@@ -1,0 +1,43 @@
+---
+title: "First Simulation"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(MASS)
+
+R <- 5 
+Ns <- c(100,200,300,400,500)
+Rhos <- c(seq(0,1, by = 0.1))
+mu1 <- 0
+mu2 <- 0
+s1 <- 1
+s2 <- 1
+rho <- 0.5
+
+mu <- c(mu1,mu2)
+
+
+scatter <- vector(mode = "list", length = R*length(Ns)*length(Rhos))
+IDs <- vector(mode = "list", length = R*length(Ns)*length(Rhos))
+index = 1
+for(i in 1:R){
+  for(j in Ns){
+    for(r in Rhos){
+      sigma <- matrix(c(s1^2, s1*s2*r, s1*s2*r, s2^2),2)
+      scatter[[index]] <- mvrnorm(j, mu = mu, Sigma = sigma ) # from MASS package
+      index = index + 1
+    }
+  }
+}
+  
+
+colnames(scatter1) <- c("X1","X2")
+
+plot(scatter[[25]])
+
+```
