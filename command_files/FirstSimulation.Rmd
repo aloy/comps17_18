@@ -1,0 +1,87 @@
+---
+title: "First Simulation"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(MASS)
+library(readr)
+library(rJava)
+install.packages('devtools')
+devtools::install_github("aloy/scagnostics")
+library(scagnostics)
+
+
+R <- 5 
+Ns <- c(100,200,300,400,500)
+Rhos <- c(seq(-1,-0.2, by = 0.2), rep(0,10))
+mu1 <- 0
+mu2 <- 0
+S1 <- c(1,2,3,4,5)
+S2 <- c(1,2,3,4,5)
+
+
+
+
+mu <- c(mu1,mu2)
+
+
+scatter <- vector(mode = "list", length = length(Ns)*20*length(S1)*length(S2))
+info <- vector(mode = "list", length = length(Ns)*20*length(S1)*length(S2))
+index = 1
+
+for(n in Ns){
+  t <- qt(0.025, n-2)
+  cutoff <- sqrt((t^2/(n-2))/(1 + (t^2/(n-2))))
+  Rhos <- c(runif(5, -1, -cutoff), rep(0, 10), runif(5, cutoff, 1))
+  for(r in Rhos){
+    for(s1 in S1){
+      for(s2 in S2) {
+        sigma <- matrix(c(s1^2, s1*s2*r, s1*s2*r, s2^2),2)
+        xy <- mvrnorm(n, mu = mu, Sigma = sigma )
+        scatter[[index]] <- list(ID = index,  x = xy[,1] , y = xy[,2])
+        info[[index]] <- list(ID = index, R = r, N = n, sd1 = s1, sd2 = s2)
+        index = index + 1
+      }
+    }
+    }
+  }
+
+  
+scagnostics1 <- vector(mode = "list", length = length(Ns)*20*length(S1)*length(S2))
+
+index = 1
+for (plot in scatter) {
+  if (index%%100 == 0){print(index)}
+  scagnostics1[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s)
+  index = index + 1
+}
+
+
+
+save(scatter, file = "Linear_Trend_Plots.RData")
+save(info, file = "Linear_Trend_Info.RData")
+save(scagnostics, file = "Linear_Trend_Scagnostics.RData")
+
+```
+
+trying to convert lists to data frames
+```{r}
+library(plyr)
+library(tidyverse)
+
+info_df <- ldply(info, data.frame)
+scatter_df <- ldply(scatter, data.frame)
+
+scagnostics_df <- ldply(scagnostics1, data.frame)
+scag_num <- rep(seq(1:9), 2500)
+scagnostics_df$scag_num <- scag_num
+  
+write.csv(info_df, "linear_trend_info.csv")
+write.csv(scatter_df, "linear_trend_plots.csv")
+write.csv(scagnostics_df, "linear_trend_scagnostics.csv")
+```
