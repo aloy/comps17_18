@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(MASS)
 library(readr)
 library(rJava)
+install.packages('devtools')
 devtools::install_github("aloy/scagnostics")
 library(scagnostics)
 
@@ -51,12 +52,12 @@ for(n in Ns){
   }
 
   
-scagnostics <- vector(mode = "list", length = length(Ns)*20*length(S1)*length(S2))
+scagnostics1 <- vector(mode = "list", length = length(Ns)*20*length(S1)*length(S2))
 
 index = 1
 for (plot in scatter) {
   if (index%%100 == 0){print(index)}
-  scagnostics[[index]] <- scagnostics(plot$x, plot$y)$s
+  scagnostics1[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s)
   index = index + 1
 }
 
@@ -66,4 +67,21 @@ save(scatter, file = "Linear_Trend_Plots.RData")
 save(info, file = "Linear_Trend_Info.RData")
 save(scagnostics, file = "Linear_Trend_Scagnostics.RData")
 
+```
+
+trying to convert lists to data frames
+```{r}
+library(plyr)
+library(tidyverse)
+
+info_df <- ldply(info, data.frame)
+scatter_df <- ldply(scatter, data.frame)
+
+scagnostics_df <- ldply(scagnostics1, data.frame)
+scag_num <- rep(seq(1:9), 2500)
+scagnostics_df$scag_num <- scag_num
+  
+write.csv(info_df, "linear_trend_info.csv")
+write.csv(scatter_df, "linear_trend_plots.csv")
+write.csv(scagnostics_df, "linear_trend_scagnostics.csv")
 ```
