@@ -1,0 +1,37 @@
+
+meeting on February 6:
+
+went over what our new simulation data is
+
+right now: let's build models to see if we can properly classify our simulated data
+
+eventually: differentiate plots from null plots -> line up
+
+supervised approach requires someone to rigorously build a model, and have a bunch of data in the background, in an unclassified way, the computer could decide what's different.
+
+could we find out why things were classified as different after running unsupervised ?
+	yes, probably through clustering!
+
+now building models:
+
+linear discriminant analysis
+logistic regression
+k nearest neighbors (non parametric)
+trees (non parametric)
+	can use if we want to do multiple groups
+
+distances:
+	euclidean
+	mahalanobis
+
+logan, cari:
+logistic, trees
+
+aidan, sophie:
+LDA, KNN
+
+coding up: Jordan Crouser
+	https://github.com/SmithCollege-SDS/tidy-islr
+
+ideas: cross validation
+	25 fold, check resampling chapter for figuring out numbers of folds, etc
