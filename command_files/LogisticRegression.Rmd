@@ -33,6 +33,8 @@ data <- data %>%
 
 data <- data %>%
   spread(key = scag_num, value = scagnostics, sep = "_")
+
+#write.csv(data, "linear_wide_scagnostics.csv")
 ```
 
 ```{r}
@@ -47,21 +49,15 @@ data$predictions <- ifelse(glm.probs < .5, 0, 1)
 mean(data$signal == data$predictions)
 ```
 
-
 ```{r}
 #cross validation
 1-cv.glm(data, glmScag, K=10)$delta[1]
 ```
 
 ```{r}
-glmScag1 <- glm(signal ~ scag_num_1+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, family = "binomial")
+glmScag1 <- glm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_7+scag_num_8+scag_num_9, data = data, family = "binomial")
 summary(glmScag1)
 anova(glmScag1, test = "Chisq")
-anova(glmScag, glmScag1, test = "Chisq")
+anova(glmScag1, glmScag, test = "Chisq")
+plot(glmScag1)
 ```
-
-
-
-
-
-
