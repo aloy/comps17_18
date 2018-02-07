@@ -1,0 +1,49 @@
+---
+title: "LDA"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(MASS)
+library(dplyr)
+
+linear_wide_scagnostics <- read_csv("~/Desktop/comps17_18/simulation_data/linear_wide_scagnostics.csv")
+
+train_data_index <- sample.int(2500, 2000)
+train_data <- linear_wide_scagnostics %>% filter(ID %in% train_data_index)
+test_data <- linear_wide_scagnostics %>% filter(!ID %in% train_data_index)
+
+#LDA
+model_LDA <- lda(train_data$signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data)
+print(model_LDA)
+plot(model_LDA)
+
+predictions_LDA <- data.frame(predict(model_LDA, test_data))
+predictions_LDA <- cbind(test_data$signal, predictions_LDA)
+predictions_LDA %>% count(class, signal)
+predictions_LDA %>% summarize(score = mean(class == signal))
+
+
+#QDA
+model_QDA1 <- qda(train_data$signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data)
+print(model_QDA1)
+
+predictions_QDA1 <- data.frame(predict(model_QDA1, test_data))
+predictions_QDA1 <- cbind(test_data, predictions_QDA1)
+predictions_QDA1 %>% count(class, signal)
+predictions_QDA1 %>% summarize(score = mean(class == signal))
+
+#QDA using only monotonic as a predictor
+model_QDA2 <- qda(train_data$signal~scag_num_9, data = train_data)
+print(model_QDA2)
+
+predictions_QDA2 <- data.frame(predict(model_QDA2, test_data))
+predictions_QDA2 <- cbind(test_data, predictions_QDA2)
+predictions_QDA2 %>% count(class, signal)
+predictions_QDA2 %>% summarize(score = mean(class == signal))
+```
+
