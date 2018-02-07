@@ -38,14 +38,18 @@ sum(compare$correct)/length(compare$correct)
 ```{r}
 library(tidyverse)
 
-Scagnostics.wide <- Scagnostics %>% group_by(ID)  %>%  spread(key = scag_num, value = scagnostics, sep = "_") 
+linear_wide_scagnostics <- read_csv("~/Desktop/comps17_18/simulation_data/linear_wide_scagnostics.csv")
 
+error = numeric(5)
 
-test_data_index <- sample.int(2500, 1000)
+train_data_index <- sample.int(2500, 2000)
+train_data <- linear_wide_scagnostics %>% filter(ID %in% train_data_index)
+test_data <- linear_wide_scagnostics %>% filter(!ID %in% train_data_index)
 
-scagnostics_test <- Scagnostics %>%
-  filter(ID %in% test_data_index)
+knn.predict <- knn(train_data[,4:12], test_data[,4:12], train_data$signal, k = 3)
+predict_table <- table(knn.predict, test_data$signal)
 
+error[i] <- (predict_table[1,1]+predict_table[2,2])/sum(predict_table)
 
 ```
 
