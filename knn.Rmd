@@ -1,0 +1,51 @@
+---
+title: "KNN Model"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(MASS)
+library(ISLR)
+library(class)
+
+#####
+#Testing Lab in Chapter 4
+#####
+
+data("Smarket")
+train <- (Smarket$Year < 2005)
+smarket.2005 <- Smarket[!train,]
+direction.2005 <- Smarket$Direction[!train]
+
+train.x <- cbind(Smarket$Lag1, Smarket$Lag2)[train,]
+test.x <- cbind(Smarket$Lag1, Smarket$Lag2)[!train,]
+train.direction <- Smarket$Direction[train]
+
+
+knn.pred <- knn(train.x, test.x, train.direction, k=3)
+table(knn.pred, direction.2005)
+
+compare <- as.data.frame(cbind(direction.2005, knn.pred))
+compare$correct  <- ifelse(compare$direction.2005 == compare$knn.pred, 1, 0)
+
+sum(compare$correct)/length(compare$correct)
+```
+
+```{r}
+library(tidyverse)
+
+Scagnostics.wide <- Scagnostics %>% group_by(ID)  %>%  spread(key = scag_num, value = scagnostics, sep = "_") 
+
+
+test_data_index <- sample.int(2500, 1000)
+
+scagnostics_test <- Scagnostics %>%
+  filter(ID %in% test_data_index)
+
+
+```
+
