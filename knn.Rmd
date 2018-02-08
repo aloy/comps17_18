@@ -12,16 +12,11 @@ library(MASS)
 library(tidyverse)
 library(class)
 
-#linear_wide_scagnostics <- read_csv("~/Desktop/comps17_18/simulation_data/linear_wide_scagnostics.csv")
-linear_wide_scagnostics <- read_csv("~/Desktop/Carleton College/Carleton '17-'18/Math Comps/Comps17_18/simulation_data/linear_wide_scagnostics.csv")
+#####
+#K-Nearest Neighbors Modeling
+#####
 
-
-
-train_data_index <- sample.int(2500, 2000)
-train_data <- linear_wide_scagnostics %>% filter(ID %in% train_data_index)
-test_data <- linear_wide_scagnostics %>% filter(!ID %in% train_data_index)
-
-
+linear_wide_scagnostics <- read_csv("simulation_data/linear_wide_scagnostics.csv")
 
 k <- 5
 folds <- cut(sample(seq_len(nrow(linear_wide_scagnostics))),  breaks=k, labels=FALSE) 
@@ -42,7 +37,7 @@ for (i in seq_len(k)) {
   knn_cv_accuracy[i,] = c(knn_best_k, knn_best_accuracy)
 }
 
-cat("Average Accuracy", mean(knn_cv_accuracy$accuracy))
+print(paste("Average Accuracy", mean(knn_cv_accuracy$accuracy)))
 
 ```
 
