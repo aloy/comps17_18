@@ -9,47 +9,40 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(MASS)
-library(ISLR)
+library(tidyverse)
 library(class)
 
-#####
-#Testing Lab in Chapter 4
-#####
-
-data("Smarket")
-train <- (Smarket$Year < 2005)
-smarket.2005 <- Smarket[!train,]
-direction.2005 <- Smarket$Direction[!train]
-
-train.x <- cbind(Smarket$Lag1, Smarket$Lag2)[train,]
-test.x <- cbind(Smarket$Lag1, Smarket$Lag2)[!train,]
-train.direction <- Smarket$Direction[train]
+#linear_wide_scagnostics <- read_csv("~/Desktop/comps17_18/simulation_data/linear_wide_scagnostics.csv")
+linear_wide_scagnostics <- read_csv("~/Desktop/Carleton College/Carleton '17-'18/Math Comps/Comps17_18/simulation_data/linear_wide_scagnostics.csv")
 
 
-knn.pred <- knn(train.x, test.x, train.direction, k=3)
-table(knn.pred, direction.2005)
-
-compare <- as.data.frame(cbind(direction.2005, knn.pred))
-compare$correct  <- ifelse(compare$direction.2005 == compare$knn.pred, 1, 0)
-
-sum(compare$correct)/length(compare$correct)
-```
-
-```{r}
-library(tidyverse)
-
-linear_wide_scagnostics <- read_csv("~/Desktop/comps17_18/simulation_data/linear_wide_scagnostics.csv")
-
-error = numeric(5)
 
 train_data_index <- sample.int(2500, 2000)
 train_data <- linear_wide_scagnostics %>% filter(ID %in% train_data_index)
 test_data <- linear_wide_scagnostics %>% filter(!ID %in% train_data_index)
 
-knn.predict <- knn(train_data[,4:12], test_data[,4:12], train_data$signal, k = 3)
-predict_table <- table(knn.predict, test_data$signal)
 
-error[i] <- (predict_table[1,1]+predict_table[2,2])/sum(predict_table)
+
+k <- 5
+folds <- cut(sample(seq_len(nrow(linear_wide_scagnostics))),  breaks=k, labels=FALSE) 
+knn_cv_accuracy <- data.frame(k=numeric(5), accuracy=numeric(5), stringsAsFactors = FALSE)
+
+for (i in seq_len(k)) {
+  train_data <- filter(linear_wide_scagnostics, folds != i) 
+  test_data <- filter(linear_wide_scagnostics, folds == i)
+
+  knn_accuracy <- numeric(100)
+  for(test_k in 1:100){
+    knn_predict <- knn(train_data[,4:12], test_data[,4:12], train_data$signal, k = test_k)
+    predict_table <- table(knn_predict, test_data$signal)
+    knn_accuracy[test_k] <- (predict_table[1,1]+predict_table[2,2])/sum(predict_table)
+  }
+  knn_best_accuracy <- max(knn_accuracy) 
+  knn_best_k <- min(as.numeric(which(knn_accuracy == max(knn_accuracy))))
+  knn_cv_accuracy[i,] = c(knn_best_k, knn_best_accuracy)
+}
+
+cat("Average Accuracy", mean(knn_cv_accuracy$accuracy))
 
 ```
 
