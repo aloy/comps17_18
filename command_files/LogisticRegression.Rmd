@@ -59,5 +59,11 @@ glmScag1 <- glm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_7+
 summary(glmScag1)
 anova(glmScag1, test = "Chisq")
 anova(glmScag1, glmScag, test = "Chisq")
-plot(glmScag1)
+#plot(glmScag1)
+```
+
+```{r}
+glmScag2 <- glm(signal ~ scag_num_9, data = data, family = "binomial")
+summary(glmScag1)
+anova(glmScag2, glmScag, test = "Chisq")
 ```
