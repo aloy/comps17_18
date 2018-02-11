@@ -26,13 +26,14 @@ R <- 5
 Ns <- c(33,67,100,133,167)
 startingAngle <- c(0, pi/4, pi/2, 3*pi/4, pi, 5*pi/4, 3*pi/2, 7*pi/4)
 rad <- c(1,2,3,4,5)
-sigma <- matrix(c((rad/3)^2, (rad/3)*(rad/3)*r, (rad/3)*(rad/3)*r, (rad/3)^2),2)
-clusterPlots <- vector(mode = "list", length = length(Ns)*20*length(S1)*length(S2))
-nullPlots <- vector(mode = "list", length = length(rad)*length(startingAngle)*length(Ns)*length(S1)*length(S2))
-info <- vector(mode = "list", length = length(rad)*length(startingAngle)*length(Ns)*length(S1)*length(S2))
-nullInfo <- vector(mode = "list", length = length(rad)*length(startingAngle)*length(Ns)*length(S1)*length(S2))
-index = 1
 rho <- 0
+
+clusterPlots <- vector(mode = "list")
+nullPlots <- vector(mode = "list")
+info <- vector(mode = "list")
+nullInfo <- vector(mode = "list")
+
+index = 1
 
 for(r in rad){
   S1 <- c(r/8, r/7, r/6, r/5, r/4, r/3)
@@ -78,7 +79,7 @@ for(r in rad){
 
 
 ```{r}
-scagnostics1 <- vector(mode = "list", length = length(Ns)*20*length(S1)*length(S2))
+scagnostics1 <- vector(mode = "list")
 
 index = 1
 for (plot in clusterPlots) {
@@ -89,7 +90,7 @@ for (plot in clusterPlots) {
 
 
 
-k <- 10000
+k <- 7200
 ggplot() +
   geom_point(data = as.data.frame(clusterPlots[[k]]), aes(x = x, y = y)) + 
   geom_point(data = as.data.frame(clusterPlots[[k]]), aes(x = x, y = y)) + 
