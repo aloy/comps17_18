@@ -12,7 +12,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(MASS)
 library(readr)
-library(rJava)
 install.packages('devtools')
 devtools::install_github("aloy/scagnostics")
 library(scagnostics)
@@ -105,9 +104,9 @@ info[k]
 
 nullInfo[k]
 
-save(scatter, file = "Linear_Trend_Plots.RData")
-save(info, file = "Linear_Trend_Info.RData")
-save(scagnostics, file = "Linear_Trend_Scagnostics.RData")
+save(clusterPlots, file = "Cluster_Plots.RData")
+save(info, file = "Cluster_Info.RData")
+save(scagnostics1, file = "Cluster_Scagnostics.RData")
 
 ```
 
