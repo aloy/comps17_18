@@ -111,6 +111,22 @@ save(scagnostics1, file = "Cluster_Scagnostics.RData")
 ```
 
 ```{r}
+scagnostics_null <- vector(mode = "list")
+
+index = 1
+for (plot in nullPlots) {
+  if (index%%100 == 0){print(index)}
+  scagnostics_null[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s)
+  index = index + 1
+}
+
+save(nullPlots, file = "Cluster_Null_Plots.RData")
+save(nullInfo, file = "Cluster_Null_Info.RData")
+save(scagnostics_null, file = "Cluster_Null_Scagnostics.RData")
+```
+
+
+```{r}
 xy1 <- as.data.frame(mvrnorm(33, mu = mu1, Sigma = sigma ))
 xy2 <- as.data.frame(mvrnorm(33, mu = mu2, Sigma = sigma ))
 xy3 <- as.data.frame(mvrnorm(33, mu = mu3, Sigma = sigma ))
