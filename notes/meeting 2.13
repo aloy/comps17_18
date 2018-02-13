@@ -1,0 +1,43 @@
+notes on february 13 meeting:
+
+went over how we simulated cluster data
+
+discussed next steps:
+	want to create more simulated data and then run analysis
+		ex: 
+		time series data would be cool, might actually stump scagnostics
+		donut-shaped data
+		quadratic data with noise
+		striated data
+		sparse
+		exponential 
+		residuals
+		logistic residuals
+		qqplot (normal vs t dist with heavy tails)
+
+
+
+easy: FOR THURSDAY
+
+Logan
+qqplot
+sparse
+
+
+Sophie 
+quadratic data with noise
+donut shaped data
+
+
+Aidan
+exponential 
+time series
+
+Cari
+striated data
+funnel
+
+
+hard: FOR SUNDAY
+logistic residuals (locate your assumptions and violate them)
+simple linear residuals (violations are 1)
