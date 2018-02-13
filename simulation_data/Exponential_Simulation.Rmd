@@ -1,0 +1,93 @@
+---
+title: "Exponential_Simulation"
+author: "Aidan Mullan"
+date: "2/13/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(MASS)
+library(readr)
+library(devtools)
+devtools::install_github("aloy/scagnostics")
+library(scagnostics)
+```
+
+```{r}
+Exp_Plots <- vector(mode = "list")
+Exp_Info <- vector(mode = "list")
+Exp_Null_Plots <- vector(mode = "list")
+Exp_Null_Info <- vector(mode = "list")
+
+
+Ns <- c(100,200,300,400,500)
+SD <- c(1, 2, 3, 4, 6, 8, 12)
+rate <- c(0.5, 0.75, 1, 1.5, 2)
+R <- 30
+index = 1
+
+for(i in 1:R){
+  for(n in Ns){
+    for(s in SD){
+      for(r in rate){
+        x <- rexp(n, rate = r)
+        y <- exp(x)+rnorm(100, 0, sd(exp(x))/s)
+        x_null <- rnorm(n, mean(x), sd(x))
+        y_null <- rnorm(n, mean(y), sd(y))
+        Exp_Plots[[index]] <- list(ID = index,  x = x , y = y)
+        Exp_Info[[index]] <- list(ID = index, Rate = r, N = n, SD = s)
+        Exp_Null_Plots[[index]] <- list(ID = index, x = x_null, y = y_null)
+        Exp_Null_Info[[index]] <- list(ID = index, Rate = r, N = n, SD = s)
+        index = index + 1
+      }
+    }
+  }
+}
+```
+
+```{r}
+Exp_Scagnostics <- vector(mode = "list")
+index = 1
+for (plot in Exp_Plots) {
+  if (index%%100 == 0){print(index)}
+  Exp_Scagnostics[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s)
+  index = index + 1
+}
+
+Exp_Null_Scagnostics <- vector(mode = "list")
+index = 1
+for (plot in Exp_Null_Plots) {
+  if (index%%100 == 0){print(index)}
+  Exp_Scagnostics[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s)
+  index = index + 1
+}
+
+#save(Exp_Plots, file = "Exponential_Plots.RData")
+#save(Exp_Info, file = "Exponential_Info.RData")
+#save(Exp_Scagnostics, file = "Exponential_Scagnostics.RData")
+
+#save(Exp_Null_Plots, file = "Exponential_Null_Plots.RData")
+#save(Exp_Null_Info, file = "Exponential_Null_Info.RData")
+#save(Exp_Null_Scagnostics, file = "Exponential_Null_Scagnostics.RData")
+
+```
+
+```{r}
+library(plyr)
+library(tidyverse)
+
+info_df <- ldply(info, data.frame)
+scatter_df <- ldply(scatter, data.frame)
+
+scagnostics_df <- ldply(scagnostics1, data.frame)
+scag_num <- rep(seq(1:9), 2500)
+scagnostics_df$scag_num <- scag_num
+  
+#write.csv(info_df, "linear_trend_info.csv")
+#write.csv(scatter_df, "linear_trend_plots.csv")
+#write.csv(scagnostics_df, "linear_trend_scagnostics.csv")
+```
