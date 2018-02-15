@@ -1,0 +1,11 @@
+---
+title: "Funnel_Simulation"
+author: "Cari Comnick"
+date: "2/13/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
