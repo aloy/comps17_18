@@ -66,13 +66,9 @@ for (plot in Exp_Null_Plots) {
   index = index + 1
 }
 
-#save(Exp_Plots, file = "Exponential_Plots.RData")
-#save(Exp_Info, file = "Exponential_Info.RData")
-#save(Exp_Scagnostics, file = "Exponential_Scagnostics.RData")
-
-#save(Exp_Null_Plots, file = "Exponential_Null_Plots.RData")
-#save(Exp_Null_Info, file = "Exponential_Null_Info.RData")
-#save(Exp_Null_Scagnostics, file = "Exponential_Null_Scagnostics.RData")
+####
+#Combine null and signal datasets before writing to csv
+####
 
 ```
 
@@ -80,14 +76,23 @@ for (plot in Exp_Null_Plots) {
 library(plyr)
 library(tidyverse)
 
-info_df <- ldply(info, data.frame)
-scatter_df <- ldply(scatter, data.frame)
+info_df <- ldply(Exp_Info, data.frame)
+scatter_df <- ldply(Exp_Plots, data.frame)
+info_null_df <- ldply(Exp_Null_Info, data.frame)
+scatter_null_df <- ldply(Exp_Null_Plots, data.frame)
 
-scagnostics_df <- ldply(scagnostics1, data.frame)
-scag_num <- rep(seq(1:9), 2500)
+scagnostics_df <- ldply(Exp_Scagnostics, data.frame)
+scag_num <- rep(seq(1:9), length(scagnostics_df))
 scagnostics_df$scag_num <- scag_num
+
+scagnostics_null_df <- ldply(Exp_Null_Scagnostics, data.frame)
+scag_num2 <- rep(seq(1:9), length(scagnostics_null_df))
+scagnostics_df$scag_num <- scag_num2
   
-#write.csv(info_df, "linear_trend_info.csv")
-#write.csv(scatter_df, "linear_trend_plots.csv")
-#write.csv(scagnostics_df, "linear_trend_scagnostics.csv")
+#write.csv(info_df, "Exponential_Info.csv")
+#write.csv(scatter_df, "Exponential_Plots.csv")
+#write.csv(scagnostics_df, "Exponential_Scagnostics.csv")
+#write.csv(info_null_df, "Exponential_Null_Info.csv")
+#write.csv(scatter_null_df, "Exponential_Null_Plots.csv")
+#write.csv(scagnostics_null_df, "Exponential_Null_Scagnostics.csv")
 ```

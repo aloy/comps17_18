@@ -18,18 +18,23 @@ library(readr)
 install.packages('devtools')
 devtools::install_github("aloy/scagnostics")
 library(scagnostics)
+```
 
-
-ar_order <- c(0,1,2,3)
-ma_order <- c(0,1,2,3)
-i_order <- c(0,1,2,3)
-ar_mag <- c(0.3, 0.5, 0.7, 0.9)
-ma_mag <- c(0.3, 0.5, 0.7, 0.9)
+```{r}
+ar_order <- c(0,1)
+ma_order <- c(0,1)
+i_order <- c(0,1)
+ar_mag <- c(0.3, 0.5, 0.6, 0.7, 0.8, 0.9)
+ma_mag <- c(0.3, 0.5, 0.6, 0.7, 0.8, 0.9)
 Ns <- c(100,200,300,400,500)
 
 TS_plot <- vector(mode = "list")
 TS_info <- vector(mode = "list")
 index = 1
+
+####
+#Fix loop to add equal null and signal plots (Currently not enough null)
+####
 
 for(n in Ns){
   for(ar in ar_order){
@@ -40,24 +45,24 @@ for(n in Ns){
             if(ar == 0){
               if(ma == 0){
                 y <- arima.sim(n = n, model = list(order = c(0,i,0)))
-                TS_plot[[index]] <- list(ID = index, x = 1:n, y = y)
+                TS_plot[[index]] <- list(ID = index, x = 1:n, y = as.numeric(y))
                 TS_info[[index]] <- list(ID = index, n = n, ar_order = 0, ma_order = 0, i_order = i,
-                                         ar_mag = 0, ma_mag = 0)
+                                         ar_mag = 0, ma_mag = 0, signal = 0)
                 index = index + 1
               }
               ma_values = sample(ma_mag, size = ma, replace = TRUE)
               y <- arima.sim(n = n, model = list(order = c(0,i,ma), ma = ma_values))
-              TS_plot[[index]] <- list(ID = index, x = 1:n, y = y)
+              TS_plot[[index]] <- list(ID = index, x = 1:n, y = as.numeric(y))
               TS_info[[index]] <- list(ID = index, n = n, ar_order = 0, ma_order = ma, i_order = i, 
-                                       ar_mag = 0, ma_mag = ma_values)
+                                       ar_mag = 0, ma_mag = ma_values, signal = 1)
               index = index + 1
             }
             ma_values = sample(ma_mag, size = ma, replace = TRUE)
             ar_values = sample(ar_mag, size = ar, replace = TRUE)
             y <- arima.sim(n = n, model = list(order = c(ar,i,ma), ar = ar_values, ma = ma_values))
-            TS_plot[[index]] <- list(ID = index, x = 1:n, y = y)
-            TS_info[[index]] <- list(ID = index, n = n, ar_order = ar, ma_order = ma, i_order = i,
-                                     ar_mag = ar_values, ma_mag = ma_values)
+            TS_plot[[index]] <- list(ID = index, x = 1:n, y = as.numeric(y))
+            TS_info[[index]] <- list(ID = index, n = n, ar_order = ar, ma_order = ma, i_order = i, 
+                                     ar_mag = ar_values, ma_mag = ma_values, signal = 1)
             index = index + 1
           }
         }
@@ -69,17 +74,17 @@ for(n in Ns){
 ```
 
 ```{r}
-TS_scagnostics <- vector(mode = "list", length = length(Ns)*20*length(S1)*length(S2))
+TS_scagnostics <- vector(mode = "list")
 
 index = 1
-for (plot in scatter) {
+for (plot in TS_plot) {
   if (index%%100 == 0){print(index)}
   TS_scagnostics[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s)
   index = index + 1
 }
 
 
-#save(TS_scatter, file = "Linear_Trend_Plots.RData")
+#save(TS_plot, file = "Linear_Trend_Plots.RData")
 #save(TS_info, file = "Linear_Trend_Info.RData")
 #save(TS_scagnostics, file = "Linear_Trend_Scagnostics.RData")
 
@@ -89,11 +94,11 @@ for (plot in scatter) {
 library(plyr)
 library(tidyverse)
 
-info_df <- ldply(info, data.frame)
-scatter_df <- ldply(scatter, data.frame)
+info_df <- ldply(TS_info, data.frame)
+scatter_df <- ldply(TS_plot, data.frame)
 
-scagnostics_df <- ldply(scagnostics1, data.frame)
-scag_num <- rep(seq(1:9), 2500)
+scagnostics_df <- ldply(TS_scagnostics, data.frame)
+scag_num <- rep(seq(1:9), length(TS_scagnostics))
 scagnostics_df$scag_num <- scag_num
   
 #write.csv(info_df, "linear_trend_info.csv")
