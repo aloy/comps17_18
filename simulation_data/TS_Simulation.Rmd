@@ -32,39 +32,47 @@ TS_plot <- vector(mode = "list")
 TS_info <- vector(mode = "list")
 index = 1
 
-####
-#Fix loop to add equal null and signal plots (Currently not enough null)
-####
-
 for(n in Ns){
   for(ar in ar_order){
     for(ma in ma_order){
-      for(i in i_order){
-        for(phi in ar_mag){
-          for(theta in ma_mag){
-            if(ar == 0){
-              if(ma == 0){
-                y <- arima.sim(n = n, model = list(order = c(0,i,0)))
-                TS_plot[[index]] <- list(ID = index, x = 1:n, y = as.numeric(y))
-                TS_info[[index]] <- list(ID = index, n = n, ar_order = 0, ma_order = 0, i_order = i,
+      for(phi in ar_mag){
+        for(theta in ma_mag){
+          if(ar == 0){
+            if(ma == 0){
+              y <- arima.sim(n = n, model = list(order = c(0,0,0)))
+              TS_plot[[index]] <- list(ID = index, x = 1:n, y = as.numeric(y))
+              TS_info[[index]] <- list(ID = index, n = n, ar_order = 0, ma_order = 0, i_order = i,
                                          ar_mag = 0, ma_mag = 0, signal = 0)
-                index = index + 1
-              }
+              index = index + 1
+            }
+            else{
               ma_values = sample(ma_mag, size = ma, replace = TRUE)
-              y <- arima.sim(n = n, model = list(order = c(0,i,ma), ma = ma_values))
+              y <- arima.sim(n = n, model = list(order = c(0,0,ma), ma = ma_values))
               TS_plot[[index]] <- list(ID = index, x = 1:n, y = as.numeric(y))
               TS_info[[index]] <- list(ID = index, n = n, ar_order = 0, ma_order = ma, i_order = i, 
                                        ar_mag = 0, ma_mag = ma_values, signal = 1)
               index = index + 1
             }
+          }
+          else{
+            if(ma == 0){
+              ar_values = sample(ar_mag, size = ar, replace = TRUE)
+              y <- arima.sim(n = n, model = list(order = c(ar,0,0), ar = ar_values, ma = ma_values))
+              TS_plot[[index]] <- list(ID = index, x = 1:n, y = as.numeric(y))
+              TS_info[[index]] <- list(ID = index, n = n, ar_order = ar, ma_order = ma, i_order = i, 
+                                     ar_mag = ar_values, ma_mag = ma_values, signal = 1)
+              index = index + 1
+            }
+            else{
             ma_values = sample(ma_mag, size = ma, replace = TRUE)
             ar_values = sample(ar_mag, size = ar, replace = TRUE)
-            y <- arima.sim(n = n, model = list(order = c(ar,i,ma), ar = ar_values, ma = ma_values))
+            y <- arima.sim(n = n, model = list(order = c(ar,0,ma), ar = ar_values, ma = ma_values))
             TS_plot[[index]] <- list(ID = index, x = 1:n, y = as.numeric(y))
             TS_info[[index]] <- list(ID = index, n = n, ar_order = ar, ma_order = ma, i_order = i, 
                                      ar_mag = ar_values, ma_mag = ma_values, signal = 1)
             index = index + 1
-          }
+            }
+          }  
         }
       }
     }
@@ -83,25 +91,20 @@ for (plot in TS_plot) {
   index = index + 1
 }
 
-
-#save(TS_plot, file = "Linear_Trend_Plots.RData")
-#save(TS_info, file = "Linear_Trend_Info.RData")
-#save(TS_scagnostics, file = "Linear_Trend_Scagnostics.RData")
-
 ```
 
 ```{r}
 library(plyr)
 library(tidyverse)
 
-info_df <- ldply(TS_info, data.frame)
-scatter_df <- ldply(TS_plot, data.frame)
+TS_info_df <- ldply(TS_info, data.frame)
+TS_scatter_df <- ldply(TS_plot, data.frame)
 
-scagnostics_df <- ldply(TS_scagnostics, data.frame)
+TS_scagnostics_df <- ldply(TS_scagnostics, data.frame)
 scag_num <- rep(seq(1:9), length(TS_scagnostics))
-scagnostics_df$scag_num <- scag_num
+TS_scagnostics_df$scag_num <- scag_num
   
-#write.csv(info_df, "linear_trend_info.csv")
-#write.csv(scatter_df, "linear_trend_plots.csv")
-#write.csv(scagnostics_df, "linear_trend_scagnostics.csv")
+write.csv(TS_info_df, "TS_Info.csv")
+write.csv(TS_scatter_df, "TS_Plots.csv")
+write.csv(TS_scagnostics_df, "TS_Scagnostics.csv")
 ```
