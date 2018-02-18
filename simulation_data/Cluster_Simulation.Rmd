@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(MASS)
 library(readr)
-install.packages('devtools')
+library(devtools)
 devtools::install_github("aloy/scagnostics")
 library(scagnostics)
 library(ggplot2)
@@ -64,8 +64,8 @@ for(r in rad){
 
             clusterPlots[[index]] <- list(ID = index,  x = xy[,1] , y = xy[,2])
             nullPlots[[index]] <- list(ID = index, x = nullxy[,1], y = nullxy[,2])
-            info[[index]] <- list(ID = index, N = n, radius = r, startingAngle = theta,  sd1 = s1, sd2 = s2)
-            nullInfo[[index]] <-list(ID = index, N = n, radius = r, startingAngle = theta,  sd1 = r, sd2 = r)
+            info[[index]] <- list(ID = index, N = n, radius = r, startingAngle = theta,  sd1 = s1, sd2 = s2, signal = 1)
+            nullInfo[[index]] <-list(ID = index, N = n, radius = r, startingAngle = theta,  sd1 = r, sd2 = r, signal = 0)
             index = index + 1
            }
          }
@@ -78,62 +78,53 @@ for(r in rad){
 
 
 ```{r}
+#####
+#Need to run scagnostics and compile null/signal datasets into main
+#####
 scagnostics1 <- vector(mode = "list")
 
 index = 1
 for (plot in clusterPlots) {
   if (index%%100 == 0){print(index)}
-  scagnostics1[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s)
+  scagnostics1[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s, signal = 1)
   index = index + 1
 }
 
-
-
-k <- 7200
-ggplot() +
-  geom_point(data = as.data.frame(clusterPlots[[k]]), aes(x = x, y = y)) + 
-  geom_point(data = as.data.frame(clusterPlots[[k]]), aes(x = x, y = y)) + 
-  geom_point(data = as.data.frame(clusterPlots[[k]]), aes(x = x, y = y))
-
-ggplot() +
-  geom_point(data = as.data.frame(nullPlots[[k]]), aes(x = x, y = y)) + 
-  geom_point(data = as.data.frame(nullPlots[[k]]), aes(x = x, y = y)) + 
-  geom_point(data = as.data.frame(nullPlots[[k]]), aes(x = x, y = y))
-
-info[k]
-
-nullInfo[k]
-
-save(clusterPlots, file = "Cluster_Plots.RData")
-save(info, file = "Cluster_Info.RData")
-save(scagnostics1, file = "Cluster_Scagnostics.RData")
-
-```
-
-```{r}
 scagnostics_null <- vector(mode = "list")
 
 index = 1
 for (plot in nullPlots) {
   if (index%%100 == 0){print(index)}
-  scagnostics_null[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s)
+  scagnostics_null[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s, signal = 0)
   index = index + 1
 }
 
-save(nullPlots, file = "Cluster_Null_Plots.RData")
-save(nullInfo, file = "Cluster_Null_Info.RData")
-save(scagnostics_null, file = "Cluster_Null_Scagnostics.RData")
+index = length(info)
+for(i in 1:length(nullInfo)){
+  info[[index+i]] <- list(ID = index+i, N = nullInfo[[i]]$n, radius = nullInfo[[i]]$r, startingAngle = nullInfo[[i]]$theta,  sd1 = nullInfo[[i]]$r, sd2 = nullInfo[[i]]$r, signal = nullInfo[[i]]$signal)
+  clusterPlots[[index+i]] <- list(ID = index+i, x = nullPlots[[i]]$x, y = nullPlots[[i]]$y)
+  scagnostics1[[index+i]] <- list(ID = index+i, scagnostics = scagnostics_null[[i]]$scagnostics, signal = scagnostics_null[[i]]$signal)
+}
 ```
 
 
 ```{r}
-xy1 <- as.data.frame(mvrnorm(33, mu = mu1, Sigma = sigma ))
-xy2 <- as.data.frame(mvrnorm(33, mu = mu2, Sigma = sigma ))
-xy3 <- as.data.frame(mvrnorm(33, mu = mu3, Sigma = sigma ))
+library(plyr)
+library(tidyverse)
 
+cluster_info_df <- ldply(info, data.frame)
+cluster_scatter_df <- ldply(clusterPlots, data.frame)
 
-ggplot() +
-  geom_point(data = xy1, aes(x = xy1[,1], y = xy1[,2])) + 
-  geom_point(data = xy2, aes(x = xy2[,1], y = xy2[,2])) + 
-  geom_point(data = xy3, aes(x = xy3[,1], y = xy3[,2]))
+cluster_scagnostics_df <- ldply(scagnostics1, data.frame)
+scag_num <- rep(seq(1:9), length(cluster_scagnostics_df))
+cluster_scagnostics_df$scag_num <- scag_num
+
+  
+write.csv(cluster_info_df, "Cluster_Info.csv")
+write.csv(cluster_scatter_df, "Cluster_Plots.csv")
+write.csv(cluster_scagnostics_df, "Cluster_Scagnostics.csv")
 ```
+
+
+
+
