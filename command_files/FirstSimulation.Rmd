@@ -14,20 +14,17 @@ library(rJava)
 install.packages('devtools')
 devtools::install_github("aloy/scagnostics")
 library(scagnostics)
+library(plyr)
+library(tidyverse)
+```
 
-R <- 5 
+```{r}
 Ns <- c(100,200,300,400,500)
-Rhos <- c(seq(-1,-0.2, by = 0.2), rep(0,10))
 mu1 <- 0
 mu2 <- 0
 S1 <- c(1,2,3,4,5)
 S2 <- c(1,2,3,4,5)
-
-
-
-
 mu <- c(mu1,mu2)
-
 
 scatter <- vector(mode = "list", length = length(Ns)*20*length(S1)*length(S2))
 info <- vector(mode = "list", length = length(Ns)*20*length(S1)*length(S2))
@@ -50,7 +47,6 @@ for(n in Ns){
     }
   }
 
-  
 scagnostics1 <- vector(mode = "list", length = length(Ns)*20*length(S1)*length(S2))
 
 index = 1
@@ -60,19 +56,13 @@ for (plot in scatter) {
   index = index + 1
 }
 
-
-
 save(scatter, file = "Linear_Trend_Plots.RData")
 save(info, file = "Linear_Trend_Info.RData")
 save(scagnostics, file = "Linear_Trend_Scagnostics.RData")
-
 ```
 
-trying to convert lists to data frames
+Convert lists to data frames:
 ```{r}
-library(plyr)
-library(tidyverse)
-
 info_df <- ldply(info, data.frame)
 scatter_df <- ldply(scatter, data.frame)
 
