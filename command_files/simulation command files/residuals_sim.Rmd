@@ -1,0 +1,115 @@
+
+---
+title: "linear regression simulation"
+author: "Sophie Gunn"
+date: "February 18, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+residPlotsNull <- vector(mode = "list")
+residPlotsQuad <- vector(mode = "list")
+residPlotsVar <- vector(mode = "list")
+residInfoNull <- vector(mode = "list")
+residInfoQuad <- vector(mode = "list")
+residInfoVar <- vector(mode = "list")
+
+Ns <- c(100, 200, 300, 400, 500)
+index = 1
+for (i in 1:500){
+  for(n in Ns){
+    a <- runif(1, -10, 10)
+    b <- runif(1, -10, 10)
+    sd <- runif(1, 0, 10)
+    X <- runif(n, -10, 10)
+    
+    Y <- a*X + b + rnorm(n, 0, sd)
+    model <- lm(Y ~ X)
+    residuals <- resid(model)
+    #plot(residuals  ~ predict(model) )
+    #abline( h = 0)
+    
+    residPlotsNull[[index]] <- list(ID = index,  x = fitted(model) , y = residuals)
+    residInfoNull[[index]] <- list(ID = index, a = a, b = b, sd = sd)
+    
+    Y_quad <- a*X^2 + b*X + rnorm(n, 0, 4*sd)
+    model_quad <- lm(Y_quad ~ X)
+    residuals_quad <- resid(model_quad)
+    #plot(residuals_quad  ~ predict(model_quad))
+    #abline( h = 0)
+    
+    residPlotsQuad[[index]] <- list(ID = index,  x = fitted(model_quad) , y = residuals_quad)
+    residInfoQuad[[index]] <- list(ID = index, a = a, b = b, sd = sd)
+    
+    sigma2 <- X^2
+    Y_var <- a*X + b + rnorm(n, 0, sqrt(sigma2))
+    model_var <- lm(Y_var ~ X)
+    residuals_var <- resid(model_var)
+    #plot(residuals_var ~ predict(model_var))
+    #abline(h = 0)
+    
+    residPlotsVar[[index]] <- list(ID = index,  x = fitted(model_var) , y = residuals_var)
+    residInfoVar[[index]] <- list(ID = index, a = a, b = b, sd = sd)
+    index = index + 1
+  }
+}
+
+```
+
+
+```{r}
+library(plyr)
+library(tidyverse)
+
+residPlotsNull_df <- ldply(residPlotsNull, data.frame)
+residPlotsNull_df$signal <- 0
+
+residPlotsQuad_df <- ldply(residPlotsQuad, data.frame)
+residPlotsQuad_df$signal <- 1
+residPlotsQuad_df$ID <- residPlotsQuad_df$ID + 2500
+
+residPlotsVar_df <- ldply(residPlotsVar, data.frame)
+residPlotsVar_df$signal <- 1
+residPlotsVar_df$ID <- residPlotsVar_df$ID + 5000
+
+residPlots <- rbind(residPlotsNull_df, residPlotsQuad_df, residPlotsVar_df)
+
+residPlots %>%
+  filter(ID == 5500) %>%
+  ggplot(aes(x =x , y = y)) + geom_point()
+write.csv(residPlots, "resid_plots.csv")
+```
+
+```{r}
+residInfoNull_df <- ldply(residInfoNull, data.frame)
+residInfoNull_df$signal <- 0
+
+residInfoQuad_df <- ldply(residInfoQuad, data.frame)
+residInfoQuad_df$signal <- 1
+residInfoQuad_df$ID <- residInfoQuad_df$ID + 2500
+
+residInfoVar_df <- ldply(residInfoVar, data.frame)
+residInfoVar_df$signal <- 1
+residInfoVar_df$ID <- residInfoVar_df$ID + 5000
+
+residInfo <- rbind(residInfoNull_df, residInfoQuad_df, residInfoVar_df)
+write.csv(residInfo, "resid_info.csv")
+```
+
+
+
+```{r}
+library(scagnostics)
+scagnostics_null <- vector(mode = "list")
+index = 1
+for (plot in residPlotsNull) {
+  if (index%%1000 == 0){print(index)}
+  scagnostics_null[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s)
+  index = index + 1
+}
+
+````

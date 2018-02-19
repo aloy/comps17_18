@@ -1,0 +1,108 @@
+---
+title: "quadratic_simulation"
+author: "Sophie Gunn"
+date: "February 14, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(MASS)
+library(readr)
+library(scagnostics)
+```
+
+
+```{r}
+
+quadPlots <- vector(mode = "list")
+nullPlots <- vector(mode = "list")
+quadInfo <- vector(mode = "list")
+nullInfo <- vector(mode = "list")
+
+Ns <- c(100, 200, 300, 400, 500)
+index = 1
+for (i in 1:2000){
+  for(n in Ns){
+    a <- runif(1, -10, 10)
+    b <- runif(1, -10, 10)
+    #sd needs to be smaller in absolute value than the minimum of a, b
+    sd <- runif(1, 0, min( abs(min(a,b)) , 1))
+    X <- runif(n, -1, 1)
+    Y <- a*X^2 + b*X + rnorm(n, 0, sd)
+    quadPlots[[index]] <- list(ID = index,  x = X , y = Y)
+    quadInfo[[index]] <- list(ID = index, N = n, a = a, b = b, sd = sd)
+    X_null <- sample(X)
+    Y_null <- sample(Y)
+    nullPlots[[index]] <- list(ID = index, x = X_null, y = Y_null)
+    nullInfo[[index]] <- list(ID = index, N = n, a = a, b = b, sd = sd)
+    index = index + 1
+  }
+}
+```
+
+```{r}
+scagnostics_quad<- vector(mode = "list")
+index = 1
+for (plot in quadPlots) {
+  if (index%%200 == 0){print(index)}
+  scagnostics_quad[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s)
+  index = index + 1
+}
+
+scagnostics_null <- vector(mode = "list")
+index = 1
+for (plot in nullPlots) {
+  if (index%%200 == 0){print(index)}
+  scagnostics_null[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s)
+  index = index + 1
+}
+
+
+```
+
+
+```{r}
+library(plyr)
+library(tidyverse)
+
+quadPlot_df <- ldply(quadPlots, data.frame)
+quadPlot_df$signal <- 1
+nullPlot_df <- ldply(nullPlots, data.frame)
+nullPlot_df$signal <- 0
+nullPlot_df$ID <- nullPlot_df$ID + 10000
+
+plots <- rbind(quadPlot_df, nullPlot_df)
+write.csv(plots, "quad_plots.csv")
+
+info_df <- ldply(quadInfo, data.frame)
+info_df$signal <- 1
+
+nullInfo_df <- ldply(nullInfo, data.frame)
+nullInfo_df$ID <- nullInfo_df$ID + 10000
+nullInfo_df$signal <- 0
+
+info <- rbind(nullInfo_df, info_df)
+write.csv(info, "quad_info.csv")
+
+scagnostics_df <- ldply(scagnostics_quad, data.frame)
+scag_num <- rep(seq(1:9), 10000)
+scagnostics_df$scag_num <- scag_num
+scagnostics_df$signal <- rep(1, 90000)
+scagnostics_df_wide <- spread(scagnostics_df, key = scag_num, value = scagnostics)
+
+scagnostics_null_df <- ldply(scagnostics_null, data.frame)
+scagnostics_null_df$ID <- scagnostics_null_df$ID + 10000
+scag_num <- rep(seq(1:9), 10000)
+scagnostics_null_df$scag_num <- scag_num
+scagnostics_null_df$signal <- rep(0, 90000)
+scagnostics_null_df_wide <- spread(scagnostics_null_df, key = scag_num, value = scagnostics)
+
+scagnostics <- rbind(scagnostics_df_wide, scagnostics_null_df_wide)
+write.csv(scagnostics, "quad_scagnostics.csv")
+
+
+```

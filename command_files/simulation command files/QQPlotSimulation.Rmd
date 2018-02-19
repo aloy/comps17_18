@@ -1,0 +1,99 @@
+---
+title: "QQPlot Simulation"
+author: "Logan Crowl"
+date: "2/15/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+devtools::install_github("aloy/scagnostics")
+library(scagnostics)
+library(plyr)
+```
+
+
+
+We will generate QQplots from random data from normal distributions, t-distributions, exponential distributions, log normal distributions, and chi-squared distributions.  We try to match variability for normal, t, and exponential distributions by setting sd of normal and exponential distributions to sqrt(df/(df-2)), which is the standard deviation of the t-distribution.  We also simulate one QQPlot for a normal distribution for every non-normal QQplot in order to maintain a 50-50 ratio of signal to noise.
+
+```{r}
+DF <- c(3,4,5,6,7)
+Ns <- c(20,30,40,50)
+
+
+QQPlots <- vector(mode = "list")
+info <- vector(mode = "list")
+
+set.seed(1)
+index = 1
+for(i in 1:100){
+  for(n in Ns) {
+    for(df in DF){
+      #normal
+      for(i in 1:4){ 
+        norm <- qqnorm(rnorm(n, 0,sqrt(df/(df-2))), plot.it = F)
+        QQPlots[[index]] <- list(ID = index,  x = norm$x , y = norm$y)
+        info[[index]] <- list(ID = index, N = n, distribution = "Normal", mean = 0, sd = sqrt(df/(df-2)), df = NA)
+        index = index + 1
+      }
+      
+      #t-distribution
+      t <- qqnorm(rt(n, df = df), plot.it = F)
+      QQPlots[[index]] <- list(ID = index,  x = t$x , y = t$y)
+      info[[index]] <- list(ID = index, N = n, distribution = "T", mean = 0, sd = sqrt(df/(df-2)), df = df)
+      index = index + 1
+      
+      #Exponential 
+      exp <- qqnorm(rexp(n, rate = 1/(sqrt(df/(df-2)))), plot.it= F)
+      QQPlots[[index]] <- list(ID = index,  x = exp$x , y = exp$y)
+      info[[index]] <- list(ID = index, N = n, distribution = "Exponential", mean = sqrt(df/(df-2)), sd = sqrt(df/(df-2)), df = NA)
+      index = index + 1
+      
+      #logNormal
+      logNorm <- qqnorm(rlnorm(n, sdlog = sqrt(log(0.5 + 0.5*sqrt(1 + 4*df/(df-2))))), plot.it = F)
+      QQPlots[[index]] <- list(ID = index,  x = logNorm$x , y = logNorm$y)
+      info[[index]] <- list(ID = index, N = n, distribution = "Log-Normal", mean = exp(df/(2*(df-2))), sd = sqrt(df/(df-2)), df = NA)
+      index = index + 1
+      
+      #Chi-Squared
+      chisq <- qqnorm(rchisq(n, df), plot.it = F)
+      QQPlots[[index]] <- list(ID = index,  x = chisq$x , y = chisq$y)
+      info[[index]] <- list(ID = index, N = n, distribution = "Chi-Squared", mean = df, sd = sqrt(2*df), df = df)
+      index = index + 1
+    }
+  }
+}
+
+```
+
+Now, we will generate the scagnostics for the plots
+```{r}
+QQscagnostics <- vector(mode = "list")
+
+index = 1
+for (plot in QQPlots) {
+  if (index%%100 == 0){print(index)}
+  QQscagnostics[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s)
+  index = index + 1
+}
+```
+
+Turn the data from lists of lists in data frames
+```{r}
+info_df <- ldply(info, data.frame)
+QQPlots_df <- ldply(QQPlots, data.frame)
+
+QQscagnostics_df <- ldply(QQscagnostics, data.frame)
+scag_num <- rep(seq(1:9), 16000)
+QQscagnostics_df$scag_num <- scag_num
+```
+
+save the CSV
+```{r}
+write.csv(info_df, "QQPlots_info.csv")
+write.csv(QQPlots_df, "QQplots.csv")
+write.csv(QQscagnostics_df, "QQPlots_scagnostics.csv")
+```

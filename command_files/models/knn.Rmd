@@ -1,0 +1,43 @@
+---
+title: "KNN Model"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(MASS)
+library(tidyverse)
+library(class)
+
+#####
+#K-Nearest Neighbors Modeling
+#####
+
+linear_wide_scagnostics <- read_csv("simulation_data/linear_wide_scagnostics.csv")
+
+k <- 5
+folds <- cut(sample(seq_len(nrow(linear_wide_scagnostics))),  breaks=k, labels=FALSE) 
+knn_cv_accuracy <- data.frame(k=numeric(5), accuracy=numeric(5), stringsAsFactors = FALSE)
+
+for (i in seq_len(k)) {
+  train_data <- filter(linear_wide_scagnostics, folds != i) 
+  test_data <- filter(linear_wide_scagnostics, folds == i)
+
+  knn_accuracy <- numeric(100)
+  for(test_k in 1:100){
+    knn_predict <- knn(train_data[,4:12], test_data[,4:12], train_data$signal, k = test_k)
+    predict_table <- table(knn_predict, test_data$signal)
+    knn_accuracy[test_k] <- (predict_table[1,1]+predict_table[2,2])/sum(predict_table)
+  }
+  knn_best_accuracy <- max(knn_accuracy) 
+  knn_best_k <- min(as.numeric(which(knn_accuracy == max(knn_accuracy))))
+  knn_cv_accuracy[i,] = c(knn_best_k, knn_best_accuracy)
+}
+
+print(paste("Average Accuracy", mean(knn_cv_accuracy$accuracy)))
+
+```
+

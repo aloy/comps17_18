@@ -1,0 +1,36 @@
+---
+title: "Random Forest"
+author: "Cari Comnick"
+date: "2/6/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(randomForest)
+library(tidyverse)
+library(tidyr)
+library(scagnostics)
+```
+
+```{r}
+data <- read_csv("simulation_data/linear_wide_scagnostics.csv")
+data <- data[,-1]
+```
+
+```{r}
+forestModel <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, ntree=100, importance =T)
+
+forestModel
+
+#choose # of trees
+plot(forestModel)
+
+#cross-validation
+predictors <- names(data)
+predictors <- predictors[!predictors %in% c("ID","signal")]
+cv1 <- rfcv(data[,predictors], data$signal, cv.fold = 10)
+```

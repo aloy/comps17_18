@@ -1,0 +1,93 @@
+---
+title: "Logistic Residuals"
+author: "Cari Comnick"
+date: "2/18/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#install.packages('devtools')
+devtools::install_github("aloy/scagnostics")
+library(scagnostics)
+library(plyr)
+library(tidyverse)
+```
+
+We wanted logistic residual plots for models that met and did not meet the assumption for logistic regression.The assumption we decided to violate was the independence of observations.In order to create dependence between consecutive observations, we simulated the continuous predictor as a time series drawn from an AR model with varying values for the AR coefficient. We then used these predictor values to determine the probability of success for each individual observations (based on a linear function).  Therefore, there should be correlation between successive probabilities, which makes the observations dependent.  We stored our data as points for the scatterplot of the residuals against the index. Our null plots use an indentical process, but the continuous predictor is simulated from a normal distribution.  
+
+X1 and X2 important, but "forget" one (plot residuals against X that you're missing)
+Maybe x and x^2, only x
+FInd real data, simulate from model
+
+
+```{r}
+Ns <- c(100,150,200,300,400,500) #number of points
+ar <- c(-0.9,-.75, -.5, .5, .75, 0.9)
+
+residScatter <- vector(mode = "list")
+info <- vector(mode = "list")
+index = 1
+
+for(i in 1:100){
+  for (a in ar){
+    for (n in Ns){
+      #bad
+      x1 <-  arima.sim(n = n, model = list(order = c(1,0,0), ar = a))   
+      x1 <- as.numeric(x1)
+      z <-  1 + 2*x1 
+      pr <- 1/(1+exp(-z))         
+      y <-  rbinom(n,1,pr)      
+      df <-  data.frame(y=y,x1=x1)
+      model <- glm(y~x1,data=df,family="binomial")
+      residuals <- resid(model, type = "response")
+      residuals <- unname(residuals)
+      residScatter[[index]] <- list(ID = index, index = 1:n,  residuals = residuals)
+      info[[index]] <- list(ID = index, N = n, AR = a, interest = 1)
+      index <- index+1
+      
+      #good
+      x1 <- rnorm(n)
+      z <-  1 + 2*x1 
+      pr <- 1/(1+exp(-z))         
+      y <-  rbinom(n,1,pr)      
+      df <-  data.frame(y=y,x1=x1)
+      model <- glm(y~x1,data=df,family="binomial")
+      residuals <- resid(model, type = "response")
+      residuals <- unname(residuals)
+      residScatter[[index]] <- list(ID = index, index = 1:n,  residuals = residuals)
+      info[[index]] <- list(ID = index, N = n, AR = 0, interest = 0)
+      index <- index+1
+    }
+  }
+}
+
+k <- 2000
+plot(residScatter[[k]]$index, residScatter[[k]]$residuals)
+```
+
+```{r}
+scagnostics1 <- vector(mode = "list")
+index = 1
+for (plot in residScatter) {
+  if (index%%100 == 0){print(index)}
+  scagnostics1[[index]] <- list(ID = index, scagnostics = scagnostics(plot$index, plot$residuals)$s)
+  index = index + 1
+}
+```
+
+```{r}
+info_df <- ldply(info, data.frame)
+scatter_df <- ldply(residScatter, data.frame)
+
+scagnostics_df <- ldply(scagnostics1, data.frame)
+scag_num <- rep(seq(1:9), 7200)
+scagnostics_df$scag_num <- scag_num
+  
+write.csv(info_df, "logistic_residuals_info.csv")
+write.csv(scatter_df, "logistic_residuals_plots.csv")
+write.csv(scagnostics_df, "logistic_residuals_scagnostics.csv")
+```

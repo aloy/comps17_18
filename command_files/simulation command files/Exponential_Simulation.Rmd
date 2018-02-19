@@ -1,0 +1,97 @@
+---
+title: "Exponential_Simulation"
+author: "Aidan Mullan"
+date: "2/13/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(MASS)
+library(readr)
+library(devtools)
+devtools::install_github("aloy/scagnostics")
+library(scagnostics)
+```
+
+```{r}
+Exp_Plots <- vector(mode = "list")
+Exp_Info <- vector(mode = "list")
+Exp_Null_Plots <- vector(mode = "list")
+Exp_Null_Info <- vector(mode = "list")
+
+
+Ns <- c(100,200,300,400,500)
+SD <- c(1, 2, 3, 4, 6, 8, 12)
+rate <- c(0.5, 0.75, 1, 1.5, 2)
+R <- 10
+index = 1
+
+for(i in 1:R){
+  for(n in Ns){
+    for(s in SD){
+      for(r in rate){
+        x <- rexp(n, rate = r)
+        y <- exp(x)+rnorm(100, 0, sd(exp(x))/s)
+        x_null <- rnorm(n, mean(x), sd(x))
+        y_null <- rnorm(n, mean(y), sd(y))
+        Exp_Plots[[index]] <- list(ID = index,  x = x , y = y)
+        Exp_Info[[index]] <- list(ID = index, Rate = r, N = n, SD = s, signal = 1)
+        Exp_Null_Plots[[index]] <- list(ID = index, x = x_null, y = y_null)
+        Exp_Null_Info[[index]] <- list(ID = index, Rate = r, N = n, SD = s, signal = 0)
+        index = index + 1
+      }
+    }
+  }
+}
+```
+
+```{r}
+Exp_Scagnostics <- vector(mode = "list")
+index = 1
+for (plot in Exp_Plots) {
+  if (index%%100 == 0){print(index)}
+  Exp_Scagnostics[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s)
+  index = index + 1
+}
+
+Exp_Null_Scagnostics <- vector(mode = "list")
+index = 1
+for (plot in Exp_Null_Plots) {
+  if (index%%100 == 0){print(index)}
+  Exp_Scagnostics[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s)
+  index = index + 1
+}
+
+####
+#Combine null and signal datasets before writing to csv
+####
+
+index = length(Exp_Info)
+for(i in 1:length(Exp_Null_Info)){
+  Exp_Info[[index+i]] <- list(ID = index+i, Rate = Exp_Null_Info[[i]]$Rate, N = Exp_Null_Info[[i]]$N, SD = Exp_Null_Info[[i]]$SD, signal = 0)
+  Exp_Plots[[index+i]] <- list(ID = index+i, x = Exp_Null_Plots[[i]]$x, y = Exp_Null_Plots[[i]]$y)
+  Exp_Scagnostics[[index+i]] <- list(ID = index+i, scagnostics = Exp_Null_Scagnostics$scagnostics)
+}
+
+```
+
+```{r}
+library(plyr)
+library(tidyverse)
+
+exp_info_df <- ldply(Exp_Info, data.frame)
+exp_scatter_df <- ldply(Exp_Plots, data.frame)
+
+exp_scagnostics_df <- ldply(Exp_Scagnostics, data.frame)
+scag_num <- rep(seq(1:9), length(exp_scagnostics_df))
+exp_scagnostics_df$scag_num <- scag_num
+
+  
+write.csv(exp_info_df, "Exponential_Info.csv")
+write.csv(exp_scatter_df, "Exponential_Plots.csv")
+write.csv(exp_scagnostics_df, "Exponential_Scagnostics.csv")
+```

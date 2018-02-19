@@ -1,0 +1,115 @@
+---
+title: "donut_simulation"
+author: "Sophie Gunn"
+date: "February 13, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(MASS)
+library(readr)
+library(scagnostics)
+```
+
+```{r}
+
+donutPlots <- vector(mode = "list")
+nullPlots <- vector(mode = "list")
+info <- vector(mode = "list")
+nullInfo <- vector(mode = "list")
+
+index = 1
+#vary n, inner_a, inner_b, outer_a, outer_b
+Ns <- c(300,400,500,600)
+center <- c(0 ,0)
+radius <-  1
+
+for (i in 1:2000){
+  for(n in Ns){
+    angle <- 2*pi*runif(n)
+    range_a <- sort(runif(2, 0,0.5))
+    range_b <- sort(runif(2, range_a[2] + 0.1,1))
+    r <- c(radius*sqrt(runif(n, range_a[1], range_a[2])), radius*sqrt(runif(n, range_b[1], range_b[2])))
+    X <- r*cos(angle) + center[1]
+    Y <- r*sin(angle) + center[2]
+    plot(X,Y)
+    r_null <- radius*sqrt(runif(n, range_a[1], range_b[2]))
+    X_null <- r_null*cos(angle) + center[1]
+    Y_null <- r_null*sin(angle) + center[2]
+    plot(X_null, Y_null)
+    
+    donutPlots[[index]] <- list(ID = index,  x = X , y = Y)
+    nullPlots[[index]] <- list(ID = index, x = X_null, y = Y_null)
+    info[[index]] <- list(ID = index, N = n, range = c(range_a[1], range_a[2], range_b[1], range_b[2]))
+    nullInfo[[index]] <-list(ID = index, N = n, range = c(range_a[1],range_b[2]))
+    index = index + 1
+  }
+}
+
+scagnostics_cluster <- vector(mode = "list")
+
+index = 1
+for (plot in donutPlots) {
+  if (index%%1000 == 0){print(index)}
+  scagnostics_cluster[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s)
+  index = index + 1
+}
+
+
+scagnostics_null <- vector(mode = "list")
+index = 1
+for (plot in nullPlots) {
+  if (index%%1000 == 0){print(index)}
+  scagnostics_null[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s)
+  index = index + 1
+}
+
+
+```
+
+
+trying to convert lists to data frames
+```{r}
+library(plyr)
+library(tidyverse)
+
+donutPlot_df <- ldply(donutPlots, data.frame)
+donutPlot_df$signal <- 1
+nullPlot_df <- ldply(nullPlots, data.frame)
+nullPlot_df$signal <- 0
+
+plots <- rbind(donutPlot_df, nullPlot_df)
+write.csv(plots, "donut_plots.csv")
+
+nullInfo_df <- ldply(nullInfo, data.frame)
+nullInfo_df$range.type <- rep(seq(1:2), 8000)
+nullInfo_df$signal <- 0
+
+info_df <- ldply(info, data.frame)
+info_df$range.type <- rep(seq(1:4), 2000)
+info_df$signal <- 1
+
+info <- rbind(nullInfo_df, info_df)
+write.csv(info, "donut_info.csv")
+
+scagnostics_df <- ldply(scagnostics_cluster, data.frame)
+scag_num <- rep(seq(1:9), 8000)
+scagnostics_df$scag_num <- scag_num
+scagnostics_df$signal <- rep(1, 72000)
+scagnostics_df_wide <- spread(scagnostics_df, key = scag_num, value = scagnostics)
+
+scagnostics_null_df <- ldply(scagnostics_null, data.frame)
+scag_num <- rep(seq(1:9), 8000)
+scagnostics_null_df$scag_num <- scag_num
+scagnostics_null_df$signal <- rep(0, 72000)
+scagnostics_null_df_wide <- spread(scagnostics_null_df, key = scag_num, value = scagnostics)
+
+scagnostics <- rbind(scagnostics_df_wide, scagnostics_null_df_wide)
+write.csv(scagnostics, "donut_scagnostics.csv")
+```
+
+

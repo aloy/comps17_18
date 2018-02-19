@@ -1,0 +1,112 @@
+---
+title: "Funnel_Simulation"
+author: "Cari Comnick"
+date: "2/13/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#install.packages('devtools')
+#devtools::install_github("aloy/scagnostics")
+```
+
+```{r}
+library(MASS)
+library(readr)
+library(rJava)
+library(scagnostics)
+library(plyr)
+library(tidyverse)
+```
+
+Funnel (bivariate log-normal with rho = 0.6)
+Vary rhos from .4 to .8
+Vary SD from .3 to 1
+
+```{r}
+mu <- c(0,0)
+s1 <- 1
+r <- .5
+sigma <- matrix(c(s1^2, s1*s1*r, s1*s1*r, s1^2),2)
+points <- mvrnorm(n = 500, mu, Sigma = sigma)
+points1 <- exp(points)
+plot(points)
+plot(points1)
+```
+
+```{r}
+Ns <- c(100,200,300,400,500)
+mu1 <- 0
+mu2 <- 0
+S1 <- seq(.3,1,by=.05)
+mu <- c(mu1,mu2)
+Rhos <- seq(.4,.9,by=.05)
+Rhos2 <- rep(0,length(Rhos))
+
+scatter <- vector(mode = "list", length = length(Ns)*length(Rhos)*length(S1))
+info <- vector(mode = "list", length = length(Ns)*length(Rhos)*length(S1))
+index = 1
+
+for(n in Ns){
+  for(r in Rhos){
+    for(s1 in S1){
+        sigma <- matrix(c(s1^2, s1*s1*r, s1*s1*r, s1^2),2)
+        xy <- mvrnorm(n, mu = mu, Sigma = sigma)
+        xy <- exp(xy)
+        scatter[[index]] <- list(ID = index,  x = xy[,1] , y = xy[,2])
+        info[[index]] <- list(ID = index, R = r, N = n, sd = s1, interest = 1)
+        index = index + 1
+      }
+    }
+}
+
+for(n in Ns){
+  for(r in Rhos2){
+    for(s1 in S1){
+        sigma <- matrix(c(s1^2, s1*s1*r, s1*s1*r, s1^2),2)
+        xy <- mvrnorm(n, mu = mu, Sigma = sigma)
+        xy <- exp(xy)
+        scatter[[index]] <- list(ID = index,  x = xy[,1] , y = xy[,2])
+        info[[index]] <- list(ID = index, R = r, N = n, sd = s1, interest = 0)
+        index = index + 1
+      }
+    }
+}
+```
+
+```{r}
+plot(scatter[[1074]])
+```
+
+```{r}
+scagnostics1 <- vector(mode = "list", length = length(Ns)*length(Rhos)*length(S1))
+
+index = 1
+for (plot in scatter) {
+  if (index%%100 == 0){print(index)}
+  scagnostics1[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s)
+  index = index + 1
+}
+
+save(scatter, file = "Funnel_Plots.RData")
+save(info, file = "Funnel_Info.RData")
+save(scagnostics, file = "Funnel_Scagnostics.RData")
+```
+
+
+```{r}
+info_df <- ldply(info, data.frame)
+scatter_df <- ldply(scatter, data.frame)
+
+scagnostics_df <- ldply(scagnostics1, data.frame)
+scag_num <- rep(seq(1:9), 1650)
+scagnostics_df$scag_num <- scag_num
+  
+write.csv(info_df, "funnel_info.csv")
+write.csv(scatter_df, "funnel_trend_plots.csv")
+write.csv(scagnostics_df, "funnel_scagnostics.csv")
+```

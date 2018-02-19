@@ -1,0 +1,99 @@
+---
+title: "Striated_Simulation"
+author: "Cari Comnick"
+date: "2/13/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+For the striated simulation, I based my process a product of uniform and integers (Wilkinson, Wills 2008). I varied the total number of points (I didn't vary how many points each stripe had), how many stripes there were, how far apart they were, how much error was around the line, and the orientation. For the null plots, I used an error equal to the distance between stripes.
+
+```{r}
+library(MASS)
+library(readr)
+library(rJava)
+#install.packages('devtools')
+devtools::install_github("aloy/scagnostics")
+library(scagnostics)
+library(plyr)
+library(tidyverse)
+```
+
+```{r}
+points1 <- runif(500,0,1)
+points2 <- rep(c(seq(1,5,by=1)),100)
+o <- 0
+x <- ifelse(o == 0, points1, points2)
+x <- points1
+plot(points1, points2)
+
+Ns <- c(50,100,150,200,250) #number of points in each stripe(?) or total
+numStripes <- c(2,3,4,5,6,7,8) #number of stripes
+distance <- c(1,2,3) #distance between stripes
+orientation <- c(0,1) #horizontal or vertical, if 0 stripes are horizontal (points1 is x, else y)
+#for null plots, use distance = d for error
+
+scatter <- vector(mode = "list", length = length(Ns)*length(numStripes)*length(distance)*length(orientation)*5)
+info <- vector(mode = "list", length = length(Ns)*length(numStripes)*length(distance)*length(orientation)*5)
+index = 1
+
+for(n in Ns){
+  for(s in numStripes){
+    for(d in distance){
+      error <- c(d/5, d/10, d/15, 0, d)
+      for(e in error){
+        for(o in orientation) {
+          points1 <- runif(n*s,0,1)
+          points2 <- rep(c(seq(1, s*d, length.out = s)),n)
+          points2 <- points2 + runif(points2, -e, e)
+          if (o==0){
+            x <- points1
+            y <- points2
+          }
+          else{
+            y <- points1
+            x <- points2
+          }
+          if (e == d){
+            interest <- 0
+          }
+          else {
+            interest <- 1
+          }
+        
+          scatter[[index]] <- list(ID = index,  x = x, y = y)
+          info[[index]] <- list(ID = index, N = n, Stripes = s, Distance = d, Error = e, Orientation = o, Interest = interest)
+          index = index + 1
+      }
+     }
+    }
+  }
+}
+```
+
+```{r}
+scagnostics1 <- vector(mode = "list", length = length(Ns)*length(numStripes)*length(distance)*length(orientation)*5)
+index = 1
+for (plot in scatter) {
+  if (index%%100 == 0){print(index)}
+  scagnostics1[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s)
+  index = index + 1
+}
+scagnostics(scatter[[521]][["x"]],scatter[[521]][["y"]])
+```
+
+```{r}
+info_df <- ldply(info, data.frame)
+scatter_df <- ldply(scatter, data.frame)
+
+scagnostics_df <- ldply(scagnostics1, data.frame)
+scag_num <- rep(seq(1:9), 1050)
+scagnostics_df$scag_num <- scag_num
+  
+write.csv(info_df, "striated_info.csv")
+write.csv(scatter_df, "striated_plots.csv")
+write.csv(scagnostics_df, "striated_scagnostics.csv")
+```

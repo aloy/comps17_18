@@ -1,0 +1,30 @@
+working on linear regression:
+
+interesting plots:
+violate:
+	constant variance
+	linearity (quadratic, exponential, )
+
+
+logistic regression:
+interesting plots:
+violate:
+	independence
+
+
+next steps:
+
+go through individual data sets and run models
+	check which ones are doing well, not
+	if anything doesn't work well, fully explore
+
+combine data sets to see if when looking at different data types, scagnostics prove to be a useful tool
+	we should check, though is not our 
+	are we looking to check only for null/interesting? or characterize based on distribution? if it can, this could prove useful
+
+
+somehow move to thinking about lineups?
+	signal v non signal?
+	pick out one different?
+	unsupervised, what would it do?
+	
