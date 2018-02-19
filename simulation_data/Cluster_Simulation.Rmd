@@ -99,12 +99,9 @@ for (plot in nullPlots) {
   index = index + 1
 }
 
-index = length(info)
-for(i in 1:length(nullInfo)){
-  info[[index+i]] <- list(ID = index+i, N = nullInfo[[i]]$n, radius = nullInfo[[i]]$r, startingAngle = nullInfo[[i]]$theta,  sd1 = nullInfo[[i]]$r, sd2 = nullInfo[[i]]$r, signal = nullInfo[[i]]$signal)
-  clusterPlots[[index+i]] <- list(ID = index+i, x = nullPlots[[i]]$x, y = nullPlots[[i]]$y)
-  scagnostics1[[index+i]] <- list(ID = index+i, scagnostics = scagnostics_null[[i]]$scagnostics, signal = scagnostics_null[[i]]$signal)
-}
+info <- rbind(info, nullInfo)
+clusterPlots <- rbind(clusterPlots, nullPlots)
+scagnostics1 <- rbind(scagnostics1, scagnostics_null)
 ```
 
 
