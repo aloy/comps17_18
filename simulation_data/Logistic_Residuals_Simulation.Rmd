@@ -17,7 +17,11 @@ library(plyr)
 library(tidyverse)
 ```
 
-We wanted logistic residual plots for models that met and did not meet the assumption for logistic regression.  The assumption we decided to violate was the independence of observations.  In order to create dependence between consecutive observations, we simulated the continuous predictor as a time series drawn from an AR model with varying values for the AR coefficient.  We then used these predictor values to determine the probability of success for each individual observations (based on a linear function).  Therefore, there should be correlation between successive probabilities, which makes the observations dependent.  We stored our data as points for the scatterplot of the residuals against the index.  Our null plots use an indentical process, but the continuous predictor is simulated from a normal distribution.  
+We wanted logistic residual plots for models that met and did not meet the assumption for logistic regression.The assumption we decided to violate was the independence of observations.In order to create dependence between consecutive observations, we simulated the continuous predictor as a time series drawn from an AR model with varying values for the AR coefficient. We then used these predictor values to determine the probability of success for each individual observations (based on a linear function).  Therefore, there should be correlation between successive probabilities, which makes the observations dependent.  We stored our data as points for the scatterplot of the residuals against the index. Our null plots use an indentical process, but the continuous predictor is simulated from a normal distribution.  
+
+X1 and X2 important, but "forget" one (plot residuals against X that you're missing)
+Maybe x and x^2, only x
+FInd real data, simulate from model
 
 
 ```{r}
