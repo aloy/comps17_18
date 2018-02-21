@@ -1,0 +1,48 @@
+meeting 2.19
+
+next steps:
+
+thinking about how we will combine data sets:
+	indicator variable about type of distribution?
+	could scagnostics tell us what type of distribution we're looking at?
+	thinking about use: when would you actually never know what type of plot you're looking at?
+	adam: what types of features combine into certain distributions?
+	ACTUAL NEXT STEPS:
+		make model for each data set
+		cluster, exponential, linear, funnel, quadratic, striated
+		logistic residuals
+		residuals
+		time series
+		QQ plots
+
+	model types:
+		logistic
+		LDA, QDA
+		random forest
+		knn
+		svn
+
+	linear (already done)
+	cari:
+	cluster
+	expo	
+	funnel
+
+	sophie:
+	quadratic
+	striated
+	donut
+
+	logan:
+	logistic residuals
+	QQplots
+	
+
+	aidan:
+	time series
+	residuals
+
+	final product: what type of plot, interesting v non interesting
+		line up game ?s
+
+

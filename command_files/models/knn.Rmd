@@ -18,6 +18,7 @@ library(class)
 
 linear_wide_scagnostics <- read_csv("simulation_data/linear_wide_scagnostics.csv")
 
+#Please ignore the brute-force cross-validation. The caret package is much more efficient
 k <- 5
 folds <- cut(sample(seq_len(nrow(linear_wide_scagnostics))),  breaks=k, labels=FALSE) 
 knn_cv_accuracy <- data.frame(k=numeric(5), accuracy=numeric(5), stringsAsFactors = FALSE)
