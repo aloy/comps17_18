@@ -1,0 +1,177 @@
+---
+title: "Time_Series_Models"
+author: "Aidan Mullan"
+date: "2/21/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(tidyr)
+library(scagnostics)
+library(caret)
+library(boot)
+library(MASS)
+library(e1071)
+library(randomForest)
+library(kernlab)
+```
+
+```{r}
+data <- read_csv("simulation_data/TS_Scagnostics.csv")
+data <- data[,-1]
+info <- read_csv("simulation_data/TS_Info.csv")
+info <- info[,-1]
+
+data <- data %>%
+  spread(key = scag_num, value = scagnostics, sep = "_")
+
+data <- merge(data, info[,c(1,7)], by.x = "ID", by.y = "ID")
+
+```
+
+```{r}
+#####
+#Logistic Model
+#####
+
+#Initial Model
+TSglm <- glm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, family = "binomial")
+
+summary(TSglm)
+
+TSglm.probs <- predict(TSglm,type="response")
+TSglm.predictions <- ifelse(TSglm.probs < .5, 0, 1)
+mean(info$signal == TSglm.predictions)
+# 77.8% accuracy
+
+1-cv.glm(data, TSglm, K=10)$delta[1]
+# 85.6% accuracy
+
+
+#Updated Model - Removed Skewed and Stringy
+TSglm2 <- glm(signal ~ scag_num_1+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_9, data = data, family = "binomial")
+summary(TSglm2)
+anova(TSglm, TSglm2, test = "Chisq")
+
+1-cv.glm(data, TSglm2, K=10)$delta[1]
+# 85.6% accuracy
+
+TSglm.probs2 <- predict(TSglm2,type="response")
+TSglm.predictions2 <- ifelse(TSglm.probs2 < .5, 0, 1)
+mean(info$signal == TSglm.predictions2)
+# 77.6% accuracy
+
+poor_predict_glm <- info[which(TSglm.predictions != info$signal),]
+
+###807 Total Errors - 8 ARMA, 53 AR, 149 MA, 597 WN 
+###Predicts a lot of white noise data as having signal (74.0% of errors)
+```
+
+```{r}
+#####
+#LDA and QDA Models
+#####
+
+TS_control <- trainControl(method = "cv", number = 10, classProbs = TRUE)
+
+TS_LDA <- train(as.factor(signal)~.-ID, data = data, method = "lda", trControl = TS_control)
+TS_LDA.predict <- predict(TS_LDA, type = "raw")
+mean(info$signal == TS_LDA.predict)
+# 77.0% accuracy
+
+poor_predict_LDA <- info[which(TS_LDA.predict != info$signal),]
+
+###829 Total Errors - 6 ARMA, 35 AR, 83 MA, 705 WN
+###Predicts white noise as signal (85.0% of errors)
+
+
+TS_QDA <- train(as.factor(signal)~.-ID, data = data, method = "qda", trControl = TS_control)
+TS_QDA.predict <- predict(TS_QDA, type = "raw")
+mean(info$signal == TS_QDA.predict)
+# 61.1% accuracy
+
+poor_predict_QDA <- info[which(TS_QDA.predict != info$signal),]
+
+###1400 Total Errors - 226 ARMA, 372 AR, 718 MA, 84 WN
+###Only 6.0% errors from white noise, but 51.3% errors from MA
+```
+
+```{r}
+#####
+#K-Nearest Neighbors
+#####
+
+TS_knn <- train(as.factor(signal)~.-ID, data = data, method = "knn", trControl = TS_control, tuneGrid = expand.grid(k = 1:25), metric = "Accuracy")
+TS_knn
+
+TS_knn.predict <- predict(TS_knn, type = "raw")
+poor_predict_knn <- info[which(TS_knn.predict != info$signal),]
+# 76% accuracy
+###764 Total Errors - 14 ARMA, 50 AR, 104 MA, 596 WN
+```
+
+```{r}
+#####
+#Random Forest
+#####
+
+#Attempt to use caret package
+TS_rf <- train(as.factor(signal)~.-ID, data = data, method = "rf", trControl = TS_control, metric = "Accuracy", tuneGrid = expand.grid(mtry = 1:9))
+TS_rf
+TS_rf.predict <- predict(TS_rf, type = "raw")
+mean(info$signal == TS_rf.predict)
+# 77.3% accuracy
+poor_predict_rf <- info[which(TS_rf.predict != info$signal),]
+###764 Total Errors - 14 ARMA, 50 AR, 104 MA, 596 WN
+###Predict command returns perfect predictions, ???
+
+#Using randomForest
+
+k <- 10
+folds <- cut(sample(seq_len(nrow(data))),  breaks=k, labels=FALSE) 
+TS_rf.accuracy <- data.frame(accuracy=numeric(k), stringsAsFactors = FALSE)
+
+for (i in seq_len(k)) {
+  train_data <- filter(data, folds != i) 
+  test_data <- filter(data, folds == i)
+
+  TS_rf.model <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data, ntree=100, importance =T)
+
+  TS_rf.predict <- predict(TS_rf.model, test_data)
+  TS_rf.accuracy[i,] <- mean(info$signal == TS_rf.predict)
+}
+mean(TS_rf.accuracy[,1])
+#Accuracy ~66%
+```
+
+```{r}
+#####
+#Support Vector Machines
+#####
+k <- 10
+folds <- cut(sample(seq_len(nrow(data))),  breaks=k, labels=FALSE) 
+TS_svm.accuracy <- data.frame(accuracy=numeric(k), stringsAsFactors = FALSE)
+
+for (i in seq_len(k)) {
+  train_data <- filter(data, folds != i) 
+  test_data <- filter(data, folds == i)
+
+  TS_svm <- svm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data)
+
+  TS_svm.probs <- predict(TS_svm, test_data, type = "raw")
+  TS_svm.predict <- ifelse(TS_svm.probs < .5, 0, 1)
+  TS_svm.accuracy[i,] <- mean(info$signal == TS_svm.predict)
+}
+mean(TS_svm.accuracy[,1])
+#Accuracy ~74%
+```
+
+
+
+
+

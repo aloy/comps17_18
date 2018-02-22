@@ -1,0 +1,35 @@
+---
+title: "Linear_Residual_Scagnostics"
+author: "Aidan Mullan"
+date: "2/21/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(plyr)
+library(tidyverse)
+library(MASS)
+library(readr)
+library(scagnostics)
+
+LinRes_Plots <- read_csv("~/Desktop/resid_plots copy.csv")
+
+LinRes_scagnostics <- vector(mode = "list")
+
+index = 1
+for (i in 1:7500) {
+  if (index%%100 == 0){print(index)}
+  LinRes_scagnostics[[index]] <- list(ID = index, scagnostics = scagnostics(subset(LinRes_Plots$x, LinRes_Plots$ID == index), subset(LinRes_Plots$y, LinRes_Plots$ID == index))$s)
+  index = index + 1
+}
+
+LinRes_scagnostics_df <- ldply(LinRes_scagnostics, data.frame)
+scag_num <- rep(seq(1:9), length(LinRes_scagnostics))
+LinRes_scagnostics_df$scag_num <- scag_num
+write.csv(LinRes_scagnostics_df, "resid_Scagnostics.csv")
+```
+
