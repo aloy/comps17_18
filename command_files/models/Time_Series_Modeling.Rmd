@@ -106,13 +106,15 @@ poor_predict_QDA <- info[which(TS_QDA.predict != info$signal),]
 #K-Nearest Neighbors
 #####
 
-TS_knn <- train(as.factor(signal)~.-ID, data = data, method = "knn", trControl = TS_control, tuneGrid = expand.grid(k = 1:25), metric = "Accuracy")
+TS_knn <- train(make.names(as.factor(signal))~.-ID, data = data, method = "knn", trControl = TS_control, tuneGrid = expand.grid(k = 1:25), metric = "Accuracy")
 TS_knn
+# 76% accuracy
 
 TS_knn.predict <- predict(TS_knn, type = "raw")
-poor_predict_knn <- info[which(TS_knn.predict != info$signal),]
-# 76% accuracy
-###764 Total Errors - 14 ARMA, 50 AR, 104 MA, 596 WN
+TS_knn.predict2 <- ifelse(TS_knn.predict == "X0", 0, 1)
+poor_predict_knn <- info[which(TS_knn.predict2 != info$signal),]
+
+###796 Total Errors - 16 ARMA, 47 AR, 105 MA, 628 WN
 ```
 
 ```{r}
@@ -121,14 +123,17 @@ poor_predict_knn <- info[which(TS_knn.predict != info$signal),]
 #####
 
 #Attempt to use caret package
-TS_rf <- train(as.factor(signal)~.-ID, data = data, method = "rf", trControl = TS_control, metric = "Accuracy", tuneGrid = expand.grid(mtry = 1:9))
+TS_rf <- train(make.names(as.factor(signal))~.-ID, data = data, method = "rf", trControl = TS_control, metric = "Accuracy", tuneGrid = expand.grid(mtry = 1:9))
 TS_rf
-TS_rf.predict <- predict(TS_rf, type = "raw")
-mean(info$signal == TS_rf.predict)
 # 77.3% accuracy
-poor_predict_rf <- info[which(TS_rf.predict != info$signal),]
-###764 Total Errors - 14 ARMA, 50 AR, 104 MA, 596 WN
-###Predict command returns perfect predictions, ???
+
+
+TS_rf.predict <- predict(TS_rf, type = "raw")
+TS_rf.predict2 <- ifelse(TS_rf.predict == "X0", 0, 1)
+poor_predict_rf <- info[which(TS_rf.predict2 != info$signal),]
+
+###Predict command returns perfect predictions, need to fix
+
 
 #Using randomForest
 
