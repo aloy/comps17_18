@@ -112,7 +112,7 @@ QQ.knn
 
 scags$prediction.knn <- predict(QQ.knn, type = "raw")
 
-knn.results <- scags %>% summarize(accuracy = mean(signal == prediction.knn), precision = sum(signal == "Signal" &  prediction.knn == "Signal")/sum(prediction.qda == "Signal"), sensitivity = sum(signal == "Signal" & prediction.knn == "Signal")/sum(signal == "Signal"), specificity = sum(signal == "Noise" & prediction.knn == "Noise")/sum(signal == "Noise")) 
+knn.results <- scags %>% summarize(accuracy = mean(signal == prediction.knn), precision = sum(signal == "Signal" &  prediction.knn == "Signal")/sum(prediction.knn == "Signal"), sensitivity = sum(signal == "Signal" & prediction.knn == "Signal")/sum(signal == "Signal"), specificity = sum(signal == "Noise" & prediction.knn == "Noise")/sum(signal == "Noise")) 
 
 #Our precision is really really good (93%)
 #accuracy is slightly better than QDA, but similar to other models
