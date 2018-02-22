@@ -1,0 +1,73 @@
+---
+title: "QQPlot Modeling"
+author: "Logan Crowl"
+date: "2/21/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(boot)
+library(ggplot2)
+library(randomForest)
+```
+
+
+```{r}
+scags <- read_csv("simulation_data/QQPlots_scagnostics.csv", 
+    col_types = cols(X1 = col_skip()))
+info <- read_csv("simulation_data/QQPlots_info.csv",
+                 col_types = cols(X1 = col_skip()))
+
+scags <- info %>%
+  select(ID, distribution, N) %>%
+  right_join(scags)
+
+scags <- scags %>%
+  mutate(signal = ifelse(distribution == "Normal", 0, 1)) %>%
+  spread(key = scag_num, value = scagnostics, sep = "_")
+
+```
+
+#Logistic Model
+```{r}
+QQ.glm <- glm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = scags, family = "binomial")
+
+scags <- scags %>% 
+  mutate(probs = predict(QQ.glm, type="response"), prediction = ifelse(probs >= 0.5, 1, 0) )
+
+scags %>% 
+  ggplot(aes(x=probs, color= ifelse(signal == 1, "Not Normal", "Normal"))) + 
+  geom_density() + ggtitle("Forecasted Signal Probabilities") +
+  geom_vline(xintercept = 0.5)
+
+scags %>% summarize(accuracy = mean(signal == prediction), precision = sum(signal == 1 &  prediction == 1)/sum(prediction == 1), sensitivity = sum(signal == 1 & prediction == 1)/sum(signal == 1), specificity = sum(signal == 0 & prediction == 0)/sum(signal == 0)) 
+
+#Cross-validate
+cost <- function(y, pi){mean(abs(y-pi) > 0.5)}
+cv.glm1 <- cv.glm(scags, QQ.glm, cost, K = 10)
+(accuracy <- 1- cv.glm1$delta[1])
+```
+
+It looks like we have cross-validated accuracy of `r accuracy`
+
+#random forest
+```{r}
+library(MASS)
+QQ.rf <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = scags, ntree=100, importance =T)
+
+QQ.rf
+
+#choose # of trees
+plot(QQ.rf)
+
+#cross-validation
+predictors <- names(scags)
+predictors <- predictors[!predictors %in% c("ID","signal", "distribution", "N", "probs", "prediction")]
+cv.rf1 <- rfcv(scags[,predictors], scags$signal, cv.fold = 10)
+cv.rf1
+```
