@@ -1,5 +1,5 @@
 ---
-title: "striated"
+title: "donut_modeling"
 author: "Sophie Gunn"
 date: "February 22, 2018"
 output: html_document
@@ -24,20 +24,14 @@ library(e1071)
 
 DATA
 ```{r}
-data <- read_csv("simulation_data/striated_scagnostics.csv")
+data <- read_csv("simulation_data/donut_scagnostics.csv")
 data <- data[,-1]
-
-info <- read_csv("simulation_data/striated_info.csv")
+names(data)[3:11] <- c("scag_num_1", "scag_num_2", "scag_num_3", "scag_num_4", "scag_num_5", "scag_num_6", "scag_num_7", "scag_num_8", "scag_num_9")
+names(data)
+info <- read_csv("simulation_data/donut_info.csv")
 info <- info[,-1]
 
-data <- data %>%
-  left_join(info) 
-data <- data %>%
-  spread(key = scag_num, value = scagnostics, sep = "_")
-names(data)[7] <- "signal"
-names(data)
 ```
-
 
 RANDOM FOREST
 ```{r}
@@ -53,15 +47,48 @@ predictors <- names(data)
 predictors <- predictors[!predictors %in% c("ID","signal")]
 cv1 <- rfcv(data[,predictors], data$signal, cv.fold = 10)
 cv1$error.cv
- #The response has five or fewer unique values.  Are you sure you want to do regression?
 ```
+trying out bagging:
+```{r}
+forestModel <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, ntree=100, importance =T, mtre = 3)
+mean(forestModel$oob.times)
+importance(forestModel)
+
+varImpPlot(forestModel)
+data %>% mutate( prediction = predict(forestModel, type="response"), 
+                 probs = predict(forestModel, type="prob")[,2]) %>%
+  select(signal, prediction, probs) %>% head()
+
+
+predict_analysis <- data %>% 
+  mutate( prediction = predict(forestModel, type="response")) %>% 
+  group_by(signal, prediction) %>% 
+  summarize( n = n(), mean_scag_num_1 = mean(scag_num_1), mean_scag_num_2 = mean(scag_num_2),mean_scag_num_3 = mean(scag_num_3), mean_scag_num_4 = mean(scag_num_4), mean_scag_num_5 = mean(scag_num_5), mean_scag_num_6 = mean(scag_num_6), mean_scag_num_7 = mean(scag_num_7), mean_scag_num_8 = mean(scag_num_8), mean_scag_num_9 = mean(scag_num_9))
+
+importance(forestModel)
+```
+
+
+
+k-means
+```{r} 
+x <- data %>% select("scag_num_1", "scag_num_2", "scag_num_3", "scag_num_4", "scag_num_5", "scag_num_6", "scag_num_7", "scag_num_8", "scag_num_9")
+kmeans_out <- kmeans(x, 2)
+data$cluster <- kmeans_out$cluster - 1
+
+cluster_info <- data %>% group_by(signal) %>% summarize( mean_scag_num_1 = mean(scag_num_1), mean_scag_num_2 = mean(scag_num_2),mean_scag_num_3 = mean(scag_num_3), mean_scag_num_4 = mean(scag_num_4), mean_scag_num_5 = mean(scag_num_5), mean_scag_num_6 = mean(scag_num_6), mean_scag_num_7 = mean(scag_num_7), mean_scag_num_8 = mean(scag_num_8), mean_scag_num_9 = mean(scag_num_9))
+
+
+```
+
+
 
 LOGISTIC REGRESSION:
 ```{r}
 glmScag <- glm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, family = "binomial")
 
 summary(glmScag)
-#doesn't work, perfect seperation
+
 glm.probs <- predict(glmScag,type="response")
 
 data$predictions <- ifelse(glm.probs < .5, 0, 1)
@@ -95,7 +122,6 @@ for (i in seq_len(k)) {
   for(test_k in 1:100){
     knn_predict <- knn(train_data[,4:12], test_data[,4:12], train_data$signal, k = test_k)
     predict_table <- table(knn_predict, test_data$signal)
-    print(predict_table)
     knn_accuracy[test_k] <- (predict_table[1,1]+predict_table[2,2])/sum(predict_table)
   }
   knn_best_accuracy <- max(knn_accuracy) 
