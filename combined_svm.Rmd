@@ -20,10 +20,11 @@ library(scagnostics)
 library(caret)
 library(boot)
 library(e1071)
+library(partykit)
 ```
 
 ```{r}
-data <- read.csv('command_files/combined_scagnostics.csv')
+data <- read.csv('simulation_data/combined_scagnostics.csv')
 
 ```
 
@@ -48,8 +49,32 @@ test$svm.probs <- new
 test$svm.preds <- ifelse(new < .5, 0, 1)
 
 mean(test$signal == test$svm.preds)
+```
+
+```{r}
+data$model_type <- data$model
+data$model_type <- as.character(data$model_type)
+data$model_type <- ifelse(data$signal == 0, "null", data$model_type) 
+data$model_type_fac <- as.factor(data$model_type)
 
 
+train_ind <- sample(seq_len(nrow(data)), size = 20000)
+train <- data[train_ind, ]
+test <- data[-train_ind, ] 
+
+svm.2 <- randomForest(train$model_type_fac ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train, probability = T)
 
 
+```
+
+
+```{r}
+scag_rpart <- rpart(train$model_type ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train)
+plot(as.party(scag_rpart), type = "simple")
+
+scag_randomForest <- randomForest(train$model_type_fac ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train)
+summary(scag_randomForest)
+
+test$preds <- predict(scag_randomForest, newdata = test)
+mean(test$preds == test$model_type_fac)
 ```
