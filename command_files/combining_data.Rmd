@@ -20,6 +20,7 @@ cluster$model <- "cluster"
 donut <- read_csv("simulation_data/donut_scagnostics.csv")
 donut <- donut[,-1]
 donut$model <- "donut"
+colnames(donut) <- colnames(cluster)
 
 exponential <- read_csv("simulation_data/Exponential_Scagnostics.csv")
 expo_info <- read_csv("simulation_data/Exponential_Info.csv")
@@ -86,10 +87,20 @@ timeseries <- timeseries %>%
   spread(key = scag_num, value = scagnostics, sep = "_")
 timeseries$signal <- timeseries_info$signal
 timeseries$model <- "timeseries"
+
+quadratic <- read_csv("simulation_data/quad_scagnostics.csv")
+quadratic <- quadratic[,-1]
+quadratic$model <- "quadratic"
+colnames(quadratic) <- colnames(cluster)
+index1 <- sample(x = 10000, size = 3000, replace = FALSE)
+index0 <- sample(x = 10001:20000, size = 3000, replace = FALSE)
+index = c(index1, index0)
+quadratic.samp <- quadratic[index,]
 ```
 
 ```{r}
-
+distribution_scagnostics <- rbind(cluster, quadratic.samp, exponential, funnel, linear, striated)
+write.csv(distribution_scagnostics, "combined_scagnostics.csv")
 ```
 
 
