@@ -27,7 +27,6 @@ data <- read_csv("simulation_data/Exponential_Scagnostics.csv")
 data <- data[,-1]
 info <- read_csv("simulation_data/Exponential_Info.csv")
 info <- info[,-1]
-info$signal <- ifelse(info$R == 0, 0, 1)
 data <- data %>%
   left_join(info) %>%
   select(ID, scag_num, scagnostics, signal)
@@ -45,10 +44,11 @@ forestModel
 plot(forestModel)
 
 #cross-validation
-predictors <- names(data)
-predictors <- predictors[!predictors %in% c("ID","signal")]
-cv1 <- rfcv(data[,predictors], data$signal, cv.fold = 10)
-cv1$error.cv
+#predictors <- names(data)
+#predictors <- predictors[!predictors %in% c("ID","signal")]
+#cv1 <- rfcv(data[,predictors], data$signal, cv.fold = 10)
+#cv1$error.cv
+tune.randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, ntree=100, importance =T)
 ```
 
 LOGISTIC REGRESSION:
@@ -64,16 +64,6 @@ mean(data$signal == data$predictions)
 
 #cross validation
 1-cv.glm(data, glmScag, K=10)$delta[1]
-
-##glmScag1 <- glm(signal ~ scag_num_1+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, family = "binomial")
-summary(glmScag1)
-anova(glmScag1, test = "Chisq")
-anova(glmScag1, glmScag, test = "Chisq")
-#plot(glmScag1)
-
-glmScag2 <- glm(signal ~ scag_num_3, data = data, family = "binomial")
-summary(glmScag2)
-anova(glmScag2, glmScag, test = "Chisq")
 ```
 
 K Nearest Neighbors
@@ -98,6 +88,7 @@ for (i in seq_len(k)) {
 }
 
 print(paste("Average Accuracy", mean(knn_cv_accuracy$accuracy)))
+tune.knn(data$scag_num_1+data$scag_num_2+data$scag_num_3+data$scag_num_4+data$scag_num_5+data$scag_num_6+data$scag_num_7+data$scag_num_8+data$scag_num_9, as.factor(data$signal))
 ```
 
 LDA-QDA
@@ -117,8 +108,9 @@ for (i in seq_len(k)) {
   lda_cv_accuracy[i] <- mean(predictions_LDA$class == predictions_LDA$signal)
 }
 print(paste("Average Accuracy", mean(lda_cv_accuracy$accuracy)))
+```
 
-
+```{r}
 #####
 #QDA Models
 #####
@@ -132,31 +124,12 @@ for (i in seq_len(k)) {
   test_data <- filter(data, folds == i)
 
   model_QDA1 <- qda(train_data$signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data)
-
-
+  
   predictions_QDA1 <- data.frame(predict(model_QDA1, test_data))
   predictions_QDA1 <- cbind(test_data, predictions_QDA1)
   qda1_cv_accuracy[i] <- mean(predictions_QDA1$class == predictions_QDA1$signal)
 }
 print(paste("Average Accuracy", mean(qda1_cv_accuracy$accuracy)))
-
-#QDA using only monotonic as a predictor
-k <- 5
-folds <- cut(sample(seq_len(nrow(data))),  breaks=k, labels=FALSE) 
-qda2_cv_accuracy <- data.frame(accuracy=numeric(5), stringsAsFactors = FALSE)
-
-for (i in seq_len(k)) {
-  train_data <- filter(data, folds != i) 
-  test_data <- filter(data, folds == i)
-
-  model_QDA2 <- qda(train_data$signal~scag_num_9, data = train_data)
-
-
-  predictions_QDA2 <- data.frame(predict(model_QDA2, test_data))
-  predictions_QDA2 <- cbind(test_data, predictions_QDA2)
-  qda2_cv_accuracy[i] <- mean(predictions_QDA2$class == predictions_QDA2$signal)
-}
-print(paste("Average Accuracy", mean(qda2_cv_accuracy$accuracy)))
 ```
 
 SVM
@@ -168,9 +141,5 @@ svm.probs <- predict(svmModel,type="response")
 data$svmpredictions <- ifelse(svm.probs < .5, 0, 1)
 mean(data$signal == data$svmpredictions)
 
-#figure out how to cross validate svm?
-```
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+tune.svm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data)
 ```
