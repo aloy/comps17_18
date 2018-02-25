@@ -213,6 +213,8 @@ mean(TS_final.prediction == info$signal)
 tc = tune.control(cross = 10)
 test <- tune.svm(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, tunecontrol = tc)
 test2 <- tune.randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, tunecontrol = tc)
+test3 <- tune.knn(y = as.factor(data$signal), x = data$scag_num_1+data$scag_num_2+data$scag_num_3+data$scag_num_4+data$scag_num_5+data$scag_num_6+data$scag_num_7+data$scag_num_8+data$scag_num_9, tunecontrol = tc)
+
 ```
 
 
