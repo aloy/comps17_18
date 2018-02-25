@@ -139,6 +139,7 @@ poor_predict_rf <- info[which(TS_rf.predict != info$signal),]
 
 ###Predict command returns perfect predictions, need to fix
 
+
 TS_rf.test <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, ntree=100, importance =T)
 
 TS_rf.pred <- predict(TS_rf.test, type = "response")
@@ -207,6 +208,13 @@ for(i in 1:3600){
 mean(TS_final.prediction == info$signal)
 #77.3% Accuracy for aggregate model
 ```
+```{r}
+#Testing out the tune package
+tc = tune.control(cross = 10)
+test <- tune.svm(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, tunecontrol = tc)
+test2 <- tune.randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, tunecontrol = tc)
+```
+
 
 
 

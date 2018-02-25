@@ -135,6 +135,11 @@ mean(info$signal == LinRes_rf.predict2)
 poor_predict_rf <- info[which(LinRes_rf.predict != info$signal),]
 #Perfect prediction?
 
+tc <- tune.control(cross = 10)
+LinRes_rf.tune <- tune.randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, tunecontrol = tc)
+LinRes_rf.predictions <- predict(LinRes_rf.tune$best.model, type = "response")
+
+
 LinRes_rf.test <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, ntree=100, importance =T)
 
 LinRes_rf.pred <- predict(LinRes_rf.test, type = "response")
@@ -168,6 +173,10 @@ LinRes_svm.test <- svm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag
 LinRes_svm.probs <- predict(LinRes_svm.test, type = "response")
 LinRes_svm.pred <- ifelse(LinRes_svm.probs < .5, 0, 1) 
 LinRes_all_predicts$svm.pred <- LinRes_svm.pred
+
+
+test <- tune.svm(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, tunecontrol = tc)
+#Accuracy of 97.3%
 ```
 
 
