@@ -19,7 +19,6 @@ library(tidyr)
 library(scagnostics)
 library(caret)
 library(boot)
-install.packages("e1071")
 library(e1071)
 ```
 
@@ -60,7 +59,12 @@ varImpPlot(forestModel)
 data <- data %>% mutate( prediction = predict(forestModel, type="response"), 
                  probs = predict(forestModel, type="prob")[,2])
 
-misplaced <- data %>% filter(prediction != signal)
+mid_prob <- data %>% filter(probs > 0.3 & probs < 0.7)  %>% select(ID, signal, prediction, probs)
+
+misplaced <- data %>% filter(prediction != signal) %>% left_join(info) %>% mutate(ratio = abs(sd/b)) %>% select(ID, signal, prediction, probs, N, a, b, sd, ratio)
+
+info <- info %>% mutate(ratio = abs(sd/b) )
+data %>% left_join(info) %>% group_by(prediction, signal, N) %>% summarize(mean_ratio = mean(ratio), n = n())
 
 predict_analysis <- data %>% 
   mutate( prediction = predict(forestModel, type="response")) %>% 
@@ -69,8 +73,32 @@ predict_analysis <- data %>%
 
 importance(forestModel)
 ```
+
+
+
+
 ```{r}
-plots <- read.csv('Users/sophiegunn/Desktop/School Work/winter/comps/too big')
+plots <- read.csv('/Users/sophiegunn/Desktop/SchoolWork/winter/comps/toobig/quad_plots.csv')
+misplaced_plots <- plots %>% filter(ID %in% misplaced$ID) 
+
+misplaced_plots %>% filter(ID == misplaced$ID[6]) %>% ggplot(aes (x = x, y = y)) + geom_point()
+
+#very bad, why prob of 0?
+misplaced_plots %>% filter(ID == 4025) %>% ggplot(aes (x = x, y = y)) + geom_point()
+
+#curious about which one predicted signal but didn't have any:
+
+misplaced_plots %>% filter(ID == 12632) %>% ggplot(aes (x = x, y = y)) + geom_point()
+misplaced_plots %>% filter(ID == 6855) %>% ggplot(aes (x = x, y = y)) + geom_point()
+misplaced_plots %>% filter(ID == 1735) %>% ggplot(aes (x = x, y = y)) + geom_point()
+
+
+
+#okay what about increasing threshold above 50%?
+treeModel1 <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, ntree=100, importance =T, mtre = 3, cutoff = c(0.55, 0.45))
+treeModel1
+forestModel
+
 
 ```
 
@@ -101,27 +129,22 @@ anova(glmScag2, glmScag, test = "Chisq")
 
 K Nearest Neighbors
 ```{r}
-k <- 5
-folds <- cut(sample(seq_len(nrow(data))),  breaks=k, labels=FALSE) 
-knn_cv_accuracy <- data.frame(k=numeric(5), accuracy=numeric(5), stringsAsFactors = FALSE)
+train_ind <- sample(seq_len(nrow(data)), size = 16000)
+train <- data[train_ind, ]
+test <- data[-train_ind, ] 
 
-for (i in seq_len(k)) {
-  train_data <- filter(data, folds != i) 
-  test_data <- filter(data, folds == i)
+quad_knn <-  knn(train, test, cl= data$signal[train_ind], k=3)
 
-  knn_accuracy <- numeric(100)
-  for(test_k in 1:100){
-    knn_predict <- knn(train_data[,4:12], test_data[,4:12], train_data$signal, k = test_k)
-    predict_table <- table(knn_predict, test_data$signal)
-    knn_accuracy[test_k] <- (predict_table[1,1]+predict_table[2,2])/sum(predict_table)
-  }
-  knn_best_accuracy <- max(knn_accuracy) 
-  knn_best_k <- min(as.numeric(which(knn_accuracy == max(knn_accuracy))))
-  knn_cv_accuracy[i,] = c(knn_best_k, knn_best_accuracy)
-}
+test <- data_frame(y=data$signal[-train_ind],prediction = quad_knn)
 
-print(paste("Average Accuracy", mean(knn_cv_accuracy$accuracy)))
+test %>% summarize(accuracy = mean(prediction == y), sensitivity = sum(prediction == 1 & y == 1)/sum(y == 1), specificity = sum(prediction == 0 & y == 0)/sum(y == 0))
+
+quad_knn.cv <- knn.cv(data, cl= data$signal, k=10)
+test <- data_frame(y=data$signal[-train_ind],prediction = quad_knn.cv)
+
+test %>% summarize(accuracy = mean(prediction == y),   sensitivity = sum(prediction == 1 & y == 1)/sum(y == 1), specificity = sum(prediction == 0 & y == 0)/sum(y == 0))
 ```
+somehow perfect?
 
 LDA-QDA
 ```{r}
@@ -184,12 +207,37 @@ print(paste("Average Accuracy", mean(qda2_cv_accuracy$accuracy)))
 
 SVM
 ```{r}
-svmModel <- svm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data)
-summary(svmModel)
-svm.probs <- predict(svmModel,type="response")
+quad_svm <- tune.svm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, cost = c(0.5, 0.6, 0.7, 0.8), tunecontrol=tune.control(cross=10))
 
-data$svmpredictions <- ifelse(svm.probs < .5, 0, 1)
-mean(data$signal == data$svmpredictions)
+summary(quad_svm)
+svm.probs <- predict(quad_svm$best.model,type="response")
+plot(svm.probs)
+summary(svm.probs)
 
-#figure out how to cross validate svm?
+train_ind <- sample(seq_len(nrow(data)), size = 16000)
+train <- data[train_ind, ]
+test <- data[-train_ind, ] 
+
+summary(quad_svm)
+
+quad_svm_simple <- svm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train, probability = T)
+
+summary(quad_svm_simple )
+new <- predict(quad_svm_simple, test, decision.values = TRUE, probability = TRUE)
+
+svm.probs <- predict(quad_svm_simple,type="response")
+data$svm.probs <- predict(quad_svm_simple,type="response")
+test$svm.preds <- ifelse(new < .5, 0, 1)
+mean(test$signal == test$svm.preds)
+summary(quad_svm_simple)
+
+```
+
+
+following lab!
+```{r}
+set.seed(1)
+tune.out <- tune.svm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data=data , cost=c(0.001, 0.01, 0.1, 1,5,10,100) )
+
+
 ```
