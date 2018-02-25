@@ -39,7 +39,7 @@ scags <- scags %>%
 
 #Logistic Model
 ```{r}
-QQ.glm <- glm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = scags, family = "binomial")
+QQ.glm <- glm(as.factor(signal) ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + N, data = scags, family = "binomial")
 
 scags <- scags %>% 
   mutate(probs = predict(QQ.glm, type="response"), prediction.glm = ifelse(probs >= 0.5, "Signal", "Noise") )
@@ -55,6 +55,8 @@ glm.results <- scags %>% summarize(accuracy = mean(signal == prediction.glm), pr
 cost <- function(y, pi){mean(abs(y-pi) > 0.5)}
 cv.glm1 <- cv.glm(scags, QQ.glm, cost, K = 10)
 (accuracy <- 1- cv.glm1$delta[1])
+
+
 ```
 
 It looks like we have cross-validated accuracy of `r accuracy`
@@ -69,12 +71,19 @@ QQ.rf
 plot(QQ.rf)
 
 #cross-validation
-predictors <- names(scags)
-predictors <- predictors[!predictors %in% c("ID","signal", "distribution", "N", "probs", "prediction")]
+predictors <- c("scag_num_1", "scag_num_2", "scag_num_3", "scag_num_4", "scag_num_5", "scag_num_6", "scag_num_7", "scag_num_8", "scag_num_9")
 #not working :(
-#cv.rf1 <- rfcv(scags[,predictors], scags$signal, cv.fold = 2)
-cv.rf1
+cv.rf1 <- rfcv(scags[,predictors], as.factor(scags$signal), cv.fold = 5)
+cv.rf1$error.cv
+
+
+#Tune the model
+
+QQ.rf2 <- tune.randomForest()
 ```
+
+Cross validated error rate of 20.9%
+
 
 #LDA and QDA
 ```{r}
