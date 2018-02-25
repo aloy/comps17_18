@@ -39,7 +39,7 @@ scags <- scags %>%
 
 #Logistic Model
 ```{r}
-QQ.glm <- glm(as.factor(signal) ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + N, data = scags, family = "binomial")
+QQ.glm <- glm(as.factor(signal) ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = scags, family = "binomial")
 
 scags <- scags %>% 
   mutate(probs = predict(QQ.glm, type="response"), prediction.glm = ifelse(probs >= 0.5, "Signal", "Noise") )
