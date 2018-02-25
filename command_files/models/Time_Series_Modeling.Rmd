@@ -32,6 +32,7 @@ data <- data %>%
 
 data <- merge(data, info[,c(1,7)], by.x = "ID", by.y = "ID")
 
+TS_all_predicts <- data.frame(ID = 1:3600, signal = data$signal, log.pred = numeric(3600), lda.pred = numeric(3600), knn.pred = numeric(3600), rf.pred = numeric(3600), svm.pred = numeric(3600))
 ```
 
 ```{r}
@@ -63,6 +64,7 @@ anova(TSglm, TSglm2, test = "Chisq")
 
 TSglm.probs2 <- predict(TSglm2,type="response")
 TSglm.predictions2 <- ifelse(TSglm.probs2 < .5, 0, 1)
+TS_all_predicts$log.pred <- TSglm.predictions2
 mean(info$signal == TSglm.predictions2)
 # 77.6% accuracy
 
@@ -77,11 +79,13 @@ poor_predict_glm <- info[which(TSglm.predictions != info$signal),]
 #LDA and QDA Models
 #####
 
-TS_control <- trainControl(method = "cv", number = 10, classProbs = TRUE)
+TS_control <- trainControl(method = "cv", number = 10, classProbs = TRUE, returnData = TRUE)
 
-TS_LDA <- train(as.factor(signal)~.-ID, data = data, method = "lda", trControl = TS_control)
+TS_LDA <- train(make.names(as.factor(signal))~.-ID, data = data, method = "lda", trControl = TS_control)
 TS_LDA.predict <- predict(TS_LDA, type = "raw")
-mean(info$signal == TS_LDA.predict)
+TS_LDA.predict2 <- ifelse(TS_LDA.predict == "X0", 0, 1)
+TS_all_predicts$lda.pred <- TS_LDA.predict2
+mean(info$signal == TS_LDA.predict2)
 # 77.0% accuracy
 
 poor_predict_LDA <- info[which(TS_LDA.predict != info$signal),]
@@ -112,6 +116,7 @@ TS_knn
 
 TS_knn.predict <- predict(TS_knn, type = "raw")
 TS_knn.predict2 <- ifelse(TS_knn.predict == "X0", 0, 1)
+TS_all_predicts$knn.pred <- TS_knn.predict2
 poor_predict_knn <- info[which(TS_knn.predict2 != info$signal),]
 
 ###796 Total Errors - 16 ARMA, 47 AR, 105 MA, 628 WN
@@ -127,15 +132,20 @@ TS_rf <- train(make.names(as.factor(signal))~.-ID, data = data, method = "rf", t
 TS_rf
 # 77.3% accuracy
 
-
-TS_rf.predict <- predict(TS_rf, type = "raw")
+TS_rf.probs <- predict(TS_rf, type = "prob")
+TS_rf.predict <- ifelse(TS_rf.probs$X0 > .5, 0, 1)
 TS_rf.predict2 <- ifelse(TS_rf.predict == "X0", 0, 1)
-poor_predict_rf <- info[which(TS_rf.predict2 != info$signal),]
+poor_predict_rf <- info[which(TS_rf.predict != info$signal),]
 
 ###Predict command returns perfect predictions, need to fix
 
+TS_rf.test <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, ntree=100, importance =T)
+
+TS_rf.pred <- predict(TS_rf.test, type = "response")
+TS_all_predicts$rf.pred <- TS_rf.pred
 
 #Using randomForest
+
 
 k <- 10
 folds <- cut(sample(seq_len(nrow(data))),  breaks=k, labels=FALSE) 
@@ -148,9 +158,11 @@ for (i in seq_len(k)) {
   TS_rf.model <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data, ntree=100, importance =T)
 
   TS_rf.predict <- predict(TS_rf.model, test_data)
+  agg.predict[,i] <- ifelse(TS_rf.predict == 1, 0, 1)
   TS_rf.accuracy[i,] <- mean(info$signal == TS_rf.predict)
 }
 mean(TS_rf.accuracy[,1])
+
 #Accuracy ~66%
 ```
 
@@ -174,6 +186,26 @@ for (i in seq_len(k)) {
 }
 mean(TS_svm.accuracy[,1])
 #Accuracy ~74%
+
+TS_svm.test <- svm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data)
+TS_svm.probs <- predict(TS_svm.test, type = "response")
+TS_svm.pred <- ifelse(TS_svm.probs < .5, 0, 1) 
+TS_all_predicts$svm.pred <- TS_svm.pred
+```
+
+```{r}
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+TS_final.prediction <- as.vector(1:3600)
+for(i in 1:3600){
+  TS_final.prediction[i] <- Mode(TS_all_predicts[i,3:7])
+}
+
+mean(TS_final.prediction == info$signal)
+#77.3% Accuracy for aggregate model
 ```
 
 

@@ -31,6 +31,7 @@ data <- data %>%
 
 data$signal <- info$signal
 
+LinRes_all_predicts <- data.frame(ID = 1:7500, signal = data$signal, log.pred = numeric(7500), lda.pred = numeric(7500), knn.pred = numeric(7500), rf.pred = numeric(7500), svm.pred = numeric(7500))
 ```
 
 ```{r}
@@ -62,6 +63,7 @@ anova(LinRes_glm, LinRes_glm2, test = "Chisq")
 
 LinRes_glm.probs2 <- predict(LinRes_glm2,type="response")
 LinRes_glm.predictions2 <- ifelse(LinRes_glm.probs2 < .5, 0, 1)
+LinRes_all_predicts$log.pred <- LinRes_glm.predictions2
 mean(info$signal == LinRes_glm.predictions2)
 # 97.1% accuracy
 
@@ -82,6 +84,8 @@ LinRes_LDA
 # 96.8% accuracy
 
 LinRes_LDA.predict <- predict(LinRes_LDA, type = "raw")
+LinRes_LDA.predict2 <- ifelse(LinRes_LDA.predict == "X0", 0, 1)
+LinRes_all_predicts$lda.pred <- LinRes_LDA.predict2
 poor_predict_LDA <- info[which(LinRes_LDA.predict != info$signal),]
 #This EDA doesn't work, need to fix (change factor names)
 
@@ -106,6 +110,8 @@ LinRes_knn
 #97.2% accuracy
 
 LinRes_knn.predict <- predict(LinRes_knn, type = "raw")
+LinRes_knn.predict2 <- ifelse(LinRes_knn.predict == "X0", 0, 1)
+LinRes_all_predicts$knn.pred <- LinRes_knn.predict2
 poor_predict_knn <- info[which(LinRes_knn.predict != info$signal),]
 #Need to change factor names
 
@@ -124,9 +130,15 @@ LinRes_rf
 # 97.2% accuracy
 
 LinRes_rf.predict <- predict(LinRes_rf, type = "raw")
-mean(info$signal == LinRes_rf.predict)
+LinRes_rf.predict2 <- ifelse(LinRes_rf.predict == "X0", 0, 1)
+mean(info$signal == LinRes_rf.predict2)
 poor_predict_rf <- info[which(LinRes_rf.predict != info$signal),]
-#Need to change factor names
+#Perfect prediction?
+
+LinRes_rf.test <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, ntree=100, importance =T)
+
+LinRes_rf.pred <- predict(LinRes_rf.test, type = "response")
+LinRes_all_predicts$rf.pred <- LinRes_rf.pred
 
 ```
 
@@ -151,4 +163,27 @@ for (i in seq_len(k)) {
 mean(LinRes_svm.accuracy[,1])
 #Accuracy ~59.3%
 #Not sure if methodology is sound here, accuracy seems too low
+
+LinRes_svm.test <- svm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data)
+LinRes_svm.probs <- predict(LinRes_svm.test, type = "response")
+LinRes_svm.pred <- ifelse(LinRes_svm.probs < .5, 0, 1) 
+LinRes_all_predicts$svm.pred <- LinRes_svm.pred
 ```
+
+
+```{r}
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+LinRes_final.prediction <- as.vector(1:7500)
+for(i in 1:7500){
+  LinRes_final.prediction[i] <- Mode(LinRes_all_predicts[i,3:7])
+}
+
+mean(LinRes_final.prediction == info$signal)
+#97.2% Accuracy for aggregate model
+```
+```
+
