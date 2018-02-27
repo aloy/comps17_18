@@ -1,0 +1,28 @@
+---
+title: "Untitled"
+author: "Cari Comnick"
+date: "2/27/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(nullabor)
+library(ggplot2)
+library(dplyr)
+
+d <- lineup(null_permute("mpg"), mtcars)
+head(d)
+attr(d, "pos")
+qplot(mpg, wt, data = d) + facet_wrap(~ .sample)
+
+x <- rnorm(100)
+y <- x+runif(100,-1,1)
+dat <- data.frame(x,y)
+d <- lineup(null_permute("y"),dat)
+attr(d, "pos")
+qplot(y, x, data = d) + facet_wrap(~ .sample)
+```
