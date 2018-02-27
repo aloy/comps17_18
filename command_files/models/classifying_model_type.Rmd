@@ -39,6 +39,7 @@ train_ind <- sample(seq_len(nrow(data)), size = 20000)
 train <- data[train_ind, ]
 test <- data[-train_ind, ] 
 
+table(data$model_type)
 ```
 
 ```{r}
@@ -47,6 +48,7 @@ plot(as.party(scag_rpart), type = "simple")
 
 scag_randomForest <- randomForest(train$model_type_fac ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train)
 summary(scag_randomForest)
+scag_randomForest$votes
 
 test$preds <- predict(scag_randomForest, newdata = test)
 mean(test$preds == test$model_type_fac)
@@ -54,6 +56,8 @@ mean(test$preds == test$model_type_fac)
 failed <- test %>% filter(test$preds != test$model_type_fac)
 
 failed %>% group_by(preds, model_type_fac) %>% select(preds, model_type_fac) %>% table()
+
+
 ```
 
 ```{r}
@@ -68,9 +72,15 @@ test <- without_funnel[-train_ind, ]
 scag_randomForest_wo <- randomForest(train$model_type_fac ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train, ntree = 400, mtry = 3)
 
 test$preds <- predict(scag_randomForest_wo, newdata = test)
+
 mean(test$preds == test$model_type_fac)
 
 failed <- test %>% filter(test$preds != test$model_type_fac)
 
 failed %>% group_by(preds, model_type_fac) %>% select(preds, model_type_fac) %>% table()
 ```
+
+
+How to confuse it:
+linear heteroskedascity
+check medium vs strong correlation for linear trend

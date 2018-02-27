@@ -1,0 +1,14 @@
+meeting feb 27:
+
+moving into line-up!
+
+next steps:
+
+first start with our already simulated data, making lineups
+using supervised to classify based on probabilities (maybe first start with already constructed models)
+
+different approaches to line up:
+using existing models to classify probs and use probs to decide interesting
+	but we want to use our other models that don't give us probs
+look at all 20 plots at once, decide most different,
+find some measure of center of scagnostics, and decide how far from mean
