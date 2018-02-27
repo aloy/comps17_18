@@ -13,11 +13,12 @@ knitr::opts_chunk$set(echo = TRUE)
 library(nullabor)
 library(ggplot2)
 library(dplyr)
+library(scagnostics)
 
-d <- lineup(null_permute("mpg"), mtcars)
-head(d)
-attr(d, "pos")
-qplot(mpg, wt, data = d) + facet_wrap(~ .sample)
+#d <- lineup(null_permute("mpg"), mtcars)
+#head(d)
+#attr(d, "pos")
+#qplot(mpg, wt, data = d) + facet_wrap(~ .sample)
 
 x <- rnorm(100)
 y <- x+runif(100,-1,1)
@@ -25,4 +26,20 @@ dat <- data.frame(x,y)
 d <- lineup(null_permute("y"),dat)
 attr(d, "pos")
 qplot(y, x, data = d) + facet_wrap(~ .sample)
+
+dscags <- matrix(ncol=9,nrow=20)
+for (i in 1:20){
+  plot <- d[which(d$.sample == i),1:2]
+  scags <- scagnostics(plot)
+  dscags[i,] <- scags
+}
+#dscags <- as.data.frame(dscags)
+
+#choose one furthest away from mean
+means <- colMeans(dscags)
+x <- NULL
+for (i in 1:20){
+  x <- c(x, (dist(rbind(dscags[i,],means))))
+}
+which(x == max(x))
 ```
