@@ -39,6 +39,7 @@ train_ind <- sample(seq_len(nrow(data)), size = 20000)
 train <- data[train_ind, ]
 test <- data[-train_ind, ] 
 
+table(data$model_type)
 ```
 
 ```{r}
@@ -54,6 +55,8 @@ mean(test$preds == test$model_type_fac)
 failed <- test %>% filter(test$preds != test$model_type_fac)
 
 failed %>% group_by(preds, model_type_fac) %>% select(preds, model_type_fac) %>% table()
+
+
 ```
 
 ```{r}
@@ -74,3 +77,8 @@ failed <- test %>% filter(test$preds != test$model_type_fac)
 
 failed %>% group_by(preds, model_type_fac) %>% select(preds, model_type_fac) %>% table()
 ```
+
+
+How to confuse it:
+linear heteroskedascity
+check medium vs strong correlation for linear trend
