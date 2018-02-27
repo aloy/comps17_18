@@ -10,10 +10,14 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
+library(MASS)
+library(dplyr)
 library(tidyverse)
 library(boot)
 library(ggplot2)
 library(randomForest)
+library(caret)
+library(e1071)
 ```
 
 
@@ -28,36 +32,37 @@ scags <- info %>%
   right_join(scags)
 
 scags <- scags %>%
-  mutate(signal = ifelse(distribution == "Normal", 0, 1)) %>%
+  mutate(signal = ifelse(distribution == "Normal", "Noise", "Signal")) %>%
   spread(key = scag_num, value = scagnostics, sep = "_")
 
 ```
 
 #Logistic Model
 ```{r}
-QQ.glm <- glm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = scags, family = "binomial")
+QQ.glm <- glm(as.factor(signal) ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = scags, family = "binomial")
 
 scags <- scags %>% 
-  mutate(probs = predict(QQ.glm, type="response"), prediction = ifelse(probs >= 0.5, 1, 0) )
+  mutate(probs = predict(QQ.glm, type="response"), prediction.glm = ifelse(probs >= 0.5, "Signal", "Noise") )
 
 scags %>% 
-  ggplot(aes(x=probs, color= ifelse(signal == 1, "Not Normal", "Normal"))) + 
+  ggplot(aes(x=probs, color= signal)) + 
   geom_density() + ggtitle("Forecasted Signal Probabilities") +
   geom_vline(xintercept = 0.5)
 
-scags %>% summarize(accuracy = mean(signal == prediction), precision = sum(signal == 1 &  prediction == 1)/sum(prediction == 1), sensitivity = sum(signal == 1 & prediction == 1)/sum(signal == 1), specificity = sum(signal == 0 & prediction == 0)/sum(signal == 0)) 
+glm.results <- scags %>% summarize(accuracy = mean(signal == prediction.glm), precision = sum(signal == "Signal" &  prediction.glm == "Signal")/sum(prediction.glm == "Signal"), sensitivity = sum(signal == "Signal" & prediction.glm == "Signal")/sum(signal == "Signal"), specificity = sum(signal == "Noise" & prediction.glm == "Noise")/sum(signal == "Noise")) 
 
 #Cross-validate
 cost <- function(y, pi){mean(abs(y-pi) > 0.5)}
 cv.glm1 <- cv.glm(scags, QQ.glm, cost, K = 10)
 (accuracy <- 1- cv.glm1$delta[1])
+
+
 ```
 
 It looks like we have cross-validated accuracy of `r accuracy`
 
 #random forest
 ```{r}
-library(MASS)
 QQ.rf <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = scags, ntree=100, importance =T)
 
 QQ.rf
@@ -66,8 +71,60 @@ QQ.rf
 plot(QQ.rf)
 
 #cross-validation
-predictors <- names(scags)
-predictors <- predictors[!predictors %in% c("ID","signal", "distribution", "N", "probs", "prediction")]
-cv.rf1 <- rfcv(scags[,predictors], scags$signal, cv.fold = 10)
-cv.rf1
+predictors <- c("scag_num_1", "scag_num_2", "scag_num_3", "scag_num_4", "scag_num_5", "scag_num_6", "scag_num_7", "scag_num_8", "scag_num_9")
+#not working :(
+cv.rf1 <- rfcv(scags[,predictors], as.factor(scags$signal), cv.fold = 5)
+cv.rf1$error.cv
+
+
+#Tune the model
+
+QQ.rf2 <- tune.randomForest()
 ```
+
+Cross validated error rate of 20.9%
+
+
+#LDA and QDA
+```{r}
+
+QQ.control <- trainControl(method = "cv", number = 10, classProbs = TRUE)
+
+QQ.lda <- train(as.factor(signal)~ scag_num_1 +scag_num_2+ scag_num_3+ scag_num_4+ scag_num_5+ scag_num_6+ scag_num_7+ scag_num_8+scag_num_9 , data = scags, method = "lda", trControl = QQ.control)
+
+scags$prediction.lda <- predict(QQ.lda, type = "raw")
+
+lda.results <- scags %>% summarize(accuracy = mean(signal == prediction.lda), precision = sum(signal == "Signal" &  prediction.lda == "Signal")/sum(prediction.lda == "Signal"), sensitivity = sum(signal == "Signal" & prediction.lda == "Signal")/sum(signal == "Signal"), specificity = sum(signal == "Noise" & prediction.lda == "Noise")/sum(signal == "Noise")) 
+
+#Note that we have 85% specificity, so we do a pretty good job of correctly identifying normal plots
+#82.6% of our signal predictions were correct.
+#We only pick out 69% of the total signal plots
+
+QQ.qda <- train(as.factor(signal)~ scag_num_1 +scag_num_2+ scag_num_3+ scag_num_4+ scag_num_5+ scag_num_6+ scag_num_7+ scag_num_8+scag_num_9 , data = scags, method = "qda", trControl = QQ.control)
+
+scags$prediction.qda <- predict(QQ.qda, type = "raw")
+
+qda.results <- scags %>% summarize(accuracy = mean(signal == prediction.qda), precision = sum(signal == "Signal" &  prediction.qda == "Signal")/sum(prediction.qda == "Signal"), sensitivity = sum(signal == "Signal" & prediction.qda == "Signal")/sum(signal == "Signal"), specificity = sum(signal == "Noise" & prediction.qda == "Noise")/sum(signal == "Noise")) 
+
+#QDA has worse sensitivity (63.3% vs. 68.8%) and accuracy (75.6% vs. 77.2%)
+#Better precision and specificity
+
+```
+
+#K-nn
+```{r}
+QQ.control <- trainControl(method = "cv", number = 10, classProbs = TRUE)
+
+QQ.knn <- train(as.factor(signal)~ scag_num_1 +scag_num_2+ scag_num_3+ scag_num_4+ scag_num_5+ scag_num_6+ scag_num_7+ scag_num_8+scag_num_9 , data = scags, method = "knn", trControl = QQ.control, tuneGrid = expand.grid(k = 1:25), metric = "Accuracy")
+
+QQ.knn
+
+scags$prediction.knn <- predict(QQ.knn, type = "raw")
+
+knn.results <- scags %>% summarize(accuracy = mean(signal == prediction.knn), precision = sum(signal == "Signal" &  prediction.knn == "Signal")/sum(prediction.knn == "Signal"), sensitivity = sum(signal == "Signal" & prediction.knn == "Signal")/sum(signal == "Signal"), specificity = sum(signal == "Noise" & prediction.knn == "Noise")/sum(signal == "Noise")) 
+
+#Our precision is really really good (93%)
+#accuracy is slightly better than QDA, but similar to other models
+
+```
+
