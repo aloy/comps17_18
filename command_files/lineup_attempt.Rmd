@@ -1,0 +1,21 @@
+---
+title: "lineup_attempt"
+author: "Sophie Gunn"
+date: "February 26, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+install.packages('nullabor')
+library(nullabor)
+library(tidyverse)
+library(ggplot2)
+
+data <- read_csv("simulation_data/quad_scagnostics.csv")
+plots <- read.csv('/Users/sophiegunn/Desktop/SchoolWork/comps/toobig/quad_plots.csv')
+plots %>% filter(ID == 200) %>% ggplot(aes (x = x, y = y)) + geom_point()
+```

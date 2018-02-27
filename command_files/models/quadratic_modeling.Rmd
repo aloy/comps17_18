@@ -78,7 +78,7 @@ importance(forestModel)
 
 
 ```{r}
-plots <- read.csv('/Users/sophiegunn/Desktop/SchoolWork/winter/comps/toobig/quad_plots.csv')
+plots <- read.csv('/Users/sophiegunn/Desktop/SchoolWork/comps/toobig/quad_plots.csv')
 misplaced_plots <- plots %>% filter(ID %in% misplaced$ID) 
 
 misplaced_plots %>% filter(ID == misplaced$ID[6]) %>% ggplot(aes (x = x, y = y)) + geom_point()

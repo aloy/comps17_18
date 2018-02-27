@@ -1,5 +1,5 @@
 ---
-title: "working with combined"
+title: "classifying_model_type"
 author: "Sophie Gunn"
 date: "February 25, 2018"
 output: html_document
@@ -8,7 +8,6 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
 
 ```{r}
 library(MASS)
@@ -28,28 +27,6 @@ data <- read.csv('simulation_data/combined_scagnostics.csv')
 
 ```
 
-SVM:
-```{r}
-svm.1 <- svm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data)
-
-train_ind <- sample(seq_len(nrow(data)), size = 20000)
-train <- data[train_ind, ]
-test <- data[-train_ind, ] 
-
-summary(svm.1)
-svm.2 <- svm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train)
-
-
-new <- predict(svm.2, test, decision.values = TRUE, probability = TRUE)
-
-svm.probs <- predict(svm.2,type="response")
-
-test$svm.probs <- new
-
-test$svm.preds <- ifelse(new < .5, 0, 1)
-
-mean(test$signal == test$svm.preds)
-```
 
 ```{r}
 data$model_type <- data$model
@@ -62,11 +39,7 @@ train_ind <- sample(seq_len(nrow(data)), size = 20000)
 train <- data[train_ind, ]
 test <- data[-train_ind, ] 
 
-svm.2 <- randomForest(train$model_type_fac ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train, probability = T)
-
-
 ```
-
 
 ```{r}
 scag_rpart <- rpart(train$model_type ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train)
@@ -76,6 +49,25 @@ scag_randomForest <- randomForest(train$model_type_fac ~ scag_num_1+scag_num_2+s
 summary(scag_randomForest)
 
 test$preds <- predict(scag_randomForest, newdata = test)
+mean(test$preds == test$model_type_fac)
+
+failed <- test %>% filter(test$preds != test$model_type_fac)
+
+failed %>% group_by(preds, model_type_fac) %>% select(preds, model_type_fac) %>% table()
+```
+
+```{r}
+without_funnel <- data %>% filter(model != "funnel")
+without_funnel$model_type_fac <- as.factor(without_funnel$model_type)
+without_funnel$model_type_fac #now no funnel
+
+train_ind <- sample(seq_len(nrow(without_funnel)), size = 20000)
+train <- without_funnel[train_ind, ]
+test <- without_funnel[-train_ind, ] 
+
+scag_randomForest_wo <- randomForest(train$model_type_fac ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train, ntree = 400, mtry = 3)
+
+test$preds <- predict(scag_randomForest_wo, newdata = test)
 mean(test$preds == test$model_type_fac)
 
 failed <- test %>% filter(test$preds != test$model_type_fac)
