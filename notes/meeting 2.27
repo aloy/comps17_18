@@ -12,3 +12,5 @@ using existing models to classify probs and use probs to decide interesting
 	but we want to use our other models that don't give us probs
 look at all 20 plots at once, decide most different,
 find some measure of center of scagnostics, and decide how far from mean
+
+
