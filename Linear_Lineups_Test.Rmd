@@ -133,10 +133,11 @@ cat("\nLOO Mahalanobis:", which(loo.maha == max(loo.maha)))
 #####
 #Testing all Prediction Methods
 #####
-R = 100
+R = 10000
 choices <- data.frame(correct.choice = numeric(R), eu.choice = numeric(R), maha.choice = numeric(R), qda.choice = numeric(R), logit.choice = numeric(R), loo.euclid = numeric(R), loo.maha = numeric(R))
 
 for(r in 1:R){
+  if (r%%100 == 0){print(r)}
   signal_scagnostics <- sample_n(signal, 1)
   null_scagnostics <- sample_n(null, 19)
   lineup_scagnostics <- rbind(signal_scagnostics, null_scagnostics)
@@ -175,6 +176,7 @@ for(r in 1:R){
   }
   choices$loo.euclid[r] <- which(loo.euclid == max(loo.euclid))
   choices$loo.maha[r] <- which(loo.maha == max(loo.maha))
+  
 }
 accuracy <- data.frame(Euclidean = mean(choices$eu.choice == choices$correct.choice), 
                        Mahalanobis = mean(choices$maha.choice == choices$correct.choice),
@@ -183,6 +185,28 @@ accuracy <- data.frame(Euclidean = mean(choices$eu.choice == choices$correct.cho
                        LOO.Euclidean = mean(choices$loo.euclid == choices$correct.choice),
                        LOO.Mahalanobis = mean(choices$loo.maha == choices$correct.choice))
 accuracy
+#EU - .581, MA - .857, QDA - .912, LOG - .936, LEU - .581, $LMA - 85.7
 ```
+NOTES:
+Testing various methods of finding most different plot in a 20 plot lineup.
 
+Method:
+Randomly sample 1 plot from "signal" set and 19 plots from "null" set. Each line-up was analyzed with both supervised and unsupervised methods
+-Supervised: Logistic and QDA Regression on all plots except for 20 included in line-up. Predictions were then gathered for lineup plots and the plot with the greatest probability of being "signal" was selected
+-Unsupervised: Mean of each scagnostic was calculated for the lineup plots. Each individual plot was compared to the means using both euclidean and mahalanobian distances. Plot with largest distance from the means was selected
+-Leave One Out: For each of the 20 lineup plots, mean values of each scagnostic were calculated on the other 19 plots. The distance between the left out plot and the means is calculated using euclidean and mahalanobian distances. Plot with the greatest distance from the mean values of the rest was selected
 
+Accuracy:
+10000 lineups were drawn, and a plot was chosen using each of the six above methods. The average number of plots correctly identified was calculated, and the results are given below.
+
+QDA Regression: 91.2% Accuracy
+Logistic Regression: 93.6% Accuracy
+Euclidean Distance: 58.1% Accuracy
+Mahalanobian Distance: 85.7% Accuracy
+LOO Euclidean Distance: 58.1% Accuracy
+LOO Mahalanobian Distance: 85.7% Accuracy
+
+Results:
+Leave-One-Out method does not seem to produce different results from using all 20 plots. 
+Supervised methods are much more accurate than unsupervised
+Euclidean distance is about as good as random guessing
