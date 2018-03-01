@@ -14,12 +14,10 @@ library(nullabor)
 library(ggplot2)
 library(dplyr)
 library(scagnostics)
+library(tidyverse)
+```
 
-#d <- lineup(null_permute("mpg"), mtcars)
-#head(d)
-#attr(d, "pos")
-#qplot(mpg, wt, data = d) + facet_wrap(~ .sample)
-
+```{r}
 x <- rnorm(100)
 y <- x+runif(100,-1,1)
 dat <- data.frame(x,y)
@@ -33,7 +31,6 @@ for (i in 1:20){
   scags <- scagnostics(plot)
   dscags[i,] <- scags
 }
-#dscags <- as.data.frame(dscags)
 
 #choose one furthest away from mean
 means <- colMeans(dscags)
@@ -42,4 +39,42 @@ for (i in 1:20){
   x <- c(x, (dist(rbind(dscags[i,],means))))
 }
 which(x == max(x))
+```
+
+Pull 20 random plots of a single type, 1 signal, 19 noise, see if means work
+```{r}
+setwd("~/Comps/comps17_18/simulation_data")
+scag <- read_csv("combined_scagnostics.csv")
+```
+
+```{r}
+n <- 1000
+sims <- matrix(ncol=n,nrow=6)
+
+for (a in 1:n){
+  each <- matrix(ncol=1,nrow=6)
+  for (i in 1:length(unique(scag$model))){
+    x1 <- which(scag$model == unique(scag$model)[i] & scag$signal == 1)
+    y <- which(scag$model == unique(scag$model)[i] & scag$signal == 0)
+    
+    null <- sample(y, 19, replace = FALSE)
+    signal <- sample(x1, 1, replace = FALSE)
+    
+    dat <- scag[c(null,signal),]
+    dscags <- as.matrix(dat[,4:12], ncol=9)
+    means <- colMeans(dscags)
+    x <- NULL
+    
+    for (j in 1:20){
+      x <- c(x, (dist(rbind(dscags[j,],means))))
+    }
+    each[i,1] <- which(x == max(x))
+  }
+  sims[,a] <- each[,1] 
+}
+
+#how good was it? really bad for funnel and linear
+for (k in 1:6){
+  print(length(which(sims[k,] == 20))/n)
+}
 ```
