@@ -15,9 +15,9 @@ library(ggplot2)
 library(dplyr)
 library(scagnostics)
 
-plots <- read_csv("simulation_data/linear_trend_plots.csv")
-info <- read_csv("simulation_data/linear_trend_info.csv")
-scagnostics <- read_csv("simulation_data/linear_wide_scagnostics.csv")
+plots <- read.csv("simulation_data/linear_trend_plots.csv")
+info <- read.csv("simulation_data/linear_trend_info.csv")
+scagnostics <- read.csv("simulation_data/linear_wide_scagnostics.csv")
 
 signal = subset(scagnostics, scagnostics$signal == 1)
 null = subset(scagnostics, scagnostics$signal == 0)
@@ -56,6 +56,8 @@ ggplot(lineup_plots, aes(x, y)) +
   geom_point() +
   facet_wrap(~ID, nrow = 4, labeller = label_context, scales = "free") 
 #Plots aren't scaled the same, difficult to visually identify "signal"
+
+cat("Different Plot:", lineup_plots$ID[1])
 ```
 
 
