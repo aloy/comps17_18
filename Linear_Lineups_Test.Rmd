@@ -1,0 +1,79 @@
+---
+title: "Linear_Lineups_Test"
+author: "Aidan Mullan"
+date: "2/28/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(nullabor)
+library(ggplot2)
+library(dplyr)
+library(scagnostics)
+
+plots <- read_csv("simulation_data/linear_trend_plots.csv")
+info <- read_csv("simulation_data/linear_trend_info.csv")
+scagnostics <- read_csv("simulation_data/linear_wide_scagnostics.csv")
+
+signal = subset(scagnostics, scagnostics$signal == 1)
+null = subset(scagnostics, scagnostics$signal == 0)
+```
+
+```{r}
+#Lineups by permuting signal data
+signal_scagnostics <- sample_n(signal, 1)
+signal_info <- subset(info, info$ID == signal_scagnostics$ID)
+signal_plot <- subset(plots, plots$ID == signal_scagnostics$ID)
+x <- signal_plot$x
+y <- signal_plot$y
+
+dat <- data.frame(x,y)
+d <- lineup(null_permute("y"),dat)
+attr(d, "pos")
+qplot(y, x, data = d) + facet_wrap(~ .sample)
+```
+
+```{r}
+#Lineups with 19 simulated noise and 1 simulated signal
+signal_scagnostics <- sample_n(signal, 1)
+signal_plot <- subset(plots, plots$ID == signal_scagnostics$ID)
+signal_info <- subset(info, info$ID == signal_scagnostics$ID)
+null_scagnostics <- sample_n(null, 19)
+null_plot <- subset(plots, plots$ID %in% null_scagnostics$ID)
+
+lineup_scagnostics <- rbind(signal_scagnostics, null_scagnostics)
+lineup_plots <- rbind(signal_plot, null_plot)
+lineup_plots$ID <- as.factor(lineup_plots$ID)
+levels(lineup_plots$ID) <- as.character(1:20)
+
+
+#To scale all plots, scales = "free" in facet_wrap
+ggplot(lineup_plots, aes(x, y)) +
+  geom_point() +
+  facet_wrap(~ID, nrow = 4, labeller = label_context, scales = "free") 
+#Plots aren't scaled the same, difficult to visually identify "signal"
+```
+
+
+
+
+```{r}
+lineup_scagnostics <- arrange(lineup_scagnostics, ID)
+dscags <- lineup_scagnostics[,4:12]
+means <- colMeans(dscags)
+
+#Euclidean distance
+eu_dists <- NULL
+for (i in 1:20){
+  eu_dists <- c(eu_dists, (dist(rbind(dscags[i,],means))))
+}
+which(eu_dists == max(eu_dists))
+
+#Mahalnobis distance
+mah_dists <- mahalanobis(dscags, means, cov(dscags))
+which(mah_dists == max(mah_dists))
+```
