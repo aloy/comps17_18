@@ -1,0 +1,107 @@
+---
+title: "linear_simulation_2"
+author: "Sophie Gunn"
+date: "March 4, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(MASS)
+library(readr)
+library(rJava)
+#install.packages('devtools')
+#devtools::install_github("aloy/scagnostics")
+library(scagnostics)
+library(plyr)
+library(tidyverse)
+```
+
+```{r}
+Ns <- c(100,200,300,400,500)
+mu1 <- 0
+mu2 <- 0
+S1 <- c(1,2,3,4,5)
+S2 <- c(1,2,3,4,5)
+mu <- c(mu1,mu2)
+
+signal <- vector(mode = "list")
+null <- vector(mode = "list")
+info_sig <- vector(mode = "list")
+info_null <- vector(mode = "list")
+index = 1
+
+for(n in Ns){
+  t <- qt(0.025, n-2)
+  cutoff <- sqrt((t^2/(n-2))/(1 + (t^2/(n-2))))
+  rhos_sig <- c(runif(5, -1, -cutoff), runif(5, cutoff, 1))
+  rhos_null <- c(runif(10, -cutoff, cutoff))
+  for(r in 1:10){
+    for(s1 in S1){
+      for(s2 in S2) {
+        sigma_sig <- matrix(c(s1^2, s1*s2*rhos_sig[r], s1*s2*rhos_sig[r], s2^2),2)
+        xy_sig <- mvrnorm(n, mu = mu, Sigma = sigma_sig )
+        signal[[index]] <- list(ID = index,  x = xy_sig[,1] , y = xy_sig[,2])
+        info_sig[[index]] <- list(ID = index, R = rhos_sig[r], N = n, sd1 = s1, sd2 = s2)
+        
+        sigma_null <- matrix(c(s1^2, s1*s2*rhos_null[r], s1*s2*rhos_null[r], s2^2),2)
+        xy_null <- mvrnorm(n, mu = mu, Sigma = sigma_null )
+        null[[index]] <- list(ID = index,  x = xy_null[,1] , y = xy_null[,2])
+        info_null[[index]] <- list(ID = index, R = rhos_null[r], N = n, sd1 = s1, sd2 = s2)
+        
+        index = index + 1
+      }
+    }
+    }
+  }
+
+scagnostics_sig <- vector(mode = "list")
+scagnostics_null <- vector(mode = "list")
+
+index = 1
+for (plot in signal) {
+  if (index%%100 == 0){print(index)}
+  scagnostics_sig[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s)
+  index = index + 1
+}
+
+index = 1
+for (plot in null) {
+  if (index%%100 == 0){print(index)}
+  scagnostics_null[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s)
+  index = index + 1
+}
+
+scagnostics_sig_df <- ldply(scagnostics_sig, data.frame)
+scagnostics_null_df <- ldply(scagnostics_null, data.frame)
+scagnostics_null_df$ID <- scagnostics_null_df$ID + 1250
+scagnostics <- rbind(scagnostics_sig_df, scagnostics_null_df)
+scagnostics$scag_num <- rep(seq(1:9), 2500)
+scagnostics_wide <- spread(scagnostics, key = scag_num, value = scagnostics)
+write.csv(scagnostics_wide, "scagnostics_linear2.csv")
+
+info_sig_df <- ldply(info_sig, data.frame)
+info_null_df <- ldply(info_null, data.frame)
+info_null_df$ID <- info_null_df$ID + 1250
+info <- rbind(info_sig_df, info_null_df)
+write.csv(info, "info_linear2.csv")
+
+signal_df <- ldply(signal, data.frame)
+null_df <- ldply(null, data.frame)
+null_df$ID <- null_df$ID + 1250
+plots <- rbind(signal_df, null_df)
+write.csv(plots, "plots_linear2.csv")
+```
+
+Convert lists to data frames:
+```{r}
+
+  
+write.csv(info_df, "linear_trend_info.csv")
+write.csv(scatter_df, "linear_trend_plots.csv")
+write.csv(scagnostics_df, "linear_trend_scagnostics.csv")
+```
