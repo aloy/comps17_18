@@ -1,5 +1,5 @@
 ---
-title: "QQ_Lineups"
+title: "Logistic_Residual_Lineups"
 author: "Aidan Mullan"
 date: "3/4/2018"
 output: pdf_document
@@ -17,14 +17,13 @@ library(scagnostics)
 library(MASS)
 library(tidyverse)
 
-plots <- read.csv("simulation_data/QQplots.csv")
-info <- read.csv("simulation_data/QQPlots_info.csv")
-scagnostics <-  read.csv("simulation_data/QQPlots_scagnostics.csv")
+plots <- read.csv("simulation_data/logistic_residuals_plots.csv")
+info <- read.csv("simulation_data/logistic_residuals_info.csv")
+scagnostics <-  read.csv("simulation_data/logistic_residuals_scagnostics.csv")
 scagnostics <- scagnostics[,-1]
 scagnostics <- scagnostics %>%
   spread(key = scag_num, value = scagnostics, sep = "_")
-info$signal <- ifelse(info$distribution == "Normal", 0, 1)
-scagnostics$signal <- info$signal
+scagnostics$signal <- info$interest
 
 signal = subset(scagnostics, scagnostics$signal == 1)
 null = subset(scagnostics, scagnostics$signal == 0)
@@ -35,11 +34,12 @@ null = subset(scagnostics, scagnostics$signal == 0)
 signal_scagnostics <- sample_n(signal, 1)
 signal_plot <- subset(plots, plots$ID == signal_scagnostics$ID)
 signal_info <- subset(info, info$ID == signal_scagnostics$ID)
-sample_size <- signal_info$n
+sample_size <- signal_info$N
 
-null_scagnostics <- sample_n(null, 19)
-null_plot <- subset(plots, plots$ID %in% null_scagnostics$ID)
-
+null_sample <- subset(info, info$N == sample_size & info$interest == 0)
+null_info <- sample_n(null_sample, 19)
+null_plot <- subset(plots, plots$ID %in% null_info$ID)
+null_scagnostics <- subset(null, null$ID %in% null_info$ID)
 
 lineup_scagnostics <- rbind(signal_scagnostics, null_scagnostics)
 lineup_plots <- rbind(signal_plot, null_plot)
@@ -48,13 +48,14 @@ levels(lineup_plots$ID) <- as.character(1:20)
 
 
 #To scale all plots, scales = "free" in facet_wrap
-ggplot(lineup_plots, aes(x, y)) +
+ggplot(lineup_plots, aes(index, residuals)) +
   geom_point() +
-  facet_wrap(~ID, nrow = 4, labeller = label_context, scales = "free") 
+  facet_wrap(~ID, nrow = 4, labeller = label_context) 
 #Plots aren't scaled the same, difficult to visually identify "signal"
 
 cat("Different Plot:", lineup_plots$ID[1])
 ```
+
 
 
 ```{r}
@@ -63,7 +64,7 @@ cat("Different Plot:", lineup_plots$ID[1])
 #####
 
 lineup_scagnostics <- arrange(lineup_scagnostics, ID)
-dscags <- lineup_scagnostics[,c(2:8,10)]
+dscags <- lineup_scagnostics[,2:10]
 means <- colMeans(dscags)
 
 #Euclidean distance
@@ -114,7 +115,7 @@ for(r in 1:R){
   lineup_scagnostics <- arrange(lineup_scagnostics, ID)
   choices$correct.choice[r] <- which(lineup_scagnostics$ID == signal_scagnostics$ID)
   
-  dscags <- lineup_scagnostics[,c(2:8, 10)]
+  dscags <- lineup_scagnostics[,2:10]
   means <- colMeans(dscags)
   eu_dists <- NULL
   for (i in 1:20){
