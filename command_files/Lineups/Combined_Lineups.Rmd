@@ -152,4 +152,8 @@ accuracy
 
 ```
 
+IDEAS:
+-Add in knn and random forest predictions
+-Test lineups with datasets not in combined
+-Test multiple signal plots
 

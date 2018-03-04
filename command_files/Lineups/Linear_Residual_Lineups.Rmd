@@ -191,7 +191,3 @@ accuracy
 NOTES:
 Lineups are much harder for visual identification of signal, but supervised predictions get 96.6% accuracy and unsupervised gets 75.3% 
 
-IDEAS:
--Try lineups with combined data
--Try lineups with multiple signal plots
--->Clustering, model probabilities

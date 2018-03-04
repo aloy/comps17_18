@@ -84,14 +84,7 @@ cat("Euclidean:", which(eu_dists == max(eu_dists)))
 mah_dists <- mahalanobis(dscags, means, cov(dscags))
 cat("\nMahalnobis:", which(mah_dists == max(mah_dists)))
 ```
-IDEAS:
--Methods to try: model probabilities, medians, global mean, leave one out
--Leave One Out
--->Compare mean of 19 with 1 left out for all 20 plots
--Possibly aggregate with multiple models/distance functions (wacky idea)
--Run 1000ish trials and compute accuracy for each prediction type
--Try more complicated distributions (Time Series!, residuals)
--->Maybe look at combined data 
+
 
 ```{r, warning=FALSE}
 #####
@@ -185,7 +178,7 @@ accuracy <- data.frame(Euclidean = mean(choices$eu.choice == choices$correct.cho
                        LOO.Euclidean = mean(choices$loo.euclid == choices$correct.choice),
                        LOO.Mahalanobis = mean(choices$loo.maha == choices$correct.choice))
 accuracy
-#EU - .581, MA - .857, QDA - .912, LOG - .936, LEU - .581, $LMA - 85.7
+#EU - .581, MA - .857, QDA - .912, LOG - .936, LEU - .581, $LMA - .857
 ```
 NOTES:
 Testing various methods of finding most different plot in a 20 plot lineup.
@@ -207,6 +200,6 @@ LOO Euclidean Distance: 58.1% Accuracy
 LOO Mahalanobian Distance: 85.7% Accuracy
 
 Results:
-Leave-One-Out method does not seem to produce different results from using all 20 plots. 
+Leave-One-Out method does not seem to produce different results from using all 20 plots at once. 
 Supervised methods are much more accurate than unsupervised
-Euclidean distance is about as good as random guessing
+Euclidean distance is slightly better random guessing
