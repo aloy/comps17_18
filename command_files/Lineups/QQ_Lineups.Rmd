@@ -1,0 +1,161 @@
+---
+title: "QQ_Lineups"
+author: "Aidan Mullan"
+date: "3/4/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(nullabor)
+library(ggplot2)
+library(dplyr)
+library(scagnostics)
+library(MASS)
+library(tidyverse)
+
+plots <- read.csv("simulation_data/QQplots.csv")
+info <- read.csv("simulation_data/QQPlots_info.csv")
+scagnostics <-  read.csv("simulation_data/QQPlots_scagnostics.csv")
+scagnostics <- scagnostics[,-1]
+scagnostics <- scagnostics %>%
+  spread(key = scag_num, value = scagnostics, sep = "_")
+info$signal <- ifelse(info$distribution == "Normal", 0, 1)
+scagnostics$signal <- info$signal
+
+signal = subset(scagnostics, scagnostics$signal == 1)
+null = subset(scagnostics, scagnostics$signal == 0)
+```
+
+```{r}
+#Lineups with 19 simulated noise and 1 simulated signal
+signal_scagnostics <- sample_n(signal, 1)
+signal_plot <- subset(plots, plots$ID == signal_scagnostics$ID)
+signal_info <- subset(info, info$ID == signal_scagnostics$ID)
+sample_size <- signal_info$n
+
+null_scagnostics <- sample_n(null, 19)
+null_plot <- subset(plots, plots$ID %in% null_scagnostics$ID)
+
+
+lineup_scagnostics <- rbind(signal_scagnostics, null_scagnostics)
+lineup_plots <- rbind(signal_plot, null_plot)
+lineup_plots$ID <- as.factor(lineup_plots$ID)
+levels(lineup_plots$ID) <- as.character(1:20)
+
+
+#To scale all plots, scales = "free" in facet_wrap
+ggplot(lineup_plots, aes(x, y)) +
+  geom_point() +
+  facet_wrap(~ID, nrow = 4, labeller = label_context, scales = "free") 
+#Plots aren't scaled the same, difficult to visually identify "signal"
+
+cat("Different Plot:", lineup_plots$ID[1])
+```
+
+
+```{r}
+#####
+#Lineups with distance predictions
+#####
+
+lineup_scagnostics <- arrange(lineup_scagnostics, ID)
+dscags <- lineup_scagnostics[,c(2:8,10)]
+means <- colMeans(dscags)
+
+#Euclidean distance
+eu_dists <- NULL
+for (i in 1:20){
+  eu_dists <- c(eu_dists, (dist(rbind(dscags[i,],means))))
+}
+cat("Euclidean:", which(eu_dists == max(eu_dists)))
+
+#Mahalnobis distance
+mah_dists <- mahalanobis(dscags, means, cov(dscags))
+cat("\nMahalnobis:", which(mah_dists == max(mah_dists)))
+```
+
+
+```{r, warning=FALSE}
+#####
+#Lineups with model predictions
+#####
+
+lineup_scagnostics <- arrange(lineup_scagnostics, ID)
+index = which(scagnostics$ID %in% lineup_scagnostics$ID)
+train_data <- scagnostics[-index,]
+
+#QDA
+model_QDA <- qda(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data)
+QDA_preds <- predict(model_QDA, lineup_scagnostics, type = "response")
+cat("QDA:", which(QDA_preds$posterior[,2] == max(QDA_preds$posterior[,2])))
+
+#Logistic
+model_logit <- glm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data, family = "binomial")
+logit_preds <- predict(model_logit, lineup_scagnostics, type = "response")
+cat("\nLogitsic:", which(logit_preds == max(logit_preds)))
+```
+
+```{r, warning = FALSE}
+#####
+#Testing all Prediction Methods
+#####
+R = 10000
+choices <- data.frame(correct.choice = numeric(R), eu.choice = numeric(R), maha.choice = numeric(R), qda.choice = numeric(R), logit.choice = numeric(R), loo.euclid = numeric(R), loo.maha = numeric(R))
+
+for(r in 1:R){
+  if (r%%100 == 0){print(r)}
+  signal_scagnostics <- sample_n(signal, 1)
+  null_scagnostics <- sample_n(null, 19)
+  lineup_scagnostics <- rbind(signal_scagnostics, null_scagnostics)
+  lineup_scagnostics <- arrange(lineup_scagnostics, ID)
+  choices$correct.choice[r] <- which(lineup_scagnostics$ID == signal_scagnostics$ID)
+  
+  dscags <- lineup_scagnostics[,c(2:8, 10)]
+  means <- colMeans(dscags)
+  eu_dists <- NULL
+  for (i in 1:20){
+    eu_dists <- c(eu_dists, (dist(rbind(dscags[i,],means))))
+  }
+  choices$eu.choice[r] <- which(eu_dists == max(eu_dists))
+  
+  mah_dists <- mahalanobis(dscags, means, cov(dscags))
+  choices$maha.choice[r] <- which(mah_dists == max(mah_dists))
+  
+  index = which(scagnostics$ID %in% lineup_scagnostics$ID)
+  train_data <- scagnostics[-index,]
+  model_QDA <- qda(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+
+                     scag_num_6+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data)
+  QDA_preds <- predict(model_QDA, lineup_scagnostics, type = "response")
+  choices$qda.choice[r] <- which(QDA_preds$posterior[,2] == max(QDA_preds$posterior[,2]))
+  
+  model_logit <- glm(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+
+                       scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data, family ="binomial")
+  logit_preds <- predict(model_logit, lineup_scagnostics, type = "response")
+  choices$logit.choice[r] <- which(logit_preds == max(logit_preds))
+  
+  loo.euclid <- numeric(20)
+  loo.maha <- numeric(20)
+  for(index in 1:20){
+    means = colMeans(dscags[-index,])
+    loo.euclid[index] <- dist(rbind(dscags[index,], means))
+    loo.maha[index] <- mahalanobis(dscags[index,], means, cov(dscags[-index,]))
+  }
+  choices$loo.euclid[r] <- which(loo.euclid == max(loo.euclid))
+  choices$loo.maha[r] <- which(loo.maha == max(loo.maha))
+  
+}
+accuracy <- data.frame(Euclidean = mean(choices$eu.choice == choices$correct.choice), 
+                       Mahalanobis = mean(choices$maha.choice == choices$correct.choice),
+                       QDA = mean(choices$qda.choice == choices$correct.choice),
+                       Logistic = mean(choices$logit.choice == choices$correct.choice),
+                       LOO.Euclidean = mean(choices$loo.euclid == choices$correct.choice),
+                       LOO.Mahalanobis = mean(choices$loo.maha == choices$correct.choice))
+accuracy
+#EU - , MA - , QDA - , LOG - , LEU - , LMA - 
+```
+
+ADD IN KNN AND RF PREDICTIONS
