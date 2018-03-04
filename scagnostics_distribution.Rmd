@@ -120,4 +120,4 @@ fit7$loglik
 fit8$loglik
 fit9$loglik
 
-s```
+```
