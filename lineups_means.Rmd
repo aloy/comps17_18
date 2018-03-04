@@ -1,0 +1,207 @@
+---
+title: "Untitled"
+author: "Cari Comnick"
+date: "2/27/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(nullabor)
+library(ggplot2)
+library(dplyr)
+library(scagnostics)
+library(tidyverse)
+library(robustbase)
+```
+
+Pull 20 random plots of a single type, 1 signal, 19 noise, see if means work
+```{r}
+setwd("~/Comps/comps17_18/simulation_data")
+scag <- read_csv("combined_scagnostics.csv")
+```
+
+```{r}
+n <- 1000
+sims <- matrix(ncol=n,nrow=6)
+
+for (a in 1:n){
+  each <- matrix(ncol=1,nrow=6)
+  for (i in 1:length(unique(scag$model))){
+    x1 <- which(scag$model == unique(scag$model)[i] & scag$signal == 1)
+    y <- which(scag$model == unique(scag$model)[i] & scag$signal == 0)
+    
+    null <- sample(y, 19, replace = FALSE)
+    signal <- sample(x1, 1, replace = FALSE)
+    
+    dat <- scag[c(null,signal),]
+    dscags <- as.matrix(dat[,4:12], ncol=9)
+    #means <- colMeans(dscags)
+    medians <- colMedians(dscags)
+    x <- NULL
+    
+    for (j in 1:20){
+      #x <- c(x, (dist(rbind(dscags[j,],means))))
+      x <- c(x, (dist(rbind(dscags[j,],medians))))
+    }
+    each[i,1] <- which(x == max(x))
+  }
+  sims[,a] <- each[,1] 
+}
+
+#how good was means? really bad for funnel and linear
+#for medians: very good again, also bad for funnel and linear
+for (k in 1:6){
+  print(length(which(sims[k,] == 20))/n)
+}
+```
+
+```{r}
+#try means and medians with TS 
+scags1info <- read_csv("TS_Info.csv")
+scags1 <- read_csv("TS_Scagnostics.csv")
+scags1 <- scags1[,-1]
+scags1info <- scags1info[,-1]
+scags1info$signal <- ""
+scags1info$signal[which(scags1info$ar_order == 0 & scags1info$ma_order == 0)] <- 0
+scags1info$signal[-which(scags1info$ar_order == 0 & scags1info$ma_order == 0)] <- 1
+
+scags1 <-   scags1 %>%
+  left_join(scags1info) %>%
+  select(ID, scag_num, scagnostics, signal)
+
+scags1  <- scags1  %>%
+  spread(key = scag_num, value = scagnostics, sep = "_")
+
+n <- 1000
+sims <- matrix(ncol=n,nrow=1)
+sims1 <- matrix(ncol=n,nrow=1)
+
+for (a in 1:n){
+  each <- matrix(ncol=1,nrow=1)
+  each1 <- matrix(ncol=1,nrow=1)
+  for (i in 1){
+    x1 <- which(scags1$signal == 1)
+    y <- which(scags1$signal == 0)
+    
+    null <- sample(y, 19, replace = FALSE)
+    signal <- sample(x1, 1, replace = FALSE)
+    
+    dat <- scags1[c(null,signal),]
+    dscags1 <- as.matrix(dat[,3:11], ncol=9)
+    means <- colMeans(dscags1)
+    medians <- colMedians(dscags1)
+    x <- NULL
+    z <- NULL
+    
+    for (j in 1:20){
+      z <- c(z, (dist(rbind(dscags1[j,],means))))
+      x <- c(x, (dist(rbind(dscags1[j,],medians))))
+    }
+    each[i,1] <- which(x == max(x))
+    each1[i,1] <- which(z == max(z))
+  }
+  sims[,a] <- each[,1] 
+  sims1[,a] <- each1[,1]
+}
+
+print(length(which(sims[,] == 20))/n)
+print(length(which(sims1[,] == 20))/n)
+```
+
+
+```{r}
+#try means and medians with donut
+scags1 <- read_csv("donut_scagnostics.csv")
+scags1 <- scags1[,-1]
+
+n <- 1000
+sims <- matrix(ncol=n,nrow=1)
+sims1 <- matrix(ncol=n,nrow=1)
+
+for (a in 1:n){
+  each <- matrix(ncol=1,nrow=1)
+  each1 <- matrix(ncol=1,nrow=1)
+  for (i in 1){
+    x1 <- which(scags1$signal == 1)
+    y <- which(scags1$signal == 0)
+    
+    null <- sample(y, 19, replace = FALSE)
+    signal <- sample(x1, 1, replace = FALSE)
+    
+    dat <- scags1[c(null,signal),]
+    dscags1 <- as.matrix(dat[,3:11], ncol=9)
+    means <- colMeans(dscags1)
+    medians <- colMedians(dscags1)
+    x <- NULL
+    z <- NULL
+    
+    for (j in 1:20){
+      z <- c(z, (dist(rbind(dscags1[j,],means))))
+      x <- c(x, (dist(rbind(dscags1[j,],medians))))
+    }
+    each[i,1] <- which(x == max(x))
+    each1[i,1] <- which(z == max(z))
+  }
+  sims[,a] <- each[,1] 
+  sims1[,a] <- each1[,1]
+}
+
+print(length(which(sims[,] == 20))/n)
+print(length(which(sims1[,] == 20))/n)
+```
+
+```{r}
+#try means and medians with qq plot
+scags1info <- read_csv("QQPlots_info.csv")
+scags1 <- read_csv("QQPlots_scagnostics.csv")
+scags1 <- scags1[,-1]
+scags1info$signal <- ""
+scags1info$signal[which(scags1info$distribution == "Normal")] <- 1
+scags1info$signal[-which(scags1info$distribution == "Normal")] <- 0
+
+scags1 <-   scags1 %>%
+  left_join(scags1info) %>%
+  select(ID, scag_num, scagnostics, signal)
+
+scags1  <- scags1  %>%
+  spread(key = scag_num, value = scagnostics, sep = "_")
+
+n <- 1000
+sims <- matrix(ncol=n,nrow=1)
+sims1 <- matrix(ncol=n,nrow=1)
+
+for (a in 1:n){
+  each <- matrix(ncol=1,nrow=1)
+  each1 <- matrix(ncol=1,nrow=1)
+  for (i in 1){
+    x1 <- which(scags1$signal == 1)
+    y <- which(scags1$signal == 0)
+    
+    null <- sample(y, 19, replace = FALSE)
+    signal <- sample(x1, 1, replace = FALSE)
+    
+    dat <- scags1[c(null,signal),]
+    dscags1 <- as.matrix(dat[,3:11], ncol=9)
+    means <- colMeans(dscags1)
+    medians <- colMedians(dscags1)
+    x <- NULL
+    z <- NULL
+    
+    for (j in 1:20){
+      z <- c(z, (dist(rbind(dscags1[j,],means))))
+      x <- c(x, (dist(rbind(dscags1[j,],medians))))
+    }
+    each[i,1] <- which(x == max(x))
+    each1[i,1] <- which(z == max(z))
+  }
+  sims[,a] <- each[,1] 
+  sims1[,a] <- each1[,1]
+}
+
+print(length(which(sims[,] == 20))/n)
+print(length(which(sims1[,] == 20))/n)
+```
