@@ -107,7 +107,49 @@ accuracy
 #EU - .770, MA - .952, QDA - .965, LOG - .972, LEU - .770, LMA - .952
 ```
 
+Just comparing LOO Euclidean and Maha
+```{r}
 
 
+R = 5000
+choices1 <- data.frame(correct.choice = numeric(R), eu.choice = numeric(R), maha.choice = numeric(R), loo.euclid = numeric(R), loo.maha = numeric(R))
+
+for(r in 1:R){
+  if (r%%500 == 0){print(r)}
+  signal_scagnostics <- sample_n(signal, 1)
+  null_scagnostics <- sample_n(null, 19)
+  lineup_scagnostics <- rbind(signal_scagnostics, null_scagnostics)
+  lineup_scagnostics <- arrange(lineup_scagnostics, ID)
+  choices1$correct.choice[r] <- which(lineup_scagnostics$ID == signal_scagnostics$ID)
+  
+  dscags <- lineup_scagnostics[,4:12]
+  means <- colMeans(dscags)
+  eu_dists <- NULL
+  for (i in 1:20){
+    eu_dists <- c(eu_dists, (dist(rbind(dscags[i,],means))))
+  }
+  choices1$eu.choice[r] <- which(eu_dists == max(eu_dists))
+  
+  mah_dists <- mahalanobis(dscags, means, cov(dscags))
+  choices1$maha.choice[r] <- which(mah_dists == max(mah_dists))
+  
+  loo.euclid <- numeric(20)
+  loo.maha <- numeric(20)
+  for(index in 1:20){
+    means = colMeans(dscags[-index,])
+    loo.euclid[index] <- dist(rbind(dscags[index,], means))
+    loo.maha[index] <- mahalanobis(dscags[index,], means, cov(dscags[-index,]))
+  }
+  choices1$loo.euclid[r] <- which(loo.euclid == max(loo.euclid))
+  choices1$loo.maha[r] <- which(loo.maha == max(loo.maha))
+  
+}
+accuracy <- data.frame(Euclidean = mean(choices1$eu.choice == choices1$correct.choice), 
+                       Mahalanobis = mean(choices1$maha.choice == choices1$correct.choice),
+                       LOO.Euclidean = mean(choices1$loo.euclid == choices1$correct.choice),
+                       LOO.Mahalanobis = mean(choices1$loo.maha == choices1$correct.choice))
+accuracy
+
+```
 
 

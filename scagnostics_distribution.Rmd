@@ -1,0 +1,123 @@
+---
+title: "scagnostics_distribution"
+author: "Sophie Gunn"
+date: "March 3, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(nullabor)
+library(ggplot2)
+library(dplyr)
+library(scagnostics)
+library(MASS)
+library(tidyverse)
+
+combined <- read.csv("simulation_data/combined_scagnostics.csv")
+signal <- subset(combined, combined$signal == 1)
+null <- subset(combined, combined$signal == 0)
+```
+
+```{r}
+#outlying, looks approx exponential
+plot(density(null$scag_num_1))
+fit_expo <- fitdistr(null$scag_num_1, "exponential")
+fit1 <- 
+x <- seq(0, 1.5, length.out=100)
+dat <- data.frame(x=x, px=dexp(x, rate=5.64))
+plot(density(null$scag_num_1))
+lines(dat$px ~ dat$x)
+
+fit_norm <- fitdistr(null$scag_num_1, "normal")
+x <- seq(0, 1.5, length.out=100)
+dat <- data.frame(x=x, px=dnorm(x, mean = 0.177, sd = 0.146))
+plot(density(null$scag_num_1))
+lines(dat$px ~ dat$x)
+#better as expo!
+fit_expo$loglik
+fit_norm$loglik
+fit1 <- fit_expo
+
+#skewed, looks normalish, centered at 0.6
+hist(null$scag_num_2)
+plot(density(null$scag_num_2))
+fit2 <- fitdistr(null$scag_num_2, "normal")
+dat2 <- data.frame(x=x, px=dnorm(x, mean = 0.594, sd = 0.064))
+plot(density(null$scag_num_2))
+lines(dat2$px ~ dat2$x)
+
+#clumpy, looks very expo
+hist(null$scag_num_3)
+plot(density(null$scag_num_3))
+fit3 <- fitdistr(null$scag_num_3, "exponential")
+dat3 <- data.frame(x=x, px=dexp(x, rate=77.07))
+plot(density(null$scag_num_3))
+lines(dat3$px ~ dat3$x)
+
+
+#sparse, weird, maybe gamma?
+hist(null$scag_num_4)
+fit4 <- fitdistr(null$scag_num_4, "normal")
+dat4 <- data.frame(x=x, px=dnorm(x, mean = 0.063, sd = 0.02))
+plot(density(null$scag_num_4))
+lines(dat4$px ~ dat4$x)
+
+#striated, norm?
+hist(null$scag_num_5)
+fit5<- fitdistr(null$scag_num_5, "normal")
+dat5 <- data.frame(x=x, px=dnorm(x, mean = 0.055, sd = 0.028))
+plot(density(null$scag_num_5))
+lines(dat5$px ~ dat5$x)
+
+
+
+
+#convex, norm
+hist(null$scag_num_6)
+fit6 <- fitdistr(null$scag_num_6, "normal")
+dat6 <- data.frame(x=x, px=dnorm(x, mean = 0.589, sd = 0.0989))
+plot(density(null$scag_num_6))
+lines(dat6$px ~ dat6$x)
+
+#skinny, normal/t
+hist(null$scag_num_7)
+fit7 <- fitdistr(null$scag_num_7, "normal")
+dat7 <- data.frame(x=x, px=dnorm(x, mean = 0.45, sd = 0.12))
+plot(density(null$scag_num_7))
+lines(dat7$px ~ dat7$x)
+
+#stringy approx normal
+hist(null$scag_num_8)
+fit8 <- fitdistr(null$scag_num_8, "normal")
+dat8 <- data.frame(x=x, px=dnorm(x, mean = 0.37, sd = 0.05))
+plot(density(null$scag_num_8))
+lines(dat8$px ~ dat8$x)
+
+
+#monotonic, expo
+hist(null$scag_num_9)
+fit9 <- fitdistr(null$scag_num_9, "exponential")
+dat9 <- data.frame(x=x, px=dexp(x, rate = 174.29))
+plot(density(null$scag_num_9))
+lines(dat9$px ~ dat9$x)
+```
+
+```{r}
+fit_param <- as.data.frame(fit1 = fit1, fit2 = fit2, fit3 = fit3, fit4 = fit4, fit5 = fit5, fit6 = fit6, fit7 = fit7, fit8 = fit8, fit9 = fit9)
+fit_param <- as.data.frame(fit1 , fit2 , fit3 , fit4, fit5 , fit6 , fit7 , fit8 , fit9)
+
+fit1$loglik
+fit2$loglik
+fit3$loglik
+fit4$loglik
+fit5$loglik
+fit6$loglik
+fit7$loglik
+fit8$loglik
+fit9$loglik
+
+s```
