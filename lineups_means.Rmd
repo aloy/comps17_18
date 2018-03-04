@@ -1,5 +1,5 @@
 ---
-title: "Untitled"
+title: "Lineups with mean and median"
 author: "Cari Comnick"
 date: "2/27/2018"
 output: pdf_document
@@ -160,8 +160,8 @@ scags1info <- read_csv("QQPlots_info.csv")
 scags1 <- read_csv("QQPlots_scagnostics.csv")
 scags1 <- scags1[,-1]
 scags1info$signal <- ""
-scags1info$signal[which(scags1info$distribution == "Normal")] <- 1
-scags1info$signal[-which(scags1info$distribution == "Normal")] <- 0
+scags1info$signal[which(scags1info$distribution == "Normal")] <- 0
+scags1info$signal[-which(scags1info$distribution == "Normal")] <- 1
 
 scags1 <-   scags1 %>%
   left_join(scags1info) %>%
@@ -169,6 +169,108 @@ scags1 <-   scags1 %>%
 
 scags1  <- scags1  %>%
   spread(key = scag_num, value = scagnostics, sep = "_")
+
+n <- 1000
+sims <- matrix(ncol=n,nrow=1)
+sims1 <- matrix(ncol=n,nrow=1)
+
+for (a in 1:n){
+  each <- matrix(ncol=1,nrow=1)
+  each1 <- matrix(ncol=1,nrow=1)
+  for (i in 1){
+    x1 <- which(scags1$signal == 1)
+    y <- which(scags1$signal == 0)
+    
+    null <- sample(y, 19, replace = FALSE)
+    signal <- sample(x1, 1, replace = FALSE)
+    
+    dat <- scags1[c(null,signal),]
+    dscags1 <- as.matrix(dat[,3:11], ncol=9)
+    means <- colMeans(dscags1)
+    medians <- colMedians(dscags1)
+    x <- NULL
+    z <- NULL
+    
+    for (j in 1:20){
+      z <- c(z, (dist(rbind(dscags1[j,],means))))
+      x <- c(x, (dist(rbind(dscags1[j,],medians))))
+    }
+    each[i,1] <- which(x == max(x))
+    each1[i,1] <- which(z == max(z))
+  }
+  sims[,a] <- each[,1] 
+  sims1[,a] <- each1[,1]
+}
+
+print(length(which(sims[,] == 20))/n)
+print(length(which(sims1[,] == 20))/n)
+```
+
+```{r}
+#try means and medians with linear residuals
+scags1info <- read_csv("resid_info.csv")
+scags1 <- read_csv("resid_Scagnostics.csv")
+scags1 <- scags1[,-1]
+scags1info <- scags1info[,-1]
+
+scags1 <-   scags1 %>%
+  left_join(scags1info) %>%
+  select(ID, scag_num, scagnostics, signal)
+
+scags1  <- scags1  %>%
+  spread(key = scag_num, value = scagnostics, sep = "_")
+
+n <- 1000
+sims <- matrix(ncol=n,nrow=1)
+sims1 <- matrix(ncol=n,nrow=1)
+
+for (a in 1:n){
+  each <- matrix(ncol=1,nrow=1)
+  each1 <- matrix(ncol=1,nrow=1)
+  for (i in 1){
+    x1 <- which(scags1$signal == 1)
+    y <- which(scags1$signal == 0)
+    
+    null <- sample(y, 19, replace = FALSE)
+    signal <- sample(x1, 1, replace = FALSE)
+    
+    dat <- scags1[c(null,signal),]
+    dscags1 <- as.matrix(dat[,3:11], ncol=9)
+    means <- colMeans(dscags1)
+    medians <- colMedians(dscags1)
+    x <- NULL
+    z <- NULL
+    
+    for (j in 1:20){
+      z <- c(z, (dist(rbind(dscags1[j,],means))))
+      x <- c(x, (dist(rbind(dscags1[j,],medians))))
+    }
+    each[i,1] <- which(x == max(x))
+    each1[i,1] <- which(z == max(z))
+  }
+  sims[,a] <- each[,1] 
+  sims1[,a] <- each1[,1]
+}
+
+print(length(which(sims[,] == 20))/n)
+print(length(which(sims1[,] == 20))/n)
+```
+
+```{r}
+#try means and medians with logistic residuals
+scags1info <- read_csv("logistic_residuals_info.csv")
+scags1 <- read_csv("logistic_residuals_scagnostics.csv")
+scags1 <- scags1[,-1]
+scags1info <- scags1info[,-1]
+
+scags1 <-   scags1 %>%
+  left_join(scags1info) %>%
+  select(ID, scag_num, scagnostics, interest)
+
+scags1  <- scags1  %>%
+  spread(key = scag_num, value = scagnostics, sep = "_")
+
+names(scags1)[names(scags1) == 'interest'] <- 'signal'
 
 n <- 1000
 sims <- matrix(ncol=n,nrow=1)
