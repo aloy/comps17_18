@@ -76,6 +76,11 @@ for (plot in null) {
   index = index + 1
 }
 
+
+```
+
+
+```{r}
 scagnostics_sig_df <- ldply(scagnostics_sig, data.frame)
 scagnostics_null_df <- ldply(scagnostics_null, data.frame)
 scagnostics_null_df$ID <- scagnostics_null_df$ID + 1250
@@ -97,11 +102,3 @@ plots <- rbind(signal_df, null_df)
 write.csv(plots, "plots_linear2.csv")
 ```
 
-Convert lists to data frames:
-```{r}
-
-  
-write.csv(info_df, "linear_trend_info.csv")
-write.csv(scatter_df, "linear_trend_plots.csv")
-write.csv(scagnostics_df, "linear_trend_scagnostics.csv")
-```
