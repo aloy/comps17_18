@@ -157,3 +157,5 @@ accuracy <- data.frame(Euclidean = mean(choices$eu.choice == choices$correct.cho
 accuracy
 #EU - , MA - , QDA - , LOG - , LEU - , LMA - 
 ```
+
+ADD IN KNN AND RF PREDICTIONS
