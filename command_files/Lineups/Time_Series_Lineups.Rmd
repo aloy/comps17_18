@@ -16,6 +16,9 @@ library(dplyr)
 library(scagnostics)
 library(MASS)
 library(tidyverse)
+library(class)
+library(caret)
+library(randomForest)
 
 plots <- read.csv("simulation_data/TS_Plots.csv")
 info <- read.csv("simulation_data/TS_Info.csv")
@@ -102,12 +105,13 @@ logit_preds <- predict(model_logit, lineup_scagnostics, type = "response")
 cat("\nLogitsic:", which(logit_preds == max(logit_preds)))
 ```
 
+
 ```{r, warning = FALSE}
 #####
 #Testing all Prediction Methods
 #####
-R = 10000
-choices <- data.frame(correct.choice = numeric(R), eu.choice = numeric(R), maha.choice = numeric(R), qda.choice = numeric(R), logit.choice = numeric(R), loo.euclid = numeric(R), loo.maha = numeric(R))
+R = 1000
+choices <- data.frame(correct.choice = numeric(R), eu.choice = numeric(R), maha.choice = numeric(R), qda.choice = numeric(R), logit.choice = numeric(R), loo.euclid = numeric(R), loo.maha = numeric(R), knn.choice = numeric(R), rf.choice = numeric(R))
 
 for(r in 1:R){
   if (r%%100 == 0){print(r)}
@@ -140,6 +144,19 @@ for(r in 1:R){
   logit_preds <- predict(model_logit, lineup_scagnostics, type = "response")
   choices$logit.choice[r] <- which(logit_preds == max(logit_preds))
   
+  control <- trainControl(method = "cv", number = 10, classProbs = TRUE, returnData = TRUE)
+  model_knn <- train(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+
+                     scag_num_6+scag_num_6+scag_num_7+scag_num_8+scag_num_9, 
+                     data = train_data, method = "knn", trControl = control)
+  knn_preds <- predict.train(model_knn, lineup_scagnostics)
+  choices$knn.choice[r] <- which(knn_preds == max(knn_preds))
+  
+  model_rf <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+
+                             scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data,
+                           ntree=100, importance =T)
+  rf_preds <- predict(model_rf, newdata = lineup_scagnostics[,2:10], type = "prob")
+  choices$rf.choice[r] <- which(rf_preds[,2] == max(rf_preds[,2]))
+  
   loo.euclid <- numeric(20)
   loo.maha <- numeric(20)
   for(index in 1:20){
@@ -156,9 +173,9 @@ accuracy <- data.frame(Euclidean = mean(choices$eu.choice == choices$correct.cho
                        QDA = mean(choices$qda.choice == choices$correct.choice),
                        Logistic = mean(choices$logit.choice == choices$correct.choice),
                        LOO.Euclidean = mean(choices$loo.euclid == choices$correct.choice),
-                       LOO.Mahalanobis = mean(choices$loo.maha == choices$correct.choice))
+                       LOO.Mahalanobis = mean(choices$loo.maha == choices$correct.choice),
+                       K.Nearest.Neighbors = mean(choices$knn.choice == choices$correct.choice),
+                       Random.Forest = mean(choices$rf.choice == choices$correct.choice))
 accuracy
-#EU - , MA - , QDA - , LOG - , LEU - , LMA - 
+#EU - .247, MA - .248, QDA - .358, LOG - .462, LEU - .247, LMA - .248, KNN - .306, RF - .425  
 ```
-
-ADD IN KNN AND RF PREDICTIONS

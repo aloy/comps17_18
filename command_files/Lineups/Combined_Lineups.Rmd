@@ -52,8 +52,8 @@ cat("\nLOO Mahalanobis:", which(loo.maha == max(loo.maha)))
 #####
 #Testing all Prediction Methods
 #####
-R = 10000
-choices <- data.frame(correct.choice = numeric(R), eu.choice = numeric(R), maha.choice = numeric(R), qda.choice = numeric(R), logit.choice = numeric(R), loo.euclid = numeric(R), loo.maha = numeric(R))
+R = 1000
+choices <- data.frame(correct.choice = numeric(R), eu.choice = numeric(R), maha.choice = numeric(R), qda.choice = numeric(R), logit.choice = numeric(R), knn.choice = numeric(R), rf.choice = numeric(R))
 
 for(r in 1:R){
   if (r%%100 == 0){print(r)}
@@ -86,33 +86,35 @@ for(r in 1:R){
   logit_preds <- predict(model_logit, lineup_scagnostics, type = "response")
   choices$logit.choice[r] <- which(logit_preds == max(logit_preds))
   
-  loo.euclid <- numeric(20)
-  loo.maha <- numeric(20)
-  for(index in 1:20){
-    means = colMeans(dscags[-index,])
-    loo.euclid[index] <- dist(rbind(dscags[index,], means))
-    loo.maha[index] <- mahalanobis(dscags[index,], means, cov(dscags[-index,]))
-  }
-  choices$loo.euclid[r] <- which(loo.euclid == max(loo.euclid))
-  choices$loo.maha[r] <- which(loo.maha == max(loo.maha))
+  control <- trainControl(method = "cv", number = 10, classProbs = TRUE, returnData = TRUE)
+  model_knn <- train(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+
+                     scag_num_6+scag_num_6+scag_num_7+scag_num_8+scag_num_9, 
+                     data = train_data, method = "knn", trControl = control)
+  #knn_preds <- predict.train(model_knn, lineup_scagnostics)
+  #choices$knn.choice[r] <- which(knn_preds == max(knn_preds))
   
+  #model_rf <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+
+   #                          scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data,
+    #                       ntree=100, importance =T)
+  #rf_preds <- predict(model_rf, newdata = lineup_scagnostics[,4:12], type = "prob")
+  #choices$rf.choice[r] <- which(rf_preds[,2] == max(rf_preds[,2]))
+  #KNN AND RF ARE COMPUTATIONALLY INTENSIVE: ~1HR FOR 50 ITERATIONS
 }
 accuracy <- data.frame(Euclidean = mean(choices$eu.choice == choices$correct.choice), 
                        Mahalanobis = mean(choices$maha.choice == choices$correct.choice),
                        QDA = mean(choices$qda.choice == choices$correct.choice),
                        Logistic = mean(choices$logit.choice == choices$correct.choice),
-                       LOO.Euclidean = mean(choices$loo.euclid == choices$correct.choice),
-                       LOO.Mahalanobis = mean(choices$loo.maha == choices$correct.choice))
+                       K.Nearest.Neighbors = mean(choices$knn.choice == choices$correct.choice),
+                       Random.Forest = mean(choices$rf.choice == choices$correct.choice))
 accuracy
-#EU - .770, MA - .952, QDA - .965, LOG - .972, LEU - .770, LMA - .952
+#EU - .770, MA - .952, QDA - .965, LOG - .972, LEU - .770, LMA - .952, KNN - , RF - 
 ```
+
 
 Just comparing LOO Euclidean and Maha
 ```{r}
-
-
 R = 5000
-choices1 <- data.frame(correct.choice = numeric(R), eu.choice = numeric(R), maha.choice = numeric(R), loo.euclid = numeric(R), loo.maha = numeric(R))
+choices1 <- data.frame(correct.choice = numeric(R), eu.choice = numeric(R), maha.choice = numeric(R), loo.euclid = numeric(R), loo.maha = numeric(R), rf.choice = numeric(R), knn.choice = numeric(R))
 
 for(r in 1:R){
   if (r%%500 == 0){print(r)}
@@ -142,6 +144,8 @@ for(r in 1:R){
   }
   choices1$loo.euclid[r] <- which(loo.euclid == max(loo.euclid))
   choices1$loo.maha[r] <- which(loo.maha == max(loo.maha))
+  
+
   
 }
 accuracy <- data.frame(Euclidean = mean(choices1$eu.choice == choices1$correct.choice), 
