@@ -18,7 +18,30 @@ library(tidyverse)
 library(robustbase)
 ```
 
-Pull 20 random plots of a single type, 1 signal, 19 noise, see if means work
+```{r}
+setwd("~/Desktop")
+ts_data <- read_csv("tsdat.csv")
+colnames(ts_data) <- c("date","temp")
+ts_data2 <- as.ts(ts_data[,2])
+plot(ts_data2)
+ts_data$date <- 1:nrow(ts_data)
+
+d <- lineup(null_permute("date"), ts_data)
+attr(d, "pos")
+qplot(date, temp, data = d) + facet_wrap(~ .sample)
+```
+
+```{r}
+x <- rnorm(100)
+y <- x+runif(100,-1,1)
+dat <- data.frame(x,y)
+
+d <- lineup(null_permute("x"), dat)
+attr(d, "pos")
+qplot(y, x, data = d) + facet_wrap(~ .sample)
+```
+
+Pull 20 random plots of a single type, 1 signal, 19 noise, see if means/medians work
 ```{r}
 setwd("~/Comps/comps17_18/simulation_data")
 scag <- read_csv("combined_scagnostics.csv")
@@ -27,9 +50,11 @@ scag <- read_csv("combined_scagnostics.csv")
 ```{r}
 n <- 1000
 sims <- matrix(ncol=n,nrow=6)
+sims1 <- matrix(ncol=n,nrow=6)
 
 for (a in 1:n){
   each <- matrix(ncol=1,nrow=6)
+  each1 <- matrix(ncol=1,nrow=6)
   for (i in 1:length(unique(scag$model))){
     x1 <- which(scag$model == unique(scag$model)[i] & scag$signal == 1)
     y <- which(scag$model == unique(scag$model)[i] & scag$signal == 0)
@@ -39,17 +64,20 @@ for (a in 1:n){
     
     dat <- scag[c(null,signal),]
     dscags <- as.matrix(dat[,4:12], ncol=9)
-    #means <- colMeans(dscags)
+    means <- colMeans(dscags)
     medians <- colMedians(dscags)
     x <- NULL
+    z <- NULL
     
     for (j in 1:20){
-      #x <- c(x, (dist(rbind(dscags[j,],means))))
-      x <- c(x, (dist(rbind(dscags[j,],medians))))
+      x <- c(x, (dist(rbind(dscags[j,],means))))
+      z <- c(z, (dist(rbind(dscags[j,],medians))))
     }
     each[i,1] <- which(x == max(x))
+    each1[i,1] <- which(z == max(z))
   }
   sims[,a] <- each[,1] 
+  sims1[,a] <- each1[,1] 
 }
 
 #how good was means? really bad for funnel and linear
