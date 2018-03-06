@@ -1,0 +1,109 @@
+---
+title: "Combining_Data"
+author: "Aidan Mullan"
+date: "2/25/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#Scagnostics
+cluster <- read_csv("simulation_data/Cluster_Scagnostics.csv")
+cluster <- cluster[,-1]
+cluster <- cluster %>%
+  spread(key = scag_num, value = scagnostics, sep = "_")
+cluster$model <- "cluster"
+
+donut <- read_csv("simulation_data/donut_scagnostics.csv")
+donut <- donut[,-1]
+donut$model <- "donut"
+colnames(donut) <- colnames(cluster)
+
+exponential <- read_csv("simulation_data/Exponential_Scagnostics.csv")
+expo_info <- read_csv("simulation_data/Exponential_Info.csv")
+exponential <- exponential[,-1]
+exponential <- exponential %>%
+  spread(key = scag_num, value = scagnostics, sep = "_")
+exponential$signal <- expo_info$signal
+exponential$model <- "exponential"
+
+funnel <- read_csv("simulation_data/funnel_scagnostics.csv")
+funnel_info <- read_csv("simulation_data/funnel_info.csv")
+funnel <- funnel[,-1]
+funnel <- funnel %>%
+  spread(key = scag_num, value = scagnostics, sep = "_")
+funnel$signal <- funnel_info$interest
+funnel$model <- "funnel"
+
+linear <- read_csv("simulation_data/linear_trend_scagnostics.csv")
+linear_info <- read_csv("simulation_data/linear_trend_info.csv")
+linear_info$signal <- ifelse(linear_info$R == 0, 0, 1)
+linear <- linear[,-1]
+linear <- linear %>%
+  spread(key = scag_num, value = scagnostics, sep = "_")
+linear$signal <- linear_info$signal
+linear$model <- "linear trend"
+
+log_res <- read_csv("simulation_data/logistic_residuals_scagnostics.csv")
+log_res_info <- read_csv("simulation_data/logistic_residuals_info.csv")
+log_res <- log_res[,-1]
+log_res <- log_res %>%
+  spread(key = scag_num, value = scagnostics, sep = "_")
+log_res$signal <- log_res_info$interest
+log_res$model <- "logistic residual"
+
+qqplot <- read_csv("simulation_data/QQPlots_scagnostics.csv")
+qqplot_info <- read_csv("simulation_data/QQPlots_info.csv")
+qqplot_info$signal <- ifelse(qqplot_info$distribution == "Normal", 0, 1)
+qqplot <- qqplot[,-1]
+qqplot <- qqplot %>%
+  spread(key = scag_num, value = scagnostics, sep = "_")
+qqplot$signal <- qqplot_info$signal
+qqplot$model <- "qq plot"
+
+lin_res <- read_csv("simulation_data/resid_Scagnostics.csv")
+lin_res_info <- read_csv("simulation_data/resid_info.csv")
+lin_res <- lin_res[,-1]
+lin_res <- lin_res %>%
+  spread(key = scag_num, value = scagnostics, sep = "_")
+lin_res$signal <- lin_res_info$signal
+lin_res$model <- "linear residual"
+
+striated <- read_csv("simulation_data/striated_scagnostics.csv")
+striated_info <- read_csv("simulation_data/striated_info.csv")
+striated <- striated[,-1]
+striated <- striated %>%
+  spread(key = scag_num, value = scagnostics, sep = "_")
+striated$signal <- striated_info$Interest
+striated$model <- "striated"
+
+timeseries <- read_csv("simulation_data/TS_Scagnostics.csv")
+timeseries_info <- read_csv("simulation_data/TS_Info.csv")
+timeseries <- timeseries[,-1]
+timeseries <- timeseries %>%
+  spread(key = scag_num, value = scagnostics, sep = "_")
+timeseries$signal <- timeseries_info$signal
+timeseries$model <- "timeseries"
+
+quadratic <- read_csv("simulation_data/quad_scagnostics.csv")
+quadratic <- quadratic[,-1]
+quadratic$model <- "quadratic"
+colnames(quadratic) <- colnames(cluster)
+index1 <- sample(x = 10000, size = 3000, replace = FALSE)
+index0 <- sample(x = 10001:20000, size = 3000, replace = FALSE)
+index = c(index1, index0)
+quadratic.samp <- quadratic[index,]
+```
+
+```{r}
+distribution_scagnostics <- rbind(cluster, quadratic.samp, exponential, funnel, linear, striated)
+write.csv(distribution_scagnostics, "combined_scagnostics.csv")
+```
+
+
+
+
+

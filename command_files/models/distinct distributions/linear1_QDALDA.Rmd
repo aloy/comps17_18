@@ -1,0 +1,78 @@
+---
+title: "LDA"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(MASS)
+library(dplyr)
+
+linear_wide_scagnostics <- read_csv("simulation_data/linear_wide_scagnostics.csv")
+
+
+#####
+#LDA Model
+#####
+
+#Please ignore the brute-force cross-validation. The caret package is much more efficient, and the lda function has a cross validation parameter
+k <- 5
+folds <- cut(sample(seq_len(nrow(linear_wide_scagnostics))),  breaks=k, labels=FALSE) 
+lda_cv_accuracy <- data.frame(accuracy=numeric(5), stringsAsFactors = FALSE)
+
+for (i in seq_len(k)) {
+  train_data <- filter(linear_wide_scagnostics, folds != i) 
+  test_data <- filter(linear_wide_scagnostics, folds == i)
+
+  model_LDA <- lda(train_data$signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data)
+
+  predictions_LDA <- data.frame(predict(model_LDA, test_data))
+  predictions_LDA <- cbind(test_data, predictions_LDA)
+  lda_cv_accuracy[i] <- mean(predictions_LDA$class == predictions_LDA$signal)
+}
+print(paste("Average Accuracy", mean(lda_cv_accuracy$accuracy)))
+
+
+#####
+#QDA Models
+#####
+
+k <- 5
+folds <- cut(sample(seq_len(nrow(linear_wide_scagnostics))),  breaks=k, labels=FALSE) 
+qda1_cv_accuracy <- data.frame(accuracy=numeric(5), stringsAsFactors = FALSE)
+
+for (i in seq_len(k)) {
+  train_data <- filter(linear_wide_scagnostics, folds != i) 
+  test_data <- filter(linear_wide_scagnostics, folds == i)
+
+  model_QDA1 <- qda(train_data$signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data)
+
+
+  predictions_QDA1 <- data.frame(predict(model_QDA1, test_data))
+  predictions_QDA1 <- cbind(test_data, predictions_QDA1)
+  qda1_cv_accuracy[i] <- mean(predictions_QDA1$class == predictions_QDA1$signal)
+}
+print(paste("Average Accuracy", mean(qda1_cv_accuracy$accuracy)))
+
+#QDA using only monotonic as a predictor
+k <- 5
+folds <- cut(sample(seq_len(nrow(linear_wide_scagnostics))),  breaks=k, labels=FALSE) 
+qda2_cv_accuracy <- data.frame(accuracy=numeric(5), stringsAsFactors = FALSE)
+
+for (i in seq_len(k)) {
+  train_data <- filter(linear_wide_scagnostics, folds != i) 
+  test_data <- filter(linear_wide_scagnostics, folds == i)
+
+  model_QDA2 <- qda(train_data$signal~scag_num_9, data = train_data)
+
+
+  predictions_QDA2 <- data.frame(predict(model_QDA2, test_data))
+  predictions_QDA2 <- cbind(test_data, predictions_QDA2)
+  qda2_cv_accuracy[i] <- mean(predictions_QDA2$class == predictions_QDA2$signal)
+}
+print(paste("Average Accuracy", mean(qda2_cv_accuracy$accuracy)))
+```
+

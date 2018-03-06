@@ -1,0 +1,147 @@
+---
+title: "Cluster_Modeling"
+author: "Cari Comnick"
+date: "February 21, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(MASS)
+library(tidyverse)
+library(class)
+library(randomForest)
+library(tidyr)
+library(scagnostics)
+library(caret)
+library(boot)
+library(e1071)
+```
+
+DATA
+```{r}
+data <- read_csv("simulation_data/Cluster_Scagnostics.csv")
+data <- data[,-1]
+info <- read_csv("simulation_data/Cluster_Info.csv")
+info <- info[,-1]
+data <- data %>%
+  left_join(info) %>%
+  select(ID, scag_num, scagnostics, signal)
+data <- data %>%
+  spread(key = scag_num, value = scagnostics, sep = "_") #didn't increase index each time!
+```
+
+RANDOM FOREST
+```{r}
+forestModel <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, ntree=100, importance =T)
+
+forestModel
+
+#choose # of trees where it flattens out?
+plot(forestModel)
+
+#cross-validation
+#predictors <- names(data)
+#predictors <- predictors[!predictors %in% c("ID","signal")]
+#cv1 <- rfcv(data[,predictors], data$signal, cv.fold = 10)
+#cv1$error.cv
+tune.randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, ntree=100, importance =T)
+```
+
+LOGISTIC REGRESSION:
+```{r}
+glmScag <- glm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, family = "binomial")
+
+summary(glmScag)
+
+glm.probs <- predict(glmScag,type="response")
+
+data$predictions <- ifelse(glm.probs < .5, 0, 1)
+mean(data$signal == data$predictions)
+
+#cross validation
+1-cv.glm(data, glmScag, K=10)$delta[1]
+```
+
+K Nearest Neighbors
+```{r}
+k <- 5
+folds <- cut(sample(seq_len(nrow(data))),  breaks=k, labels=FALSE) 
+knn_cv_accuracy <- data.frame(k=numeric(5), accuracy=numeric(5), stringsAsFactors = FALSE)
+
+for (i in seq_len(k)) {
+  train_data <- filter(data, folds != i) 
+  test_data <- filter(data, folds == i)
+
+  knn_accuracy <- numeric(100)
+  for(test_k in 1:100){
+    knn_predict <- knn(train_data[,4:12], test_data[,4:12], train_data$signal, k = test_k)
+    predict_table <- table(knn_predict, test_data$signal)
+    knn_accuracy[test_k] <- (predict_table[1,1]+predict_table[2,2])/sum(predict_table)
+  }
+  knn_best_accuracy <- max(knn_accuracy) 
+  knn_best_k <- min(as.numeric(which(knn_accuracy == max(knn_accuracy))))
+  knn_cv_accuracy[i,] = c(knn_best_k, knn_best_accuracy)
+}
+
+print(paste("Average Accuracy", mean(knn_cv_accuracy$accuracy)))
+
+tune.knn(data$scag_num_1+data$scag_num_2+data$scag_num_3+data$scag_num_4+data$scag_num_5+data$scag_num_6+data$scag_num_7+data$scag_num_8+data$scag_num_9, as.factor(data$signal))
+```
+
+LDA/QDA
+```{r}
+k <- 5
+folds <- cut(sample(seq_len(nrow(data))),  breaks=k, labels=FALSE) 
+lda_cv_accuracy <- data.frame(accuracy=numeric(5), stringsAsFactors = FALSE)
+
+for (i in seq_len(k)) {
+  train_data <- filter(data, folds != i) 
+  test_data <- filter(data, folds == i)
+
+  model_LDA <- lda(train_data$signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data)
+
+  predictions_LDA <- data.frame(predict(model_LDA, test_data))
+  predictions_LDA <- cbind(test_data, predictions_LDA)
+  lda_cv_accuracy[i] <- mean(predictions_LDA$class == predictions_LDA$signal)
+}
+print(paste("Average Accuracy", mean(lda_cv_accuracy$accuracy)))
+```
+
+```{r}
+#####
+#QDA Model
+#####
+
+k <- 5
+folds <- cut(sample(seq_len(nrow(data))),  breaks=k, labels=FALSE) 
+qda1_cv_accuracy <- data.frame(accuracy=numeric(5), stringsAsFactors = FALSE)
+
+for (i in seq_len(k)) {
+  train_data <- filter(data, folds != i) 
+  test_data <- filter(data, folds == i)
+
+  model_QDA1 <- qda(train_data$signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data)
+
+  predictions_QDA1 <- data.frame(predict(model_QDA1, test_data))
+  predictions_QDA1 <- cbind(test_data, predictions_QDA1)
+  qda1_cv_accuracy[i] <- mean(predictions_QDA1$class == predictions_QDA1$signal)
+}
+print(paste("Average Accuracy", mean(qda1_cv_accuracy$accuracy)))
+```
+
+SVM
+```{r}
+svmModel <- svm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data)
+summary(svmModel)
+svm.probs <- predict(svmModel,type="response")
+
+data$svmpredictions <- ifelse(svm.probs < .5, 0, 1)
+mean(data$signal == data$svmpredictions)
+
+#figure out how to cross-validate svm?
+tune.svm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data)
+```
