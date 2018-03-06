@@ -1,0 +1,24 @@
+---
+title: "looking at new data"
+author: "Sophie Gunn"
+date: "March 6, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+data <- read_csv('data-1-2-21-20-10-12-18.csv')
+
+data1 <- data %>% filter(.n == 1)
+plot(data1$naive1.qq.x, data1$naive1.qq.y)
+
+data %>% ggplot(aes(x = naive1.qq.x, y = naive1.qq.y)) + geom_point() + facet_wrap(~.n)
+
+data2 <- read_csv('data-1-1-4-75-2-13-11.csv')
+data2 %>% ggplot(aes(x = naive1.qq.x, y = naive1.qq.y)) + geom_point() + facet_wrap(~.n)
+
+```

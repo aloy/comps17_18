@@ -84,6 +84,7 @@ for (plot in null) {
 scagnostics_sig_df <- ldply(scagnostics_sig, data.frame)
 scagnostics_null_df <- ldply(scagnostics_null, data.frame)
 scagnostics_null_df$ID <- scagnostics_null_df$ID + 1250
+
 scagnostics <- rbind(scagnostics_sig_df, scagnostics_null_df)
 scagnostics$scag_num <- rep(seq(1:9), 2500)
 scagnostics_wide <- spread(scagnostics, key = scag_num, value = scagnostics)
