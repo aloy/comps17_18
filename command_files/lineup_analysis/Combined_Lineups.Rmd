@@ -7,6 +7,7 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+setwd('..')
 ```
 
 ```{r}
@@ -16,6 +17,8 @@ library(dplyr)
 library(scagnostics)
 library(MASS)
 library(tidyverse)
+library(caret)
+library(randomForest)
 
 combined <- read.csv("simulation_data/combined_scagnostics.csv")
 signal <- subset(combined, combined$signal == 1)
@@ -156,8 +159,86 @@ accuracy
 
 ```
 
-IDEAS:
--Add in knn and random forest predictions
--Test lineups with datasets not in combined
--Test multiple signal plots
+
+Modeling outside of loop to save time
+```{r, warning = FALSE}
+Rep = 10
+R = 1000
+choices2 <- data.frame(correct.choice = numeric(R*Rep), eu.choice = numeric(R*Rep), maha.choice = numeric(R*Rep), rf.choice = numeric(R*Rep), knn.choice = numeric(R*Rep))
+for(rep in 1:Rep){
+  print(rep)
+  train_data <- rbind(sample_n(signal, 7000), sample_n(null, 7000))
+  index = which(combined$X %in% train_data$X)
+  test_data <- combined[-index,]
+
+
+  model_QDA <- qda(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+
+                     scag_num_6+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data)
+  model_logit <- glm(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+
+                       scag_num_6+scag_num_7+scag_num_8+scag_num_9, 
+                     data = train_data, family ="binomial")
+  control <- trainControl(method = "cv", number = 10, classProbs = TRUE, returnData = TRUE)
+  model_knn <- train(make.names(as.factor(signal))~scag_num_1+scag_num_2+scag_num_3+scag_num_4+
+                       scag_num_5+scag_num_6+scag_num_6+scag_num_7+scag_num_8+scag_num_9, 
+                     data = train_data, method = "knn", trControl = control, 
+                   tuneGrid = expand.grid(k = 1:25))
+  model_rf <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+
+                             scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data,
+                           ntree=100, importance =T)
+
+
+
+  test_signal <- subset(test_data, test_data$signal == 1)
+  test_null <- subset(test_data, test_data$signal == 0)
+
+  for(r in 1:R){
+    if (r%%100 == 0){print(r)}
+    entry <- ((rep-1)*R)+r
+    signal_scagnostics <- sample_n(test_signal, 1)
+    null_scagnostics <- sample_n(test_null, 19)
+    lineup_scagnostics <- rbind(signal_scagnostics, null_scagnostics)
+    lineup_scagnostics <- arrange(lineup_scagnostics, ID)
+    choices2$correct.choice[entry] <- which(lineup_scagnostics$ID == signal_scagnostics$ID)
+  
+    dscags <- lineup_scagnostics[,4:12]
+    means <- colMeans(dscags)
+    eu_dists <- NULL
+    for (i in 1:20){
+      eu_dists <- c(eu_dists, (dist(rbind(dscags[i,],means))))
+    }
+    choices2$eu.choice[entry] <- which(eu_dists == max(eu_dists))
+  
+    mah_dists <- mahalanobis(dscags, means, cov(dscags))
+    choices2$maha.choice[entry] <- which(mah_dists == max(mah_dists))
+  
+    index = which(combined$ID %in% lineup_scagnostics$ID)
+    train_data <- combined[-index,]
+  
+    QDA_preds <- predict(model_QDA, lineup_scagnostics, type = "response")
+    choices2$qda.choice[entry] <- which(QDA_preds$posterior[,2] == max(QDA_preds$posterior[,2]))
+
+    logit_preds <- predict(model_logit, lineup_scagnostics, type = "response")
+    choices2$logit.choice[entry] <- which(logit_preds == max(logit_preds))
+  
+    knn_preds <- predict.train(model_knn, lineup_scagnostics, type = "prob")
+    choices2$knn.choice[entry] <- which(knn_preds[,2] == max(knn_preds[,2]))
+
+    rf_preds <- predict(model_rf, newdata = lineup_scagnostics[,4:12], type = "prob")
+    choices2$rf.choice[entry] <- which(rf_preds[,2] == max(rf_preds[,2]))  
+
+  
+  }
+}
+accuracy2 <- data.frame(Euclidean = mean(choices2$eu.choice == choices2$correct.choice), 
+                       Mahalanobis = mean(choices2$maha.choice == choices2$correct.choice),
+                       QDA = mean(choices2$qda.choice == choices2$correct.choice),
+                       Logistic = mean(choices2$logit.choice == choices2$correct.choice),
+                       KNN = mean(choices2$knn.choice == choices2$correct.choice),
+                       Random.Forest = mean(choices2$rf.choice == choices2$correct.choice))
+accuracy2
+#EU - .774, MAH - .956, QDA - .965, LOG - .975, KNN - .952, RF - .989
+```
+
+NOTES:
+Random forest has an astounding 99% accuracy on these lineups, would be interesting to see if lineups are just easy or if computer is identifying patters that we can't
 
