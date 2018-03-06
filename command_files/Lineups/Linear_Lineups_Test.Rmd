@@ -202,4 +202,3 @@ LOO Mahalanobian Distance: 85.7% Accuracy
 Results:
 Leave-One-Out method does not seem to produce different results from using all 20 plots at once. 
 Supervised methods are much more accurate than unsupervised
-Euclidean distance is slightly better random guessing
