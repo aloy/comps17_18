@@ -49,7 +49,7 @@ importance(forestModel)
 varImpPlot(forestModel)
 data %>% mutate( prediction = predict(forestModel, type="response"), 
                  probs = predict(forestModel, type="prob")[,2]) %>%
-  select(signal, prediction, probs) %>% head()
+  select(signal, prediction, probs)
 
 
 predict_analysis <- data %>% 
