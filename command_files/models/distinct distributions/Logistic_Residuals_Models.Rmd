@@ -1,0 +1,113 @@
+---
+title: "Logistic_Residuals_Models"
+author: "Logan Crowl"
+date: "2/22/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(MASS)
+library(dplyr)
+library(tidyverse)
+library(boot)
+library(ggplot2)
+library(randomForest)
+library(caret)
+library(e1071)
+```
+
+
+```{r}
+scags <- read_csv("simulation_data/logistic_residuals_scagnostics.csv", 
+    col_types = cols(X1 = col_skip()))
+info <- read_csv("simulation_data/logistic_residuals_info.csv", 
+    col_types = cols(X1 = col_skip()))
+
+scags <- info %>%
+  select(ID, interest) %>%
+  right_join(scags)
+
+scags <- scags %>%
+  mutate(signal = ifelse(interest == 0, "Noise", "Signal")) %>%
+  spread(key = scag_num, value = scagnostics, sep = "_")
+
+```
+
+#Logistic Model
+```{r}
+LogResid.glm <- glm(interest ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = scags, family = "binomial")
+
+scags <- scags %>% 
+  mutate(probs = predict(LogResid.glm, type="response"), prediction.glm = ifelse(probs >= 0.56, "Signal", "Noise") )
+
+scags %>% 
+  ggplot(aes(x=probs, color= signal)) + 
+  geom_density() + ggtitle("Forecasted Signal Probabilities") +
+  geom_vline(xintercept = 0.56)
+
+(glm.results <- scags %>% summarize(accuracy = mean(signal == prediction.glm), precision = sum(signal == "Signal" &  prediction.glm == "Signal")/sum(prediction.glm == "Signal"), sensitivity = sum(signal == "Signal" & prediction.glm == "Signal")/sum(signal == "Signal"), specificity = sum(signal == "Noise" & prediction.glm == "Noise")/sum(signal == "Noise")) )
+
+
+#Cross-validate
+cost <- function(y, pi){mean(abs(y-pi) > 0.5)}
+cv.glm1 <- cv.glm(scags, LogResid.glm, cost, K = 10)
+(accuracy <- 1- cv.glm1$delta[1])
+```
+
+It looks like we have cross-validated accuracy of `r accuracy`
+
+#random forest
+```{r}
+LogResid.rf <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = scags, ntree=100, importance =T)
+
+LogResid.rf
+
+#choose # of trees
+plot(LogResid.rf)
+
+#cross-validation
+predictors <- names(scags)
+predictors <- predictors[!predictors %in% c("ID","signal", "distribution", "N", "probs", "prediction")]
+#not working :(
+#cv.rf1 <- rfcv(scags[,predictors], scags$signal, cv.fold = 2)
+cv.rf1
+```
+
+#LDA and QDA
+```{r}
+
+LogResid.control <- trainControl(method = "cv", number = 10, classProbs = TRUE)
+
+LogResid.lda <- train(as.factor(signal)~ scag_num_1 +scag_num_2+ scag_num_3+ scag_num_4+ scag_num_5+ scag_num_6+ scag_num_7+ scag_num_8+scag_num_9 , data = scags, method = "lda", trControl = LogResid.control)
+
+scags$prediction.lda <- predict(LogResid.lda, type = "raw")
+
+(lda.results <- scags %>% summarize(accuracy = mean(signal == prediction.lda), precision = sum(signal == "Signal" &  prediction.lda == "Signal")/sum(prediction.lda == "Signal"), sensitivity = sum(signal == "Signal" & prediction.lda == "Signal")/sum(signal == "Signal"), specificity = sum(signal == "Noise" & prediction.lda == "Noise")/sum(signal == "Noise")) )
+
+#LDA does worse than logistic regression for everything but sensitivity (which is important)
+
+LogResid.qda <- train(as.factor(signal)~ scag_num_1 +scag_num_2+ scag_num_3+ scag_num_4+ scag_num_5+ scag_num_6+ scag_num_7+ scag_num_8+scag_num_9 , data = scags, method = "qda", trControl = LogResid.control)
+
+scags$prediction.qda <- predict(LogResid.qda, type = "raw")
+
+(qda.results <- scags %>% summarize(accuracy = mean(signal == prediction.qda), precision = sum(signal == "Signal" &  prediction.qda == "Signal")/sum(prediction.qda == "Signal"), sensitivity = sum(signal == "Signal" & prediction.qda == "Signal")/sum(signal == "Signal"), specificity = sum(signal == "Noise" & prediction.qda == "Noise")/sum(signal == "Noise")) )
+
+#QDA is all over the place, better specificity and precision than LDA, but much much worse sensitivity
+```
+
+#K-nn
+```{r}
+LogResid.control <- trainControl(method = "cv", number = 10, classProbs = TRUE)
+
+LogResid.knn <- train(as.factor(signal)~ scag_num_1 +scag_num_2+ scag_num_3+ scag_num_4+ scag_num_5+ scag_num_6+ scag_num_7+ scag_num_8+scag_num_9 , data = scags, method = "knn", trControl = LogResid.control, tuneGrid = expand.grid(k = 1:25), metric = "Accuracy")
+
+scags$prediction.knn <- predict(LogResid.knn, type = "raw")
+
+(knn.results <- scags %>% summarize(accuracy = mean(signal == prediction.knn), precision = sum(signal == "Signal" &  prediction.knn == "Signal")/sum(prediction.knn == "Signal"), sensitivity = sum(signal == "Signal" & prediction.knn == "Signal")/sum(signal == "Signal"), specificity = sum(signal == "Noise" & prediction.knn == "Noise")/sum(signal == "Noise")) )
+
+#Pretty average
+```
