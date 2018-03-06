@@ -32,6 +32,53 @@ lineup_scagnostics <- arrange(lineup_scagnostics, ID)
 ```
 
 ```{r}
+####
+#LOF outlier detection
+####
+
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+#take the majority vote from each k
+prediction <- numeric(10)
+for(i in 1:10){
+  signal_scagnostics <- sample_n(signal, 1)
+  null_scagnostics <- sample_n(null, 19)
+  lineup_scagnostics <- bind_rows(signal_scagnostics, null_scagnostics)
+  lof <- numeric(18)
+  for(j in 1:18){
+  lof[j] <- which.max(lof(lineup_scagnostics[, c("scag_num_1", "scag_num_2", "scag_num_3", "scag_num_4", "scag_num_5", "scag_num_6", "scag_num_7", "scag_num_8", "scag_num_9")], k = 2:19)[,j])
+  }
+  prediction[i] <- Mode(lof)
+  print(i)
+}
+
+mean(prediction == 1)
+#yikes, doesn't do very well and is super slow
+
+#Check into using dt package for data table calculations
+
+#let's try taking the mean for each value of k
+prediction <- numeric(100)
+for(i in 1:100){
+  signal_scagnostics <- sample_n(signal, 1)
+  null_scagnostics <- sample_n(null, 19)
+  lineup_scagnostics <- rbind(signal_scagnostics, null_scagnostics)
+  prediction[i] <- which.max(rowMeans(lof(lineup_scagnostics[, c("scag_num_1", "scag_num_2", "scag_num_3", "scag_num_4", "scag_num_5", "scag_num_6", "scag_num_7", "scag_num_8", "scag_num_9")], k = 8:9)))
+  print(i)
+}
+
+mean(prediction == 1)
+
+#accuracy of 0.74 seems pretty bad.
+
+```
+
+
+
+```{r}
 #####
 #Leave One Out Predictions
 #####
