@@ -86,10 +86,10 @@ for(r in 1:R){
   logit_preds <- predict(model_logit, lineup_scagnostics, type = "response")
   choices$logit.choice[r] <- which(logit_preds == max(logit_preds))
   
-  control <- trainControl(method = "cv", number = 10, classProbs = TRUE, returnData = TRUE)
-  model_knn <- train(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+
-                     scag_num_6+scag_num_6+scag_num_7+scag_num_8+scag_num_9, 
-                     data = train_data, method = "knn", trControl = control)
+  #control <- trainControl(method = "cv", number = 10, classProbs = TRUE, returnData = TRUE)
+  #model_knn <- train(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+
+   #                  scag_num_6+scag_num_6+scag_num_7+scag_num_8+scag_num_9, 
+    #                 data = train_data, method = "knn", trControl = control)
   #knn_preds <- predict.train(model_knn, lineup_scagnostics)
   #choices$knn.choice[r] <- which(knn_preds == max(knn_preds))
   
