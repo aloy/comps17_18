@@ -90,71 +90,50 @@ cat("\nLogitsic:", which(logit_preds == max(logit_preds)))
 
 Testing prediction accuracy
 ```{r, warning = FALSE}
-Rep = 10
-R = 1000
-choices2 <- data.frame(correct.choice = numeric(R*Rep), eu.choice = numeric(R*Rep), maha.choice = numeric(R*Rep), rf.choice = numeric(R*Rep), knn.choice = numeric(R*Rep), lda.choice = numeric(R*Rep), logit.choice = numeric(R*Rep))
-for(rep in 1:Rep){
-  print(rep)
-  train_index <- sample(48, 24)
-  train_data <- subset(scagnostics, scagnostics$lineup %in% train_index)
-  index = which(scagnostics$ID %in% train_data$ID)
-  test_data <- scagnostics[-index,]
-
+choices2 <- data.frame(correct.choice = numeric(48), eu.choice = numeric(48), maha.choice = numeric(48), rf.choice = numeric(48), knn.choice = numeric(48), lda.choice = numeric(48), logit.choice = numeric(48))
+for(i in 1:48){
+  print(i)
+  test_data <- subset(scagnostics, scagnostics$lineup == i)
+  train_data <- subset(scagnostics, scagnostics$lineup != i)
+  choices2$correct.choice[i] <- which(test_data$signal == 1)
 
   model_LDA <- lda(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+
-                     scag_num_6+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data)
+                     scag_num_6+scag_num_6+scag_num_7+scag_num_9, data = train_data)
+  LDA_preds <- predict(model_LDA, test_data, type = "response")
+  choices2$lda.choice[i] <- which(LDA_preds$posterior[,2] == max(LDA_preds$posterior[,2]))
+  
   model_logit <- glm(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+
-                       scag_num_6+scag_num_7+scag_num_8+scag_num_9, 
+                       scag_num_6+scag_num_7+scag_num_9, 
                      data = train_data, family ="binomial")
+  logit_preds <- predict(model_logit, test_data, type = "response")
+  choices2$logit.choice[i] <- which(logit_preds == max(logit_preds))
+  
   control <- trainControl(method = "cv", number = 10, classProbs = TRUE, returnData = TRUE)
   model_knn <- train(make.names(as.factor(signal))~scag_num_1+scag_num_2+scag_num_3+scag_num_4+
-                       scag_num_5+scag_num_6+scag_num_6+scag_num_7+scag_num_8+scag_num_9, 
+                       scag_num_5+scag_num_6+scag_num_6+scag_num_7+scag_num_9, 
                      data = train_data, method = "knn", trControl = control, 
                    tuneGrid = expand.grid(k = 1:25))
+  knn_preds <- predict.train(model_knn, test_data, type = "prob")
+  choices2$knn.choice[i] <- which(knn_preds[,2] == max(knn_preds[,2]))
+  
   model_rf <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+
-                             scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data,
+                             scag_num_5+scag_num_6+scag_num_7+scag_num_9, data = train_data,
                            ntree=100, importance =T)
-
-
-
-
-  for(r in 1:R){
-    if (r%%100 == 0){print(r)}
-    entry <- ((rep-1)*R)+r
-    sample_lineup <- sample(test_data$lineup, 1)
-    lineup_scagnostics <- subset(test_data, test_data$lineup == sample_lineup)
-    lineup_scagnostics <- arrange(lineup_scagnostics, ID)
-    choices2$correct.choice[entry] <- which(lineup_scagnostics$signal == 1)
+  rf_preds <- predict(model_rf, newdata = test_data[,c(2:8,10)], type = "prob")
+  choices2$rf.choice[i] <- which(rf_preds[,2] == max(rf_preds[,2]))  
   
-    dscags <- lineup_scagnostics[,c(2:8, 10)]
-    means <- colMeans(dscags)
-    eu_dists <- NULL
-    for (i in 1:20){
-      eu_dists <- c(eu_dists, (dist(rbind(dscags[i,],means))))
-    }
-    choices2$eu.choice[entry] <- which(eu_dists == max(eu_dists))
-  
-    mah_dists <- mahalanobis(dscags, means, cov(dscags))
-    choices2$maha.choice[entry] <- which(mah_dists == max(mah_dists))
-  
-    index = which(combined$ID %in% lineup_scagnostics$ID)
-    train_data <- combined[-index,]
-  
-    LDA_preds <- predict(model_LDA, lineup_scagnostics, type = "response")
-    choices2$lda.choice[entry] <- which(LDA_preds$posterior[,2] == max(LDA_preds$posterior[,2]))
-
-    logit_preds <- predict(model_logit, lineup_scagnostics, type = "response")
-    choices2$logit.choice[entry] <- which(logit_preds == max(logit_preds))
-  
-    knn_preds <- predict.train(model_knn, lineup_scagnostics, type = "prob")
-    choices2$knn.choice[entry] <- which(knn_preds[,2] == max(knn_preds[,2]))
-
-    rf_preds <- predict(model_rf, newdata = lineup_scagnostics[,2:10], type = "prob")
-    choices2$rf.choice[entry] <- which(rf_preds[,2] == max(rf_preds[,2]))  
-
-  
+  dscags <- test_data[,c(2:8, 10)]
+  means <- colMeans(dscags)
+  eu_dists <- NULL
+  for (j in 1:20){
+    eu_dists <- c(eu_dists, (dist(rbind(dscags[j,],means))))
   }
+  choices2$eu.choice[i] <- which(eu_dists == max(eu_dists))
+  
+  mah_dists <- mahalanobis(dscags, means, cov(dscags))
+  choices2$maha.choice[i] <- which(mah_dists == max(mah_dists))
 }
+
 accuracy2 <- data.frame(Euclidean = mean(choices2$eu.choice == choices2$correct.choice), 
                        Mahalanobis = mean(choices2$maha.choice == choices2$correct.choice),
                        LDA = mean(choices2$lda.choice == choices2$correct.choice),
@@ -162,7 +141,8 @@ accuracy2 <- data.frame(Euclidean = mean(choices2$eu.choice == choices2$correct.
                        KNN = mean(choices2$knn.choice == choices2$correct.choice),
                        Random.Forest = mean(choices2$rf.choice == choices2$correct.choice))
 accuracy2
-#EU - .077, MAH - .000, QDA - .067, LOG - .062, KNN - .038, RF - .040
+#EU - .083, MAH - .000, QDA - .000, LOG - .000, KNN - .021, RF - .083
+#Random chance suggests an accuracy of .050
 ```
 
 
