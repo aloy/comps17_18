@@ -1,0 +1,71 @@
+---
+title: "Turk_Lineups_Combining"
+author: "Aidan Mullan"
+date: "3/8/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(plyr)
+library(tidyverse)
+library(scagnostics)
+
+temp <- list.files(path = "turk-lineup-data", pattern = ".csv")
+temp.matrix <- as.matrix(temp)
+all_files <- data.frame(index = numeric(1), .n = numeric(1), n = numeric(1), df = numeric(1), naive1.qq.x = numeric(1), naive1.qq.y = numeric(1), seed = numeric(1), correct = numeric(1), signal = numeric(1))
+
+for(i in 1:48){
+  lineup_filename <- paste("turk-lineup-data/", temp.matrix[i,], sep = "")
+  lineup_file <- read.csv(lineup_filename)
+  lineup_correct <- strsplit(as.character(temp.matrix[i,]), "-")[[1]][7]
+  lineup_shortfile <- lineup_file[,c(3:6,14,15)]
+  lineup_shortfile$index <- rep(i, length(lineup_shortfile[,1]))
+  lineup_shortfile$correct <- rep(lineup_correct, length(lineup_shortfile[,1]))
+  lineup_shortfile$signal <- ifelse(lineup_shortfile$correct == lineup_shortfile$.n, 1, 0)
+  all_files <- rbind(all_files, lineup_shortfile)
+}
+
+all_files <- all_files[-1,]
+all_files$ID <- numeric(length(all_files[,1]))
+all_files$ID[1] <- 1
+ID_index = 1
+for(j in 2:42000){
+  all_files$ID[j] <- ifelse(all_files$index[j] == all_files$index[j-1] & 
+                              all_files$.n[j] == all_files$.n[j-1], ID_index, ID_index + 1)
+  ID_index <- ifelse(all_files$index[j] == all_files$index[j-1] & 
+                              all_files$.n[j] == all_files$.n[j-1], ID_index, ID_index + 1)
+}
+```
+
+```{r}
+all_turk_info <- all_files %>% group_by(index, .n) %>%
+  summarise(ID = mean(ID), n = mean(n), df = mean(df), signal = mean(signal), seed = mean(seed))
+colnames(all_turk_info_raw) <- c("lineup", "lineup.ID", "ID", "n", "df", "signal", "seed")
+
+all_turk_plots <- data.frame(x = all_files$naive1.qq.x, y = all_files$naive1.qq.y, ID = all_files$ID, lineup = all_files$index, lineup.ID = all_files$.n)
+
+
+all_turk_scagnostics <- data.frame(ID = numeric(960), scag_num_1 = numeric(960), scag_num_2 = numeric(960), scag_num_3 = numeric(960), scag_num_4 = numeric(960), scag_num_5 = numeric(960), scag_num_6 = numeric(960), scag_num_7 = numeric(960), scag_num_8 = numeric(960), scag_num_9 = numeric(960))
+index = 1
+
+for (rep in 1:length(all_turk_info$ID)) {
+  if (index%%100 == 0){print(index)}
+  turk_subset <- subset(all_turk_plots, all_turk_plots$ID == index)
+  scagnostics <- scagnostics(turk_subset$x, turk_subset$y)$s
+  all_turk_scagnostics$ID[index] = index
+  all_turk_scagnostics[index, c(2:10)] <- scagnostics
+  index <- index + 1
+}
+all_turk_scagnostics$signal <- all_turk_info_raw$signal
+
+write.csv(all_turk_plots, "all_turk_plots.csv")
+write.csv(all_turk_info, "all_turk_info.csv")
+write.csv(all_turk_scagnostics, "all_turk_scagnostics.csv")
+```
+
+
