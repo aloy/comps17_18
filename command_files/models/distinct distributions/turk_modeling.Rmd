@@ -1,0 +1,161 @@
+---
+title: "Turk_Modeling"
+author: "Aidan Mullan"
+date: "3/9/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+library(tidyverse)
+library(tidyr)
+library(scagnostics)
+library(caret)
+library(boot)
+library(MASS)
+library(e1071)
+library(randomForest)
+library(kernlab)
+
+data <- read_csv("simulation_data/all_turk_scagnostics.csv")
+data <- data[,-1]
+info <- read_csv("simulation_data/all_turk_info.csv")
+info <- info[,-1]
+```
+
+```{r}
+#####
+#Logistic Model
+#####
+
+#Initial Model
+TSglm <- glm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, family = "binomial")
+
+summary(TSglm)
+
+TSglm.probs <- predict(TSglm,type="response")
+TSglm.predictions <- ifelse(TSglm.probs < .5, 0, 1)
+mean(info$signal == TSglm.predictions)
+
+
+#Updated Model 
+TSglm2 <- glm(signal ~ scag_num_1+scag_num_3+scag_num_4+scag_num_6+scag_num_7+scag_num_9, data = data, family = "binomial")
+summary(TSglm2)
+anova(TSglm, TSglm2, test = "Chisq")
+
+1-cv.glm(data, TSglm2, K=10)$delta[1]
+
+
+TSglm.probs2 <- predict(TSglm2,type="response")
+TSglm.predictions2 <- ifelse(TSglm.probs2 < .5, 0, 1)
+mean(info$signal == TSglm.predictions2)
+
+
+poor_predict_glm <- info[which(TSglm.predictions != info$signal),]
+
+
+```
+
+```{r}
+#####
+#LDA and QDA Models
+#####
+
+TS_control <- trainControl(method = "cv", number = 10, classProbs = TRUE, returnData = TRUE)
+
+TS_LDA <- train(make.names(as.factor(signal))~.-ID, data = data, method = "lda", trControl = TS_control)
+TS_LDA.predict <- predict(TS_LDA, type = "raw")
+TS_LDA.predict2 <- ifelse(TS_LDA.predict == "X0", 0, 1)
+mean(info$signal == TS_LDA.predict2)
+
+
+poor_predict_LDA <- info[which(TS_LDA.predict != info$signal),]
+
+
+
+#Rank deficiency
+TS_QDA <- train(make.names(as.factor(signal))~.-ID, data = data, method = "qda", trControl = TS_control)
+TS_QDA.predict <- predict(TS_QDA, type = "raw")
+TS_QDA.predict2 <- ifelse(TS_QDA.predict == "X0", 0, 1)
+mean(info$signal == TS_QDA.predict)
+
+
+poor_predict_QDA <- info[which(TS_QDA.predict != info$signal),]
+
+
+```
+
+```{r}
+#####
+#K-Nearest Neighbors
+#####
+
+TS_knn <- train(make.names(as.factor(signal))~.-ID, data = data, method = "knn", trControl = TS_control, tuneGrid = expand.grid(k = 1:25), metric = "Accuracy")
+TS_knn
+
+
+TS_knn.predict <- predict(TS_knn, type = "raw")
+TS_knn.predict2 <- ifelse(TS_knn.predict == "X0", 0, 1)
+poor_predict_knn <- info[which(TS_knn.predict2 != info$signal),]
+
+
+```
+
+```{r}
+#####
+#Random Forest
+#####
+
+#Attempt to use caret package
+TS_rf <- train(make.names(as.factor(signal))~.-ID, data = data, method = "rf", trControl = TS_control, metric = "Accuracy", tuneGrid = expand.grid(mtry = 1:9))
+TS_rf
+
+k <- 10
+folds <- cut(sample(seq_len(nrow(data))),  breaks=k, labels=FALSE) 
+TS_rf.accuracy <- data.frame(accuracy=numeric(k), stringsAsFactors = FALSE)
+
+for (i in seq_len(k)) {
+  train_data <- filter(data, folds != i) 
+  test_data <- filter(data, folds == i)
+
+  TS_rf.model <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data, ntree=100, importance =T)
+
+  TS_rf.predict <- predict(TS_rf.model, test_data)
+  TS_rf.accuracy[i,] <- mean(info$signal == TS_rf.predict)
+}
+mean(TS_rf.accuracy[,1])
+
+#Accuracy ~66%
+```
+
+```{r}
+#####
+#Support Vector Machines
+#####
+k <- 10
+folds <- cut(sample(seq_len(nrow(data))),  breaks=k, labels=FALSE) 
+TS_svm.accuracy <- data.frame(accuracy=numeric(k), stringsAsFactors = FALSE)
+
+for (i in seq_len(k)) {
+  train_data <- filter(data, folds != i) 
+  test_data <- filter(data, folds == i)
+
+  TS_svm <- svm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data)
+
+  TS_svm.probs <- predict(TS_svm, test_data, type = "raw")
+  TS_svm.predict <- ifelse(TS_svm.probs < .5, 0, 1)
+  TS_svm.accuracy[i,] <- mean(info$signal == TS_svm.predict)
+}
+mean(TS_svm.accuracy[,1])
+#Accuracy ~74%
+
+
+```
+
+NOTES:
+
+Every single model gave a prediction accuracy of 0.95 by classifying every plot as noise. This would suggest that we do not have enough signal plots to distinguish between signal and noise. This degree of inaccuracy is seen in the lineup predictions, with no model doing better than ~7% accuracy across all 48 lineups
