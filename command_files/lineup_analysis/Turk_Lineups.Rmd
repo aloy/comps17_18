@@ -315,6 +315,9 @@ turk_groups <- all_turk_responses %>% group_by(index) %>% summarise(signal = mea
 summary(turk_groups)  
 #Raw Accuracy: Min - 0.000, Mean - 0.426, Max - 1.000
 #Weighted Acc: Min - 0.000, Mean - 0.403, Max - 0.993
+
+length(which(turk_groups$signal > 0.5))/48
+#47.9% of lineups have accuracy greater than 50%
 ```
 
 ```{r}
@@ -331,29 +334,6 @@ ggplot(choice_plots, aes(x, y)) +
 
 
 
-```{r}
-mode <- function(x) {
-  ux <- unique(x)
-  ux[which.max(tabulate(match(x, ux)))]
-}
-
-turk_choice <- data.frame(mode = numeric(48))
-for(l in 1:48){
-  sl_data <- subset(all_turk_responses, all_turk_responses$index == l)
-  all_responses <- sl_data[, 3:14]
-  no_NA <- as.matrix(all_responses[, colSums(is.na(all_responses)) != nrow(all_responses)])
-  turk_choice$mode[l] <- mode(no_NA)
-}
-#Needs fix to return plot with majority vote 
-
-turk_choice2 <- data.frame(mode = numeric(48))
-for(l in 1:48){
-  sl_data <- subset(all_turk_responses, all_turk_responses$index == l)
-  all_responses <- sl_data[, 17]
-  turk_choice$mode[l] <- mode(all_responses)
-}
-#Assuming each turker has equal weight vote, majority was correct 0% of the time
-```
 
 
 
