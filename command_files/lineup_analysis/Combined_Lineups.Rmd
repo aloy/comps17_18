@@ -211,7 +211,7 @@ Modeling outside of loop to save time
 ```{r, warning = FALSE}
 Rep = 10
 R = 1000
-choices2 <- data.frame(correct.choice = numeric(R*Rep), eu.choice = numeric(R*Rep), maha.choice = numeric(R*Rep), rf.choice = numeric(R*Rep), knn.choice = numeric(R*Rep))
+choices2 <- data.frame(correct.choice = numeric(R*Rep), eu.choice = numeric(R*Rep), maha.choice = numeric(R*Rep), rf.choice = numeric(R*Rep), knn.choice = numeric(R*Rep), lda.choice = numeric(R*Rep), logit.choice = numeric(R*Rep))
 for(rep in 1:Rep){
   print(rep)
   train_data <- rbind(sample_n(signal, 7000), sample_n(null, 7000))
