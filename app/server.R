@@ -25,9 +25,7 @@ shinyServer(function(input, output) {
   df <- reactive({
     req(input$file1)
     read.csv(input$file1$datapath,
-                   header = input$header,
-                   sep = input$sep,
-                   quote = input$quote)
+                   sep = input$sep)
   })
   
   output$contents <- renderTable({
@@ -47,13 +45,6 @@ shinyServer(function(input, output) {
     string_fun <- function(col_names){
       return(paste(col_names[1], 'vs', col_names[2]))
     }
-    
-    #if(input$disp == "head") {
-     # return(head(df))
-    #}
-    #else {
-      #return(df)
-    #}
     
     output <- t(as.data.frame(lapply(pairs_list, scag_fun, dataset = df()))) 
 
