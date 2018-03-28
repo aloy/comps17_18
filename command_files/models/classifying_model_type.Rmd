@@ -48,7 +48,7 @@ plot(as.party(scag_rpart), type = "simple")
 
 scag_randomForest <- randomForest(train$model_type_fac ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train)
 summary(scag_randomForest)
-scag_randomForest$votes
+
 
 test$preds <- predict(scag_randomForest, newdata = test)
 mean(test$preds == test$model_type_fac)
