@@ -23,14 +23,7 @@ library(tidyverse)
 ```
 
 ```{r}
-points1 <- runif(500,0,1)
-points2 <- rep(c(seq(1,5,by=1)),100)
-o <- 0
-x <- ifelse(o == 0, points1, points2)
-x <- points1
-plot(points1, points2)
-
-Ns <- c(50,100,150,200,250) #number of points in each stripe(?) or total
+Ns <- c(50,100,150,200,250) #number of points in each stripe
 numStripes <- c(2,3,4,5,6,7,8) #number of stripes
 distance <- c(1,2,3) #distance between stripes
 orientation <- c(0,1) #horizontal or vertical, if 0 stripes are horizontal (points1 is x, else y)
@@ -47,7 +40,7 @@ for(n in Ns){
       for(e in error){
         for(o in orientation) {
           points1 <- runif(n*s,0,1)
-          points2 <- rep(c(seq(1, s*d, length.out = s)),n)
+          points2 <- rep(c(seq(0, (s-1)*d, by = d)),n)
           points2 <- points2 + runif(points2, -e, e)
           if (o==0){
             x <- points1
@@ -67,8 +60,8 @@ for(n in Ns){
           scatter[[index]] <- list(ID = index,  x = x, y = y)
           info[[index]] <- list(ID = index, N = n, Stripes = s, Distance = d, Error = e, Orientation = o, Interest = interest)
           index = index + 1
+       }
       }
-     }
     }
   }
 }
@@ -82,7 +75,7 @@ for (plot in scatter) {
   scagnostics1[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s)
   index = index + 1
 }
-scagnostics(scatter[[521]][["x"]],scatter[[521]][["y"]])
+plot(scatter[[528]][["x"]],scatter[[528]][["y"]])
 ```
 
 ```{r}
