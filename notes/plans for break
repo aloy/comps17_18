@@ -1,0 +1,28 @@
+plans for break:
+
+we will be writing:
+
+sections:
+  scagnostics
+    cari: clumpy, sparse, striated
+    sophie: convex, skinny
+    logan: stringy, monotonic
+    aidan: outlying, skewed
+  
+  ideas:
+    cari: geometric graphs, feature measures 
+    sophie: convex hulls
+    logan: nonconvex hull/alpha hull 
+    aidan: MST 
+  
+  statistical learning models/algorithms
+    cari: logistic regression, knn
+    sophie: svm 
+    logan: random forest 
+    aidan: LDA & QDA
+
+  simulation methods: everyone write about their own
+    cari: striated, funnel, cluster
+    sophie:	quadratic,	donut,  linear2
+	  logan: QQplots, logistic residials
+	  aidan: time series, exponential, linear residuals

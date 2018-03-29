@@ -1,0 +1,360 @@
+---
+title: "MTurk_Lineups"
+author: "Aidan Mullan"
+date: "3/8/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(nullabor)
+library(ggplot2)
+library(dplyr)
+library(scagnostics)
+library(MASS)
+library(tidyverse)
+library(caret)
+library(randomForest)
+
+scagnostics <- read.csv("simulation_data/turk10_scagnostics.csv")
+scagnostics <- scagnostics[,-1]
+info <- read.csv("simulation_data/turk10_info.csv")
+info <- info[,-1]
+colnames(info) <- c("lineup", "lineup.ID", "ID", "n", "df", "signal", "seed")
+plots <- read.csv("simulation_data/turk10_plots.csv")
+plots <- plots[,-1]
+
+scagnostics$lineup <- info$lineup
+```
+
+
+```{r}
+#Lineups with 19 simulated noise and 1 simulated signal
+sample <- sample_n(info, 1)
+lineup_plots <- subset(plots, plots$lineup == sample$lineup)
+lineup_info <- subset(info, info$lineup == sample$lineup)
+signal_info <- lineup_info[which(lineup_info$signal == 1),]
+
+
+#To scale all plots, scales = "free" in facet_wrap
+ggplot(lineup_plots, aes(x, y)) +
+  geom_point() +
+  facet_wrap(~lineup.ID, nrow = 4, labeller = label_context) 
+
+
+cat("Different Plot:", signal_info$lineup.ID)
+```
+
+```{r, warning=FALSE}
+#####
+#Lineups with distance predictions
+#####
+
+lineup_scagnostics <- subset(scagnostics, scagnostics$ID %in% lineup_info$ID)
+dscags <- lineup_scagnostics[,c(2:8,10)]
+means <- colMeans(dscags)
+
+#Euclidean distance
+eu_dists <- NULL
+for (i in 1:20){
+  eu_dists <- c(eu_dists, (dist(rbind(dscags[i,],means))))
+}
+cat("Euclidean:", which(eu_dists == max(eu_dists)))
+
+#Mahalnobis distance
+mah_dists <- mahalanobis(dscags, means, cov(dscags))
+cat("\nMahalnobis:", which(mah_dists == max(mah_dists)))
+
+#####
+#Lineups with model predictions
+#####
+
+lineup_scagnostics <- arrange(lineup_scagnostics, ID)
+index = which(scagnostics$ID %in% lineup_scagnostics$ID)
+train_data <- scagnostics[-index,]
+
+#LDA
+model_LDA <- lda(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data)
+LDA_preds <- predict(model_LDA, lineup_scagnostics, type = "response")
+cat("\nLDA:", which(LDA_preds$posterior[,2] == max(LDA_preds$posterior[,2])))
+
+#Logistic
+model_logit <- glm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data, family = "binomial")
+logit_preds <- predict(model_logit, lineup_scagnostics, type = "response")
+cat("\nLogitsic:", which(logit_preds == max(logit_preds)))
+```
+
+Testing prediction accuracy
+```{r, warning = FALSE}
+choices <- data.frame(correct.choice = numeric(48), eu.choice = numeric(48), maha.choice = numeric(48), rf.choice = numeric(48), knn.choice = numeric(48), lda.choice = numeric(48), logit.choice = numeric(48))
+for(i in 1:48){
+  print(i)
+  test_data <- subset(scagnostics, scagnostics$lineup == i)
+  train_data <- subset(scagnostics, scagnostics$lineup != i)
+  choices$correct.choice[i] <- which(test_data$signal == 1)
+
+  model_LDA <- lda(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+
+                     scag_num_6+scag_num_6+scag_num_7+scag_num_9, data = train_data)
+  LDA_preds <- predict(model_LDA, test_data, type = "response")
+  choices$lda.choice[i] <- which(LDA_preds$posterior[,2] == max(LDA_preds$posterior[,2]))
+  
+  model_logit <- glm(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+
+                       scag_num_6+scag_num_7+scag_num_9, 
+                     data = train_data, family ="binomial")
+  logit_preds <- predict(model_logit, test_data, type = "response")
+  choices$logit.choice[i] <- which(logit_preds == max(logit_preds))
+  
+  control <- trainControl(method = "cv", number = 10, classProbs = TRUE, returnData = TRUE)
+  model_knn <- train(make.names(as.factor(signal))~scag_num_1+scag_num_2+scag_num_3+scag_num_4+
+                       scag_num_5+scag_num_6+scag_num_6+scag_num_7+scag_num_9, 
+                     data = train_data, method = "knn", trControl = control, 
+                   tuneGrid = expand.grid(k = 1:25))
+  knn_preds <- predict.train(model_knn, test_data, type = "prob")
+  choices$knn.choice[i] <- which(knn_preds[,2] == max(knn_preds[,2]))
+  
+  model_rf <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+
+                             scag_num_5+scag_num_6+scag_num_7+scag_num_9, data = train_data,
+                           ntree=100, importance =T)
+  rf_preds <- predict(model_rf, newdata = test_data[,c(2:8,10)], type = "prob")
+  choices$rf.choice[i] <- which(rf_preds[,2] == max(rf_preds[,2]))  
+  
+  dscags <- test_data[,c(2:8, 10)]
+  means <- colMeans(dscags)
+  eu_dists <- NULL
+  for (j in 1:20){
+    eu_dists <- c(eu_dists, (dist(rbind(dscags[j,],means))))
+  }
+  choices$eu.choice[i] <- which(eu_dists == max(eu_dists))
+  
+  mah_dists <- mahalanobis(dscags, means, cov(dscags))
+  choices$maha.choice[i] <- which(mah_dists == max(mah_dists))
+}
+
+accuracy <- data.frame(Euclidean = mean(choices$eu.choice == choices$correct.choice), 
+                       Mahalanobis = mean(choices$maha.choice == choices$correct.choice),
+                       LDA = mean(choices$lda.choice == choices$correct.choice),
+                       Logistic = mean(choices$logit.choice == choices$correct.choice),
+                       KNN = mean(choices$knn.choice == choices$correct.choice),
+                       Random.Forest = mean(choices$rf.choice == choices$correct.choice))
+accuracy
+#EU - .083, MAH - .000, LDA - .000, LOG - .000, KNN - .021, RF - .083
+#Random chance suggests an accuracy of .050
+```
+
+
+Permuting across all lineups
+```{r, warning = FALSE}
+Rep = 10
+R = 1000
+choices2 <- data.frame(correct.choice = numeric(R*Rep), eu.choice = numeric(R*Rep), maha.choice = numeric(R*Rep), rf.choice = numeric(R*Rep), knn.choice = numeric(R*Rep), lda.choice = numeric(R*Rep), logit.choice = numeric(R*Rep))
+
+signal <- subset(scagnostics, scagnostics$signal == 1)
+null <- subset(scagnostics, scagnostics$signal == 0)
+for(rep in 1:Rep){
+  print(rep)
+  train_data <- rbind(sample_n(signal, 24), sample_n(null, 456))
+  index = which(scagnostics$ID %in% train_data$ID)
+  test_data <- scagnostics[-index,]
+
+
+  model_LDA <- lda(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+
+                     scag_num_6+scag_num_6+scag_num_7+scag_num_9, data = train_data)
+  model_logit <- glm(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+
+                       scag_num_6+scag_num_7+scag_num_9, 
+                     data = train_data, family ="binomial")
+  control <- trainControl(method = "cv", number = 10, classProbs = TRUE, returnData = TRUE)
+  model_knn <- train(make.names(as.factor(signal))~scag_num_1+scag_num_2+scag_num_3+scag_num_4+
+                       scag_num_5+scag_num_6+scag_num_6+scag_num_7+scag_num_9, 
+                     data = train_data, method = "knn", trControl = control, 
+                   tuneGrid = expand.grid(k = 1:25))
+  model_rf <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+
+                             scag_num_5+scag_num_6+scag_num_7+scag_num_9, data = train_data,
+                           ntree=100, importance =T)
+
+
+
+  test_signal <- subset(test_data, test_data$signal == 1)
+  test_null <- subset(test_data, test_data$signal == 0)
+
+  for(r in 1:R){
+    if (r%%100 == 0){print(r)}
+    entry <- ((rep-1)*R)+r
+    signal_scagnostics <- sample_n(test_signal, 1)
+    null_scagnostics <- sample_n(test_null, 19)
+    lineup_scagnostics <- rbind(signal_scagnostics, null_scagnostics)
+    lineup_scagnostics <- arrange(lineup_scagnostics, ID)
+    choices2$correct.choice[entry] <- which(lineup_scagnostics$ID == signal_scagnostics$ID)
+  
+    dscags <- lineup_scagnostics[,c(2:8, 10)]
+    means <- colMeans(dscags)
+    eu_dists <- NULL
+    for (i in 1:20){
+      eu_dists <- c(eu_dists, (dist(rbind(dscags[i,],means))))
+    }
+    choices2$eu.choice[entry] <- which(eu_dists == max(eu_dists))
+  
+    mah_dists <- mahalanobis(dscags, means, cov(dscags))
+    choices2$maha.choice[entry] <- which(mah_dists == max(mah_dists))
+  
+    LDA_preds <- predict(model_LDA, lineup_scagnostics, type = "response")
+    choices2$lda.choice[entry] <- which(LDA_preds$posterior[,2] == max(LDA_preds$posterior[,2]))
+
+    logit_preds <- predict(model_logit, lineup_scagnostics, type = "response")
+    choices2$logit.choice[entry] <- which(logit_preds == max(logit_preds))
+  
+    knn_preds <- predict.train(model_knn, lineup_scagnostics, type = "prob")
+    choices2$knn.choice[entry] <- which(knn_preds[,2] == max(knn_preds[,2]))
+
+    rf_preds <- predict(model_rf, newdata = lineup_scagnostics[,c(2:8, 10)], type = "prob")
+    choices2$rf.choice[entry] <- which(rf_preds[,2] == max(rf_preds[,2]))  
+
+  
+  }
+}
+accuracy2 <- data.frame(Euclidean = mean(choices2$eu.choice == choices2$correct.choice), 
+                       Mahalanobis = mean(choices2$maha.choice == choices2$correct.choice),
+                       LDA = mean(choices2$lda.choice == choices2$correct.choice),
+                       Logistic = mean(choices2$logit.choice == choices2$correct.choice),
+                       KNN = mean(choices2$knn.choice == choices2$correct.choice),
+                       Random.Forest = mean(choices2$rf.choice == choices2$correct.choice))
+accuracy2
+#EU - .063, MAH - .055, LDA - .035, LOG - .037, KNN - .043, RF - .051
+```
+
+Using simulation models on MTurk lineups
+```{r, warning = FALSE}
+old_scags_raw <- read.csv("simulation_data/QQPlots_scagnostics.csv")
+old_scags <- old_scags_raw[,-1]
+old_info_raw <- read.csv("simulation_data/QQPlots_info.csv")
+old_info <- old_info_raw[,-1]
+
+old_scags <- old_scags %>% spread(key = scag_num, value = scagnostics, sep = "_")
+old_info$signal <- ifelse(old_info$distribution == "Normal", 0, 1)
+old_scags <- merge(old_scags, old_info[,c(1,7)], by.x = "ID", by.y = "ID")
+
+model_LDA <- lda(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+
+                     scag_num_6+scag_num_6+scag_num_7+scag_num_9, data = old_scags)
+model_logit <- glm(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+
+                       scag_num_6+scag_num_7+scag_num_9, 
+                     data = old_scags, family ="binomial")
+control <- trainControl(method = "cv", number = 10, classProbs = TRUE, returnData = TRUE)
+model_knn <- train(make.names(as.factor(signal))~scag_num_1+scag_num_2+scag_num_3+scag_num_4+
+                       scag_num_5+scag_num_6+scag_num_6+scag_num_7+scag_num_9, 
+                     data = old_scags, method = "knn", trControl = control, 
+                   tuneGrid = expand.grid(k = 1:25))
+model_rf <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+
+                             scag_num_5+scag_num_6+scag_num_7+scag_num_9, data = old_scags,
+                           ntree=100, importance =T)
+
+choices <- data.frame(correct.choice = numeric(48), eu.choice = numeric(48), maha.choice = numeric(48), rf.choice = numeric(48), knn.choice = numeric(48), lda.choice = numeric(48), logit.choice = numeric(48))
+for(i in 1:48){
+  print(i)
+  test_data <- subset(scagnostics, scagnostics$lineup == i)
+  choices$correct.choice[i] <- which(test_data$signal == 1)
+
+
+  LDA_preds <- predict(model_LDA, test_data, type = "response")
+  choices$lda.choice[i] <- which(LDA_preds$posterior[,2] == max(LDA_preds$posterior[,2]))
+  
+  logit_preds <- predict(model_logit, test_data, type = "response")
+  choices$logit.choice[i] <- which(logit_preds == max(logit_preds))
+
+  knn_preds <- predict.train(model_knn, test_data, type = "prob")
+  choices$knn.choice[i] <- which(knn_preds[,2] == max(knn_preds[,2]))
+  
+  rf_preds <- predict(model_rf, newdata = test_data[,c(2:8,10)], type = "prob")
+  choices$rf.choice[i] <- which(rf_preds[,2] == max(rf_preds[,2]))  
+  
+  dscags <- test_data[,c(2:8, 10)]
+  means <- colMeans(dscags)
+  eu_dists <- NULL
+  for (j in 1:20){
+    eu_dists <- c(eu_dists, (dist(rbind(dscags[j,],means))))
+  }
+  choices$eu.choice[i] <- which(eu_dists == max(eu_dists))
+  
+  mah_dists <- mahalanobis(dscags, means, cov(dscags))
+  choices$maha.choice[i] <- which(mah_dists == max(mah_dists))
+}
+
+#accuracy <- data.frame(Euclidean = mean(choices$eu.choice == choices$correct.choice), 
+ #                      Mahalanobis = mean(choices$maha.choice == choices$correct.choice),
+  #                     LDA = mean(choices$lda.choice == choices$correct.choice),
+   #                    Logistic = mean(choices$logit.choice == choices$correct.choice),
+    #                   KNN = mean(choices$knn.choice == choices$correct.choice),
+     #                  Random.Forest = mean(choices$rf.choice == choices$correct.choice))
+
+accuracy <- data.frame(Euclidean = mean(choices$eu.choice == 20), 
+                       Mahalanobis = mean(choices$maha.choice == 20),
+                       LDA = mean(choices$lda.choice == 20),
+                       Logistic = mean(choices$logit.choice == 20),
+                       KNN = mean(choices$knn.choice == 20),
+                       Random.Forest = mean(choices$rf.choice == 20))
+accuracy
+#EU - .083, MAH - .000, LDA - .063, LOG - .021, KNN - .063, RF - .063
+#EU - .167, MAH - .146, LDA - .250, LOG - .333, KNN - .208, RF - .313 
+
+```
+
+```{r}
+all_turk_responses <- read.csv("simulation_data/all_turk_responses.csv")
+all_turk_responses$signal <- NA
+all_turk_responses$weighted <- NA
+for(i in 1:21838){
+  if (i%%1000 == 0){print(i)}
+  response <- all_turk_responses[i, 3:14]
+  no_NA <- response[, colSums(is.na(response)) != nrow(response)]
+  all_turk_responses$signal[i] <- ifelse(all_turk_responses$plot_location[i] %in% no_NA, 1, 0)
+  all_turk_responses$weighted[i] <- all_turk_responses$signal[i] / length(no_NA)
+}
+
+mean(all_turk_responses$signal)
+mean(na.omit(all_turk_responses$weighted))
+#No Weight - .441
+#Weighted - .418
+
+turk_groups <- all_turk_responses %>% group_by(index) %>% summarise(signal = mean(signal, na.rm = TRUE), weighted = mean(weighted, na.rm = TRUE))
+
+summary(turk_groups)  
+#Raw Accuracy: Min - 0.000, Mean - 0.426, Max - 1.000
+#Weighted Acc: Min - 0.000, Mean - 0.403, Max - 0.993
+
+length(which(turk_groups$signal > 0.5))/48
+#47.9% of lineups have accuracy greater than 50%
+
+turk_groups$predict <- ifelse(turk_groups$signal > 0.5, 1, 0)
+best_model <- ifelse(choices$logit.choice == 20, 1, 0)
+turk_table <- data.frame(best.model = best_model, turk.response = turk_groups$predict)
+
+
+mcnemar.test(table(turk_table))
+#No difference between best model predictions and human predictions
+```
+
+```{r}
+choice <- 15
+choice_plots <- subset(plots, plots$lineup == choice)
+choice_info <- subset(info, info$lineup == choice)
+cat(subset(choice_info, choice_info$signal == 1)$lineup.ID)
+
+#To scale all plots, scales = "free" in facet_wrap
+ggplot(choice_plots, aes(x, y)) +
+  geom_point() +
+  facet_wrap(~lineup.ID, nrow = 4, labeller = label_context) 
+
+
+ggplot(data_1_2_15_50_2_13_6, aes(naive1.qq.x, naive1.qq.y)) +
+  geom_point() +
+  facet_wrap(~.n, nrow = 4, labeller = label_context) 
+```
+
+
+
+
+
+
+
