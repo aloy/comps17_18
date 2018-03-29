@@ -28,14 +28,30 @@ shinyServer(function(input, output) {
                    sep = input$sep)
   })
   
+  #colnames <- reactive({
+  #  colnames <- vector()
+  #  for (var in colnames(df())){
+  #    if (length(unique(df()[,var]))/length(df()[,var]) > 0.05){
+  #      colnames <- c(colnames, var)
+  #    }
+  #  }
+  #})
+  
   output$contents <- renderTable({
     
     # input$file1 will be NULL initially. After the user selects
     # and uploads a file, head of that data file by default,
     # or all rows if selected, will be shown.
     
-  
-    pairs <- combn(colnames(df()), 2)
+    #checking whether discrete or not:
+    colnames <- vector()
+    for (var in colnames(df())){
+      if (length(unique(df()[,var]))/length(df()[,var]) > 0.1){
+        colnames <- c(colnames, var)
+      }
+    }
+    
+    pairs <- combn(colnames, 2)
     pairs_list <- split(pairs, rep(1:ncol(pairs), each = nrow(pairs)))
     
     scag_fun <- function(dataset, col_names){
@@ -57,8 +73,15 @@ shinyServer(function(input, output) {
     pred_df <- pred_df %>% arrange(preds)
     return(pred_df)
   })
+  
   output$pairs <- renderPlot({
-    return(pairs(df()))
+    colnames <- vector()
+    for (var in colnames(df())){
+      if (length(unique(df()[,var]))/length(df()[,var]) > 0.1){
+        colnames <- c(colnames, var)
+      }
+    }
+    return(pairs(df()[,colnames]))
   })
   
 })
