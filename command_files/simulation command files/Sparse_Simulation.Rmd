@@ -1,0 +1,50 @@
+---
+title: "Sparse_Simulation"
+author: "Cari Comnick"
+date: "March 29, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(MASS)
+library(readr)
+install.packages('devtools')
+devtools::install_github("aloy/scagnostics")
+library(scagnostics)
+library(ggplot2)
+```
+
+Sparse(product of integer[1,3] with itself)
+```{r}
+R <- 50 #replication
+N <- c(3:15) #number of total points
+X <- c(1:15) #choose x coords
+Y <- c(1:15) #choose y coords
+
+scatter <- vector(mode = "list")
+info <- vector(mode = "list")
+index = 1
+
+for (r in R){
+  for (n in N){
+    x <- sample(X, n)
+    y <- sample(Y, n)
+    index = index + 1
+    scatter[[index]] <- list(ID = index,  x = x , y = y)
+    info[[index]] <- list(ID = index, N = n, signal = 1)
+  }
+}
+```
+
+```{r}
+plot(scatter[[14]][["x"]],scatter[[14]][["y"]])
+scagnostics(scatter[[1]][["x"]],scatter[[14]][["y"]])
+x <- c(1:3)
+y <- c(1:3)
+plot(x,y)
+scagnostics(x,y)
+```
