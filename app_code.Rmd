@@ -1,0 +1,34 @@
+---
+title: "app_working"
+author: "Sophie Gunn"
+date: "March 27, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+data(mtcars)
+pairs <- combn(colnames(mtcars), 2)
+pairs_list <- split(pairs, rep(1:ncol(pairs), each = nrow(pairs)))
+
+scag_fun <- function(dataset, col_names){
+  scagnostics <- scagnostics(dataset[col_names])
+  return(scagnostics[1:9])
+}
+string_fun <- function(col_names){
+  return(paste(col_names[1], 'vs', col_names[2]))
+}
+
+output <- t(as.data.frame(lapply(pairs_list, scag_fun, dataset = mtcars))) 
+rownames(output) <- lapply(pairs_list, string_fun)
+colnames(output) <- c("scag_num_1", "scag_num_2", "scag_num_3", "scag_num_4", "scag_num_5", "scag_num_6", "scag_num_7", "scag_num_8", "scag_num_9")
+
+
+preds <- predict(scag_randomForest, newdata = output)
+as.data.frame(preds)
+
+
+```

@@ -13,8 +13,13 @@ knitr::opts_chunk$set(echo = TRUE)
 devtools::install_github("aloy/scagnostics")
 library(scagnostics)
 library(plyr)
+library(nortest)
 ```
 
+#Additional scagnostic-type measures (work in progress)
+```{r}
+
+```
 
 
 We will generate QQplots from random data from normal distributions, t-distributions, exponential distributions, log normal distributions, and chi-squared distributions.  We try to match variability for normal, t, and exponential distributions by setting sd of normal and exponential distributions to sqrt(df/(df-2)), which is the standard deviation of the t-distribution.  We also simulate one QQPlot for a normal distribution for every non-normal QQplot in order to maintain a 50-50 ratio of signal to noise.
@@ -34,33 +39,38 @@ for(i in 1:100){
     for(df in DF){
       #normal
       for(i in 1:4){ 
-        norm <- qqnorm(rnorm(n, 0,sqrt(df/(df-2))), plot.it = F)
-        QQPlots[[index]] <- list(ID = index,  x = norm$x , y = norm$y)
+        normdata <- rnorm(n, 0,sqrt(df/(df-2)))
+        norm <- qqnorm(normdata, plot.it = F)
+        QQPlots[[index]] <- list(ID = index,  x = norm$x , y = norm$y, origdata = normdata )
         info[[index]] <- list(ID = index, N = n, distribution = "Normal", mean = 0, sd = sqrt(df/(df-2)), df = NA)
         index = index + 1
       }
       
       #t-distribution
-      t <- qqnorm(rt(n, df = df), plot.it = F)
-      QQPlots[[index]] <- list(ID = index,  x = t$x , y = t$y)
+      tdata <- rt(n, df = df) 
+      t <- qqnorm(tdata, plot.it = F)
+      QQPlots[[index]] <- list(ID = index,  x = t$x , y = t$y, origdata = tdata)
       info[[index]] <- list(ID = index, N = n, distribution = "T", mean = 0, sd = sqrt(df/(df-2)), df = df)
       index = index + 1
       
       #Exponential 
-      exp <- qqnorm(rexp(n, rate = 1/(sqrt(df/(df-2)))), plot.it= F)
-      QQPlots[[index]] <- list(ID = index,  x = exp$x , y = exp$y)
+      expdata <- rexp(n, rate = 1/(sqrt(df/(df-2))))
+      exp <- qqnorm(expdata, plot.it= F)
+      QQPlots[[index]] <- list(ID = index,  x = exp$x , y = exp$y, origdata = expdata)
       info[[index]] <- list(ID = index, N = n, distribution = "Exponential", mean = sqrt(df/(df-2)), sd = sqrt(df/(df-2)), df = NA)
       index = index + 1
       
       #logNormal
-      logNorm <- qqnorm(rlnorm(n, sdlog = sqrt(log(0.5 + 0.5*sqrt(1 + 4*df/(df-2))))), plot.it = F)
-      QQPlots[[index]] <- list(ID = index,  x = logNorm$x , y = logNorm$y)
+      logNormData <- rlnorm(n, sdlog = sqrt(log(0.5 + 0.5*sqrt(1 + 4*df/(df-2)))))
+      logNorm <- qqnorm(logNormData, plot.it = F)
+      QQPlots[[index]] <- list(ID = index,  x = logNorm$x , y = logNorm$y, origdata = logNormData)
       info[[index]] <- list(ID = index, N = n, distribution = "Log-Normal", mean = exp(df/(2*(df-2))), sd = sqrt(df/(df-2)), df = NA)
       index = index + 1
       
       #Chi-Squared
-      chisq <- qqnorm(rchisq(n, df), plot.it = F)
-      QQPlots[[index]] <- list(ID = index,  x = chisq$x , y = chisq$y)
+      chisqData <- rchisq(n, df) 
+      chisq <- qqnorm(chisqData, plot.it = F)
+      QQPlots[[index]] <- list(ID = index,  x = chisq$x , y = chisq$y, origdata = chisqData)
       info[[index]] <- list(ID = index, N = n, distribution = "Chi-Squared", mean = df, sd = sqrt(2*df), df = df)
       index = index + 1
     }
@@ -76,7 +86,7 @@ QQscagnostics <- vector(mode = "list")
 index = 1
 for (plot in QQPlots) {
   if (index%%100 == 0){print(index)}
-  QQscagnostics[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s)
+  QQscagnostics[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s, AD_pvalue = ad.test(plot$origdata)$p.value, SW_pvalue = shapiro.test(plot$origdata)$p.value, CVM_pvalue = cvm.test(plot$origdata)$p.value, lillie_pvalue = lillie.test(plot$origdata)$p.value, pearson_pvalue = pearson.test(plot$origdata)$p.value, SF_pvalue = sf.test(plot$origdata)$p.value)
   index = index + 1
 }
 ```
@@ -93,7 +103,7 @@ QQscagnostics_df$scag_num <- scag_num
 
 save the CSV
 ```{r}
-write.csv(info_df, "QQPlots_info.csv")
-write.csv(QQPlots_df, "QQplots.csv")
-write.csv(QQscagnostics_df, "QQPlots_scagnostics.csv")
+write.csv(info_df, "simulation_data/QQPlots_info.csv")
+write.csv(QQPlots_df, "simulation_data/QQplots.csv")
+write.csv(QQscagnostics_df, "simulation_data/QQPlots_scagnostics.csv")
 ```
