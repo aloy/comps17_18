@@ -16,11 +16,8 @@ library(plyr)
 library(nortest)
 ```
 
-#Additional scagnostic-type measures
+#Additional scagnostic-type measures (work in progress)
 ```{r}
-deviation <- function(qqplot){
-  
-}
 
 ```
 
@@ -106,7 +103,7 @@ QQscagnostics_df$scag_num <- scag_num
 
 save the CSV
 ```{r}
-write.csv(info_df, "QQPlots_info.csv")
-write.csv(QQPlots_df, "QQplots.csv")
-write.csv(QQscagnostics_df, "QQPlots_scagnostics.csv")
+write.csv(info_df, "simulation_data/QQPlots_info.csv")
+write.csv(QQPlots_df, "simulation_data/QQplots.csv")
+write.csv(QQscagnostics_df, "simulation_data/QQPlots_scagnostics.csv")
 ```
