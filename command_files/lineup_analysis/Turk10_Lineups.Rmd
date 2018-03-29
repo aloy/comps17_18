@@ -20,12 +20,12 @@ library(tidyverse)
 library(caret)
 library(randomForest)
 
-scagnostics <- read.csv("simulation_data/all_turk_scagnostics.csv")
+scagnostics <- read.csv("simulation_data/turk10_scagnostics.csv")
 scagnostics <- scagnostics[,-1]
-info <- read.csv("simulation_data/all_turk_info.csv")
+info <- read.csv("simulation_data/turk10_info.csv")
 info <- info[,-1]
 colnames(info) <- c("lineup", "lineup.ID", "ID", "n", "df", "signal", "seed")
-plots <- read.csv("simulation_data/all_turk_plots.csv")
+plots <- read.csv("simulation_data/turk10_plots.csv")
 plots <- plots[,-1]
 
 scagnostics$lineup <- info$lineup
@@ -281,16 +281,23 @@ for(i in 1:48){
   choices$maha.choice[i] <- which(mah_dists == max(mah_dists))
 }
 
-accuracy <- data.frame(Euclidean = mean(choices$eu.choice == choices$correct.choice), 
-                       Mahalanobis = mean(choices$maha.choice == choices$correct.choice),
-                       LDA = mean(choices$lda.choice == choices$correct.choice),
-                       Logistic = mean(choices$logit.choice == choices$correct.choice),
-                       KNN = mean(choices$knn.choice == choices$correct.choice),
-                       Random.Forest = mean(choices$rf.choice == choices$correct.choice))
+#accuracy <- data.frame(Euclidean = mean(choices$eu.choice == choices$correct.choice), 
+ #                      Mahalanobis = mean(choices$maha.choice == choices$correct.choice),
+  #                     LDA = mean(choices$lda.choice == choices$correct.choice),
+   #                    Logistic = mean(choices$logit.choice == choices$correct.choice),
+    #                   KNN = mean(choices$knn.choice == choices$correct.choice),
+     #                  Random.Forest = mean(choices$rf.choice == choices$correct.choice))
+
+accuracy <- data.frame(Euclidean = mean(choices$eu.choice == 20), 
+                       Mahalanobis = mean(choices$maha.choice == 20),
+                       LDA = mean(choices$lda.choice == 20),
+                       Logistic = mean(choices$logit.choice == 20),
+                       KNN = mean(choices$knn.choice == 20),
+                       Random.Forest = mean(choices$rf.choice == 20))
 accuracy
 #EU - .083, MAH - .000, LDA - .063, LOG - .021, KNN - .063, RF - .063
-#Random chance suggests an accuracy of .050
-#Predictions are all still very low, best is still Euclidean estimation
+#EU - .167, MAH - .146, LDA - .250, LOG - .333, KNN - .208, RF - .313 
+
 ```
 
 ```{r}
@@ -318,10 +325,18 @@ summary(turk_groups)
 
 length(which(turk_groups$signal > 0.5))/48
 #47.9% of lineups have accuracy greater than 50%
+
+turk_groups$predict <- ifelse(turk_groups$signal > 0.5, 1, 0)
+best_model <- ifelse(choices$logit.choice == 20, 1, 0)
+turk_table <- data.frame(best.model = best_model, turk.response = turk_groups$predict)
+
+
+mcnemar.test(table(turk_table))
+#No difference between best model predictions and human predictions
 ```
 
 ```{r}
-choice <- 48
+choice <- 15
 choice_plots <- subset(plots, plots$lineup == choice)
 choice_info <- subset(info, info$lineup == choice)
 cat(subset(choice_info, choice_info$signal == 1)$lineup.ID)
@@ -330,7 +345,13 @@ cat(subset(choice_info, choice_info$signal == 1)$lineup.ID)
 ggplot(choice_plots, aes(x, y)) +
   geom_point() +
   facet_wrap(~lineup.ID, nrow = 4, labeller = label_context) 
+
+
+ggplot(data_1_2_15_50_2_13_6, aes(naive1.qq.x, naive1.qq.y)) +
+  geom_point() +
+  facet_wrap(~.n, nrow = 4, labeller = label_context) 
 ```
+
 
 
 
