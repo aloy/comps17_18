@@ -17,7 +17,7 @@ library(scagnostics)
 
 temp <- list.files(path = "turk-lineup-data", pattern = ".csv")
 temp.matrix <- as.matrix(temp)
-all_files <- data.frame(index = numeric(1), .n = numeric(1), n = numeric(1), df = numeric(1), naive1.qq.x = numeric(1), naive1.qq.y = numeric(1), seed = numeric(1), correct = numeric(1), signal = numeric(1))
+
 
 for(i in 1:48){
   lineup_filename <- paste("turk-lineup-data/", temp.matrix[i,], sep = "")
