@@ -167,3 +167,98 @@ accuracy <- data.frame(Euclidean = mean(choices$eu.choice == choices$correct.cho
 accuracy
 ```
 
+```{r}
+scag <- data.frame("1"= numeric(2),"2"= numeric(2),"3"= numeric(2),"4"= numeric(2),"5"= numeric(2),"6"= numeric(2),"7"= numeric(2),"8"= numeric(2),"9"= numeric(2))
+for(i in 1:20){
+  plot <- subset(choice_plots, choice_plots$in.lineup.ID == i)
+  scag[i,] <- scagnostics(plot$x, plot$y)$s
+}
+
+test <- data.frame(correct.choice = numeric(20), model.choice = numeric(20))
+for(i in 1:20){
+  print(i)
+  test_data <- subset(scagnostics, scagnostics$set == i)
+  train_data <- subset(scagnostics, scagnostics$set != i)
+  test$correct.choice[i] <- which(test_data$signal == 1)
+  
+  scag2 <- test_data[,2:10]
+  means <- colMeans(scag)
+  eu_dists <- NULL
+  for (j in 1:20){
+    eu_dists <- c(eu_dists, (dist(rbind(scag[j,],means))))
+  }
+  test$model.choice[i] <- which(eu_dists == max(eu_dists))
+}
+
+means <- colMeans(scag)
+eu_dists <- NULL
+for (j in 1:20){
+  eu_dists <- c(eu_dists, (dist(rbind(scag[j,],means))))
+}
+which(eu_dists == max(eu_dists))
+```
+
+```{r, warning = FALSE}
+#Look into redoing scagnostics for this data
+
+choices <- data.frame(correct.choice = numeric(20), eu.choice = numeric(20), maha.choice = numeric(20), rf.choice = numeric(20), knn.choice = numeric(20), lda.choice = numeric(20), logit.choice = numeric(20))
+for(i in 1:20){
+  print(i)
+  choice_plots <- subset(plots, plots$set == i)
+  choice_info <- subset(info, info$set == i)
+  train_data <- subset(scagnostics, scagnostics$set != i)
+  test_data <- data.frame("scag_num_1"= numeric(2),"scag_num_2"= numeric(2),"scag_num_3"= numeric(2),"scag_num_4"= numeric(2),"scag_num_5"= numeric(2),"scag_num_6"= numeric(2),"scag_num_7"= numeric(2),"scag_num_8"= numeric(2),"scag_num_9"= numeric(2))
+
+  for(k in 1:20){
+    plot <- subset(choice_plots, choice_plots$in.lineup.ID == k)
+    test_data[k,] <- scagnostics(plot$x, plot$y)$s
+  }
+  choices$correct.choice[i] <- which(choice_info$signal == 1)
+  
+  means <- colMeans(test_data)
+  eu_dists <- NULL
+  for (j in 1:20){
+    eu_dists <- c(eu_dists, (dist(rbind(test_data[j,],means))))
+  }
+  choices$eu.choice[i] <- which(eu_dists == max(eu_dists))
+  
+  mah_dists <- mahalanobis(test_data, means, cov(test_data))
+  choices$maha.choice[i] <- which(mah_dists == max(mah_dists))
+  
+  
+  model_LDA <- lda(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+
+                     scag_num_6+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data)
+  LDA_preds <- predict(model_LDA, test_data, type = "response")
+  choices$lda.choice[i] <- which(LDA_preds$posterior[,2] == max(LDA_preds$posterior[,2]))
+  
+  model_logit <- glm(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+
+                       scag_num_6+scag_num_7+scag_num_8+scag_num_9, 
+                     data = train_data, family ="binomial")
+  logit_preds <- predict(model_logit, test_data, type = "response")
+  choices$logit.choice[i] <- which(logit_preds == max(logit_preds))
+  
+  control <- trainControl(method = "cv", number = 10, classProbs = TRUE, returnData = TRUE)
+  model_knn <- train(make.names(as.factor(signal))~scag_num_1+scag_num_2+scag_num_3+scag_num_4+
+                       scag_num_5+scag_num_6+scag_num_6+scag_num_7+scag_num_8+scag_num_9, 
+                     data = train_data, method = "knn", trControl = control, 
+                   tuneGrid = expand.grid(k = 1:25))
+  knn_preds <- predict.train(model_knn, test_data, type = "prob")
+  choices$knn.choice[i] <- which(knn_preds[,2] == max(knn_preds[,2]))
+  
+  model_rf <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+
+                             scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data,
+                           ntree=100, importance =T)
+  rf_preds <- predict(model_rf, newdata = test_data, type = "prob")
+  choices$rf.choice[i] <- which(rf_preds[,2] == max(rf_preds[,2])) 
+}
+
+accuracy <- data.frame(Euclidean = mean(choices$eu.choice == choices$correct.choice), 
+                       Mahalanobis = mean(choices$maha.choice == choices$correct.choice),
+                       LDA = mean(choices$lda.choice == choices$correct.choice),
+                       Logistic = mean(choices$logit.choice == choices$correct.choice),
+                       KNN = mean(choices$knn.choice == choices$correct.choice),
+                       Random.Forest = mean(choices$rf.choice == choices$correct.choice))
+accuracy
+```
+
+
