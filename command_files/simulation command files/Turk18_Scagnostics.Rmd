@@ -1,0 +1,68 @@
+---
+title: "Turk18_Scagnostics"
+author: "Aidan Mullan"
+date: "3/29/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(plyr)
+library(tidyverse)
+library(scagnostics)
+
+temp <- as.matrix(list.files(path = "~/Dropbox (Carleton College)/comps2018/turk-data/turk18/lineup_data18/", pattern = ".csv"))
+all_files <- data.frame(set = numeric(1), x = numeric(1), y = numeric(1), group = numeric(1), in.lineup.ID = numeric(1), target1 = numeric(1), target2 = numeric(1))
+
+for(i in 1:27){
+  lineup_filename <- paste("~/Dropbox (Carleton College)/comps2018/turk-data/turk18/lineup_data18/", temp[i,], sep = "")
+  lineup_file <- read.csv(lineup_filename)
+  lineup_file$in.lineup.ID <- lineup_file$.sample
+  lineup_finalfile <- lineup_file[,-5]
+  all_files <- rbind(all_files, lineup_finalfile)
+}
+
+all_files <- all_files[-1,]
+all_turk_info <- all_files %>% group_by(set, in.lineup.ID) %>%
+  summarise(n = n(), target1 = mean(target1), target2 = mean(target2))
+all_turk_info$ID <- 1:540
+all_turk_info$signal <- ifelse(all_turk_info$in.lineup.ID == all_turk_info$target1 | all_turk_info$in.lineup.ID == all_turk_info$target2, 1, 0)
+
+all_turk_plots <- all_files[,c(1:3, 5)]
+all_turk_plots <- arrange(all_turk_plots, set, in.lineup.ID)
+all_turk_plots$ID <- rep(1:540, each = 45)
+```
+
+```{r}
+all_turk_scagnostics <- data.frame(ID = numeric(540), scag_num_1 = numeric(540), scag_num_2 = numeric(540), scag_num_3 = numeric(540), scag_num_4 = numeric(540), scag_num_5 = numeric(540), scag_num_6 = numeric(540), scag_num_7 = numeric(540), scag_num_8 = numeric(540), scag_num_9 = numeric(540), set = numeric(540), signal = numeric(540))
+
+for (rep in 1:length(all_turk_info$ID)) {
+  if (rep%%60 == 0){print(rep)}
+  turk_subset <- subset(all_turk_plots, all_turk_plots$ID == rep)
+  scagnostics <- scagnostics(turk_subset$x, turk_subset$y)$s
+  all_turk_scagnostics$ID[rep] <- rep
+  all_turk_scagnostics[rep, c(2:10)] <- scagnostics
+  all_turk_scagnostics$set[rep] <- all_turk_info$set[rep]
+  all_turk_scagnostics$signal[rep] <- all_turk_info$signal[rep]
+}
+```
+
+```{r}
+write.csv(all_turk_plots, "turk18_plots.csv")
+write.csv(all_turk_info, "turk18_info.csv")
+write.csv(all_turk_scagnostics, "turk18_scagnostics.csv")
+```
+
+
+```{r}
+choice <- 3
+choice_plots <- subset(all_turk_plots, all_turk_plots$set == choice)
+
+ggplot(choice_plots, aes(x, y)) +
+  geom_point() +
+  facet_wrap(~in.lineup.ID, nrow = 4, labeller = label_context) 
+```
+
