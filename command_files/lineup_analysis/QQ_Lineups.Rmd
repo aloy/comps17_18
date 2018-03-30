@@ -54,6 +54,7 @@ ggplot(lineup_plots, aes(x, y)) +
 #Plots aren't scaled the same, difficult to visually identify "signal"
 
 cat("Different Plot:", lineup_plots$ID[1])
+
 ```
 
 
@@ -88,10 +89,12 @@ lineup_scagnostics <- arrange(lineup_scagnostics, ID)
 index = which(scagnostics$ID %in% lineup_scagnostics$ID)
 train_data <- scagnostics[-index,]
 
-#QDA
-model_QDA <- qda(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data)
-QDA_preds <- predict(model_QDA, lineup_scagnostics, type = "response")
-cat("QDA:", which(QDA_preds$posterior[,2] == max(QDA_preds$posterior[,2])))
+#random forest
+set.seed(1)
+QQlineup.rf <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + AD_pvalue + SW_pvalue + CVM_pvalue + lillie_pvalue + pearson_pvalue + SF_pvalue, data = train_data, ntree=100, importance =T)
+QQ_preds <- predict(QQlineup.rf, newdata = lineup_scagnostics, type = "prob")
+cat("RF:", which(QQ_preds[,2] == max(QQ_preds[,2])))
+
 
 #Logistic
 model_logit <- glm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data, family = "binomial")
