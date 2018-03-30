@@ -193,6 +193,7 @@ accuracy <- data.frame(Euclidean = mean(choices$eu.choice == choices$correct.cho
                        KNN = mean(choices$knn.choice == choices$correct.choice),
                        Random.Forest = mean(choices$rf.choice == choices$correct.choice))
 accuracy
+#EU - .9, MAH - .6, Need to rework other models
 ```
 
 
