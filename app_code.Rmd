@@ -30,5 +30,15 @@ colnames(output) <- c("scag_num_1", "scag_num_2", "scag_num_3", "scag_num_4", "s
 preds <- predict(scag_randomForest, newdata = output)
 as.data.frame(preds)
 
+df <- airquality
+df <- mtcars
+colnames <- vector()
+    for (var in colnames(df)){
+      print(var)
+      print(length(unique(df[,var]))/length(df[,var]))
+      if (length(unique(df[,var]))/length(df[,var]) > 0.1){
+        colnames <- c(colnames, var)
+      }
+    }
 
 ```

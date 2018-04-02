@@ -25,10 +25,17 @@ shinyServer(function(input, output) {
   df <- reactive({
     req(input$file1)
     read.csv(input$file1$datapath,
-                   header = input$header,
-                   sep = input$sep,
-                   quote = input$quote)
+                   sep = input$sep)
   })
+  
+  #colnames <- reactive({
+  #  colnames <- vector()
+  #  for (var in colnames(df())){
+  #    if (length(unique(df()[,var]))/length(df()[,var]) > 0.05){
+  #      colnames <- c(colnames, var)
+  #    }
+  #  }
+  #})
   
   output$contents <- renderTable({
     
@@ -36,8 +43,15 @@ shinyServer(function(input, output) {
     # and uploads a file, head of that data file by default,
     # or all rows if selected, will be shown.
     
-  
-    pairs <- combn(colnames(df()), 2)
+    #checking whether discrete or not:
+    colnames <- vector()
+    for (var in colnames(df())){
+      if (length(unique(df()[,var]))/length(df()[,var]) > 0.1){
+        colnames <- c(colnames, var)
+      }
+    }
+    
+    pairs <- combn(colnames, 2)
     pairs_list <- split(pairs, rep(1:ncol(pairs), each = nrow(pairs)))
     
     scag_fun <- function(dataset, col_names){
@@ -47,13 +61,6 @@ shinyServer(function(input, output) {
     string_fun <- function(col_names){
       return(paste(col_names[1], 'vs', col_names[2]))
     }
-    
-    #if(input$disp == "head") {
-     # return(head(df))
-    #}
-    #else {
-      #return(df)
-    #}
     
     output <- t(as.data.frame(lapply(pairs_list, scag_fun, dataset = df()))) 
 
@@ -66,8 +73,15 @@ shinyServer(function(input, output) {
     pred_df <- pred_df %>% arrange(preds)
     return(pred_df)
   })
+  
   output$pairs <- renderPlot({
-    return(pairs(df()))
+    colnames <- vector()
+    for (var in colnames(df())){
+      if (length(unique(df()[,var]))/length(df()[,var]) > 0.1){
+        colnames <- c(colnames, var)
+      }
+    }
+    return(pairs(df()[,colnames]))
   })
   
 })
