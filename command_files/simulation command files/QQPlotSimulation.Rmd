@@ -18,8 +18,34 @@ library(nortest)
 
 #Additional scagnostic-type measures (work in progress)
 ```{r}
-
+deviation1 <- function()
+  
+log(x^2+1) +1 
+x^2+1
 ```
+
+$$
+\frac{1}{n}(y-x)^2
+$$
+$$
+\frac{1}{n}((y-x)^2 + \mid x \mid)
+$$
+
+$$
+\frac{1}{n}((y-x)^2 + x^2)
+$$
+
+$$
+\frac{1}{n}(y-x)^2
+$$
+
+$$
+\frac{1}{n}((x^2+1)(y-x)^2)
+$$
+
+$$
+\frac{1}{n}((log(x^2+1) + 1)(y-x)^2)
+$$
 
 
 We will generate QQplots from random data from normal distributions, t-distributions, exponential distributions, log normal distributions, and chi-squared distributions.  We try to match variability for normal, t, and exponential distributions by setting sd of normal and exponential distributions to sqrt(df/(df-2)), which is the standard deviation of the t-distribution.  We also simulate one QQPlot for a normal distribution for every non-normal QQplot in order to maintain a 50-50 ratio of signal to noise.

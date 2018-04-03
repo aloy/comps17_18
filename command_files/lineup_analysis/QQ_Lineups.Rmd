@@ -189,20 +189,31 @@ test <- scagnostics[-index,]
 set.seed(1)
 QQlineup.rf <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + AD_pvalue + SW_pvalue + CVM_pvalue + lillie_pvalue + pearson_pvalue + SF_pvalue, data = train_data, ntree=100, importance =T)
 
+QQlineup.rf2 <- randomForest(as.factor(signal) ~ AD_pvalue + SW_pvalue + CVM_pvalue + lillie_pvalue + pearson_pvalue + SF_pvalue, data = train_data, ntree=100, importance =T)
+
 signal <- test %>% filter(signal == 1)
 null <- test %>% filter(signal == 0)
 
-#Lineups with 19 simulated noise and 1 simulated signal
-QQ_preds <- data.frame(diff_plot = numeric(1000), pred.model = numeric(1000), pred.AD = numeric(1000))
+QQ_preds <- data.frame(diff_plot = numeric(1000), pred.full = numeric(1000), pred.AD = numeric(1000), pred.tests = numeric(1000))
+#Let's test accuracy
 for(i in 1:1000){
 signal_scagnostics <- sample_n(signal, 1)
 null_scagnostics <- sample_n(null, 19)
 lineup_scagnostics <- rbind(signal_scagnostics, null_scagnostics)
 
-preds <- predict(QQlineup.rf, newdata = lineup_scagnostics, type = "prob")
-QQ_preds[i,1] <- 1
-QQ_preds[i,2] <- which(preds[,2] == max(preds[,2]))
-QQ_preds[i,3] <- which(lineup_scagnostics$AD_pvalue == min(lineup_scagnostics$AD_pvalue))
+preds.full <- predict(QQlineup.rf, newdata = lineup_scagnostics, type = "prob")
+preds.tests <- predict(QQlineup.rf2, newdata = lineup_scagnostics, type = "prob")
+QQ_preds$diff_plot[i] <- 1
+QQ_preds$pred.full[i] <- which(preds.full[,2] == max(preds.full[,2]))
+QQ_preds$pred.AD[i] <- which(lineup_scagnostics$AD_pvalue == min(lineup_scagnostics$AD_pvalue))
+QQ_preds$pred.tests[i] <- which(preds.tests[,2] == max(preds.tests[,2]))
+
 }
+
+mean(QQ_preds$pred.full==1)
+mean(QQ_preds$pred.AD==1)
+mean(QQ_preds$pred.tests==1)
+
+
 
 ```
