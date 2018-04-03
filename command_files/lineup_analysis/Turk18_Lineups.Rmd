@@ -118,7 +118,7 @@ for(set in 1:20){
 
 colMeans(accuracy)
 #EU - .85, MAH - .55, LDA - .75, Log - .775, KNN - .925, RF - .95
-#MAH got 0/2 twice, KNN got 0/1 once, all other models got at least 1 signal plot every time
+#MAH got 0/2 twice, KNN got 0/2 once, all other models got at least 1 signal plot every time
 ```
 
 
