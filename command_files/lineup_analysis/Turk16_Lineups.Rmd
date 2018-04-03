@@ -30,7 +30,7 @@ scagnostics$set <- info$set
 ```
 
 ```{r}
-choice <- 14
+choice <- 3
 choice_plots <- subset(plots, plots$set == choice)
 choice_info <- subset(info, info$set == choice)
 cat(subset(choice_info, choice_info$signal == 1)$in.lineup.ID)
@@ -98,39 +98,9 @@ accuracy <- data.frame(Euclidean = mean(choices$eu.choice == choices$correct.cho
                        KNN = mean(choices$knn.choice == choices$correct.choice),
                        Random.Forest = mean(choices$rf.choice == choices$correct.choice))
 accuracy
+#EU - 0.9, MAH - 0.6, LDA - 0.9, LOG - 1.00, KNN - 0.9, RF - 1.00
 ```
 
-
-```{r}
-scag <- data.frame("1"= numeric(2),"2"= numeric(2),"3"= numeric(2),"4"= numeric(2),"5"= numeric(2),"6"= numeric(2),"7"= numeric(2),"8"= numeric(2),"9"= numeric(2))
-for(i in 1:20){
-  plot <- subset(choice_plots, choice_plots$in.lineup.ID == i)
-  scag[i,] <- scagnostics(plot$x, plot$y)$s
-}
-
-test <- data.frame(correct.choice = numeric(20), model.choice = numeric(20))
-for(i in 1:20){
-  print(i)
-  test_data <- subset(scagnostics, scagnostics$set == i)
-  train_data <- subset(scagnostics, scagnostics$set != i)
-  test$correct.choice[i] <- which(test_data$signal == 1)
-  
-  scag2 <- test_data[,2:10]
-  means <- colMeans(scag)
-  eu_dists <- NULL
-  for (j in 1:20){
-    eu_dists <- c(eu_dists, (dist(rbind(scag[j,],means))))
-  }
-  test$model.choice[i] <- which(eu_dists == max(eu_dists))
-}
-
-means <- colMeans(scag)
-eu_dists <- NULL
-for (j in 1:20){
-  eu_dists <- c(eu_dists, (dist(rbind(scag[j,],means))))
-}
-which(eu_dists == max(eu_dists))
-```
 
 ```{r, warning = FALSE}
 #Look into redoing scagnostics for this data
