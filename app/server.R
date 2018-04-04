@@ -19,61 +19,63 @@ library(caret)
 library(boot)
 library(e1071)
 
-
+# Define server logic required to draw a histogram
 shinyServer(function(input, output) {
   
   df <- reactive({
     req(input$file1)
-    read.csv(input$file1$datapath, sep = input$sep)
+    read.csv(input$file1$datapath,
+             sep = input$sep)
   })
   
+  discrete_cols <- reactive({
+    df <- df()
+    cols <- vector()
+    for (var in colnames(df)){
+     if (length(unique(df[,var]))/length(df[,var]) > 0.05){
+      cols <- c(cols, var)
+   }
+  }
+  cols
+  })
   
   output$contents <- renderTable({
-    cols <- vector()
-    for (var in colnames(df())){
-      if (length(unique(df()[,var]))/length(df()[,var]) > 0.05){
-        cols <- c(cols, var)
-      }
-    }
-    pairs <- combn(cols, 2)
+    df <- df()
+    colnames <- discrete_cols()
+    # input$file1 will be NULL initially. After the user selects
+    # and uploads a file, head of that data file by default,
+    # or all rows if selected, will be shown.
+    
+    #checking whether discrete or not:
+    
+    
+    pairs <- combn(colnames, 2)
     pairs_list <- split(pairs, rep(1:ncol(pairs), each = nrow(pairs)))
     
     scag_fun <- function(dataset, col_names){
-      scagnostics <- scagnostics(scale(dataset[col_names]))
+      scagnostics <- scagnostics(dataset[col_names])
       return(scagnostics[1:9])
     }
     string_fun <- function(col_names){
       return(paste(col_names[1], 'vs', col_names[2]))
     }
     
-    output <- t(as.data.frame(lapply(pairs_list, scag_fun, dataset = df())))
-
+    output <- t(as.data.frame(lapply(pairs_list, scag_fun, dataset = df))) 
+    
     rownames(output) <- lapply(pairs_list, string_fun)
     colnames(output) <- c("scag_num_1", "scag_num_2", "scag_num_3", "scag_num_4", "scag_num_5", "scag_num_6", "scag_num_7", "scag_num_8", "scag_num_9")
-    scag_randomForest <- readRDS("model_4.2.18.rds")
+    scag_randomForest <- readRDS("randomForest_model.rds")
     preds <- predict(scag_randomForest, newdata = output)
     pred_df<- as.data.frame(preds)
     pred_df$name <- lapply(pairs_list, string_fun)
     pred_df <- pred_df %>% arrange(preds)
-    
-    plot_type <- unique(pred_df$preds)
-    df_bytype <- list()
-    i <- 1
-    for (type in plot_type){
-      df_bytype[[i]] <- filter(pred_df, preds == type)
-      i <- i + 1
-    }
     return(pred_df)
   })
   
   output$pairs <- renderPlot({
-    cols <- vector()
-    for (var in colnames(df())){
-      if (length(unique(df()[,var]))/length(df()[,var]) > 0.05){
-        cols <- c(cols, var)
-      }
-    }
-    return(pairs(scale(df()[,cols]))) 
+    df <- df()
+    colnames <- discrete_cols()
+    return(pairs(df[,colnames]))
   })
   
 })
