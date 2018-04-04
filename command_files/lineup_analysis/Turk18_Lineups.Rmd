@@ -19,11 +19,11 @@ library(tidyverse)
 library(caret)
 library(randomForest)
 
-scagnostics <- read.csv("simulation_data/turk16_scagnostics.csv")
+scagnostics <- read.csv("simulation_data/turk18_scagnostics.csv")
 scagnostics <- scagnostics[,-1]
-info <- read.csv("simulation_data/turk16_info.csv")
+info <- read.csv("simulation_data/turk18_info.csv")
 info <- info[,-1]
-plots <- read.csv("simulation_data/turk16_plots.csv")
+plots <- read.csv("simulation_data/turk18_plots.csv")
 plots <- plots[,-1]
 
 scagnostics$set <- info$set
@@ -42,25 +42,30 @@ ggplot(choice_plots, aes(x, y)) +
 ```
 
 
-
 ```{r, warning = FALSE}
-choices <- data.frame(correct.choice = numeric(20), eu.choice = numeric(20), maha.choice = numeric(20), rf.choice = numeric(20), knn.choice = numeric(20), lda.choice = numeric(20), logit.choice = numeric(20))
+choices <- data.frame(set = numeric(140), choice1 = numeric(140), choice2 = numeric(140))
+
 for(i in 1:20){
   print(i)
+  a <- 7*(i-1)+1
+  z <- 7*i
+  choices$set[a:z] <- rep(i, 7)
   test_data <- subset(scagnostics, scagnostics$set == i)
   train_data <- subset(scagnostics, scagnostics$set != i)
-  choices$correct.choice[i] <- which(test_data$signal == 1)
+  choices[a,2:3] <- which(test_data$signal == 1)
 
   model_LDA <- lda(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+
                      scag_num_6+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data)
   LDA_preds <- predict(model_LDA, test_data, type = "response")
-  choices$lda.choice[i] <- which(LDA_preds$posterior[,2] == max(LDA_preds$posterior[,2]))
+  LDA_max <- sort(LDA_preds$posterior[,2], decreasing = TRUE)[1:2]
+  choices[a+1,2:3] <- which(LDA_preds$posterior[,2] %in% LDA_max)
   
   model_logit <- glm(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+
                        scag_num_6+scag_num_7+scag_num_8+scag_num_9, 
                      data = train_data, family ="binomial")
   logit_preds <- predict(model_logit, test_data, type = "response")
-  choices$logit.choice[i] <- which(logit_preds == max(logit_preds))
+  logit_max <- sort(logit_preds, decreasing = TRUE)[1:2]
+  choices[a+2,2:3] <- which(logit_preds %in% logit_max)
   
   control <- trainControl(method = "cv", number = 10, classProbs = TRUE, returnData = TRUE)
   model_knn <- train(make.names(as.factor(signal))~scag_num_1+scag_num_2+scag_num_3+scag_num_4+
@@ -68,13 +73,15 @@ for(i in 1:20){
                      data = train_data, method = "knn", trControl = control, 
                    tuneGrid = expand.grid(k = 1:25))
   knn_preds <- predict.train(model_knn, test_data, type = "prob")
-  choices$knn.choice[i] <- which(knn_preds[,2] == max(knn_preds[,2]))
+  knn_max <- sort(knn_preds[,2], decreasing = TRUE)[1:2]
+  choices[a+3,2:3] <- which(knn_preds[,2] %in% knn_max)
   
   model_rf <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+
                              scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data,
                            ntree=100, importance =T)
   rf_preds <- predict(model_rf, newdata = test_data[,2:10], type = "prob")
-  choices$rf.choice[i] <- which(rf_preds[,2] == max(rf_preds[,2]))  
+  rf_max <- sort(rf_preds[,2], decreasing = TRUE)[1:2]
+  choices[a+4,2:3] <- which(rf_preds[,2] %in% rf_max) 
   
   dscags <- test_data[,2:10]
   means <- colMeans(dscags)
@@ -82,20 +89,36 @@ for(i in 1:20){
   for (j in 1:20){
     eu_dists <- c(eu_dists, (dist(rbind(dscags[j,],means))))
   }
-  choices$eu.choice[i] <- which(eu_dists == max(eu_dists))
+  eu_max <- sort(eu_dists, decreasing = TRUE)[1:2]
+  choices[a+5,2:3] <- which(eu_dists %in% eu_max)
   
   mah_dists <- mahalanobis(dscags, means, cov(dscags))
-  choices$maha.choice[i] <- which(mah_dists == max(mah_dists))
+  mah_max <- sort(mah_dists, decreasing = TRUE)[1:2]
+  choices[a+6,2:3] <- which(mah_dists %in% mah_max)
 }
 
-accuracy <- data.frame(Euclidean = mean(choices$eu.choice == choices$correct.choice), 
-                       Mahalanobis = mean(choices$maha.choice == choices$correct.choice),
-                       LDA = mean(choices$lda.choice == choices$correct.choice),
-                       Logistic = mean(choices$logit.choice == choices$correct.choice),
-                       KNN = mean(choices$knn.choice == choices$correct.choice),
-                       Random.Forest = mean(choices$rf.choice == choices$correct.choice))
-accuracy
-#EU - 0.9, MAH - 0.6, LDA - 0.9, LOG - 1.00, KNN - 0.9, RF - 1.00
+choices$model <- rep(1:7, 20)
+all_choices <- choices %>% gather(Choice, values, choice1:choice2)
+final_choice <- all_choices %>% unite(temp, model, Choice) %>% spread(temp, values)
+
+colnames(final_choice) <- c("set", "Cor1", "Cor2", "LDA1", "LDA2", "Log1", "Log2", "KNN1", "KNN2", "RF1", "RF2", "EU1", "EU2", "MAH1", "MAH2")
+
+
+accuracy <- data.frame(Euclidean = numeric(20), Mahalanobis = numeric(20), LDA = numeric(20), Logistic = numeric(20), KNN = numeric(20), Random.Forest = numeric(20))
+
+for(set in 1:20){
+  correct <- c(final_choice$Cor1[set], final_choice$Cor2[set])
+  accuracy$Euclidean[set] <- mean(c(final_choice$EU1[set] %in% correct, final_choice$EU2[set] %in% correct))
+  accuracy$Mahalanobis[set] <- mean(c(final_choice$MAH1[set] %in% correct, final_choice$MAH2[set] %in% correct))
+  accuracy$LDA[set] <- mean(c(final_choice$LDA1[set] %in% correct, final_choice$LDA2[set] %in% correct))
+  accuracy$Logistic[set] <- mean(c(final_choice$Log1[set] %in% correct, final_choice$Log2[set] %in% correct))
+  accuracy$KNN[set] <- mean(c(final_choice$KNN1[set] %in% correct, final_choice$KNN2[set] %in% correct))
+  accuracy$Random.Forest[set] <- mean(c(final_choice$RF1[set] %in% correct, final_choice$RF2[set] %in% correct))
+}          
+
+colMeans(accuracy)
+#EU - .85, MAH - .55, LDA - .75, Log - .775, KNN - .925, RF - .95
+#MAH got 0/2 twice, KNN got 0/2 once, all other models got at least 1 signal plot every time
 ```
 
 

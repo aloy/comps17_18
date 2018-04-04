@@ -33,7 +33,8 @@ all_turk_info <- all_files %>% group_by(set, in.lineup.ID) %>%
 all_turk_info$ID <- 1:400
 
 all_turk_plots <- all_files[,c(1:3, 5)]
-
+all_turk_plots <- arrange(all_turk_plots, set)
+all_turk_plots$ID <- rep(1:400, each = 45)
 
 all_turk_scagnostics <- data.frame(ID = numeric(400), scag_num_1 = numeric(400), scag_num_2 = numeric(400), scag_num_3 = numeric(400), scag_num_4 = numeric(400), scag_num_5 = numeric(400), scag_num_6 = numeric(400), scag_num_7 = numeric(400), scag_num_8 = numeric(400), scag_num_9 = numeric(400))
 
@@ -44,6 +45,12 @@ for (rep in 1:length(all_turk_info$ID)) {
   all_turk_scagnostics$ID[rep] = rep
   all_turk_scagnostics[rep, c(2:10)] <- scagnostics
 }
-all_turk_scagnostics$signal <- all_turk_info_raw$signal
+all_turk_scagnostics$signal <- all_turk_info$signal
+```
+
+```{r}
+write.csv(all_turk_plots, "turk16_plots.csv")
+write.csv(all_turk_info, "turk16_info.csv")
+write.csv(all_turk_scagnostics, "turk16_scagnostics.csv")
 ```
 
