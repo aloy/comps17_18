@@ -42,3 +42,52 @@ colnames <- vector()
     }
 
 ```
+
+looking at birthwt data:
+
+```{r}
+data(birthwt)
+names(birthwt)
+
+plot(birthwt[,c(2,3)])
+plot(birthwt_1[,2], birthwt_1[, 3])
+birthwt_1 <- birthwt[birthwt$age < 45,]
+plot(scale(birthwt_1[,c(2,3)]))
+model_1 <- lm(lwt ~ age, data = birthwt_1)
+summary(model_1) #is null according to our model
+plot(fitted(model_1), rstudent(model_1))
+
+influencePlot(model_1)
+cooks.distance(model_1)
+
+plot(scale(birthwt[,c(2,10)]))
+model_2 <- lm(bwt ~ age, data = birthwt)
+summary(model_2)
+
+plot(scale(birthwt[,c(3,10)]))
+model_3 <- lm(bwt ~ lwt, data = birthwt)
+summary(model_3)
+plot(fitted(model_3), rstudent(model_3))
+library(car)
+
+colnames <- vector()
+    for (var in colnames(df())){
+      if (length(unique(df()[,var]))/length(df()[,var]) > 0.1){
+        colnames <- c(colnames, var)
+      }
+    }
+
+
+
+  #discrete_cols <- reactive({
+  #  df <- df()
+  #  cols <- vector()
+  #  for (var in colnames(df)){
+   #   if (length(unique(df[,var]))/length(df[,var]) > 0.05){
+    #    cols <- c(cols, var)
+     # }
+    #}
+    #cols
+  #})
+  
+```

@@ -84,3 +84,11 @@ failed %>% group_by(preds, model_type_fac) %>% select(preds, model_type_fac) %>%
 How to confuse it:
 linear heteroskedascity
 check medium vs strong correlation for linear trend
+
+
+making model:
+```{r}
+scag_randomForest <- randomForest(model_type_fac ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data)
+summary(scag_randomForest)
+saveRDS(scag_randomForest, "./model_4.2.18.rds")
+```
