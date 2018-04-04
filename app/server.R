@@ -25,31 +25,29 @@ shinyServer(function(input, output) {
   df <- reactive({
     req(input$file1)
     read.csv(input$file1$datapath,
-                   sep = input$sep)
+             sep = input$sep)
   })
   
-  #colnames <- reactive({
-  #  colnames <- vector()
-  #  for (var in colnames(df())){
-  #    if (length(unique(df()[,var]))/length(df()[,var]) > 0.05){
-  #      colnames <- c(colnames, var)
-  #    }
-  #  }
-  #})
+  discrete_cols <- reactive({
+    df <- df()
+    cols <- vector()
+    for (var in colnames(df)){
+     if (length(unique(df[,var]))/length(df[,var]) > 0.05){
+      cols <- c(cols, var)
+   }
+  }
+  cols
+  })
   
   output$contents <- renderTable({
-    
+    df <- df()
+    colnames <- discrete_cols()
     # input$file1 will be NULL initially. After the user selects
     # and uploads a file, head of that data file by default,
     # or all rows if selected, will be shown.
     
     #checking whether discrete or not:
-    colnames <- vector()
-    for (var in colnames(df())){
-      if (length(unique(df()[,var]))/length(df()[,var]) > 0.1){
-        colnames <- c(colnames, var)
-      }
-    }
+    
     
     pairs <- combn(colnames, 2)
     pairs_list <- split(pairs, rep(1:ncol(pairs), each = nrow(pairs)))
@@ -62,8 +60,8 @@ shinyServer(function(input, output) {
       return(paste(col_names[1], 'vs', col_names[2]))
     }
     
-    output <- t(as.data.frame(lapply(pairs_list, scag_fun, dataset = df()))) 
-
+    output <- t(as.data.frame(lapply(pairs_list, scag_fun, dataset = df))) 
+    
     rownames(output) <- lapply(pairs_list, string_fun)
     colnames(output) <- c("scag_num_1", "scag_num_2", "scag_num_3", "scag_num_4", "scag_num_5", "scag_num_6", "scag_num_7", "scag_num_8", "scag_num_9")
     scag_randomForest <- readRDS("randomForest_model.rds")
@@ -75,13 +73,9 @@ shinyServer(function(input, output) {
   })
   
   output$pairs <- renderPlot({
-    colnames <- vector()
-    for (var in colnames(df())){
-      if (length(unique(df()[,var]))/length(df()[,var]) > 0.1){
-        colnames <- c(colnames, var)
-      }
-    }
-    return(pairs(df()[,colnames]))
+    df <- df()
+    colnames <- discrete_cols()
+    return(pairs(df[,colnames]))
   })
   
 })

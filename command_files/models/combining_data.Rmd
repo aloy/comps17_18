@@ -38,14 +38,15 @@ funnel <- funnel %>%
 funnel$signal <- funnel_info$interest
 funnel$model <- "funnel"
 
-linear <- read_csv("simulation_data/linear_trend_scagnostics.csv")
-linear_info <- read_csv("simulation_data/linear_trend_info.csv")
+linear <- read_csv("simulation_data/linear2_scagnostics.csv")
+linear_info <- read_csv("simulation_data/linear2_info.csv")
 linear_info$signal <- ifelse(linear_info$R == 0, 0, 1)
 linear <- linear[,-1]
 linear <- linear %>%
   spread(key = scag_num, value = scagnostics, sep = "_")
 linear$signal <- linear_info$signal
 linear$model <- "linear trend"
+colnames(linear) <- colnames(cluster)
 
 log_res <- read_csv("simulation_data/logistic_residuals_scagnostics.csv")
 log_res_info <- read_csv("simulation_data/logistic_residuals_info.csv")
