@@ -1,3 +1,8 @@
+
+library(scagnostics)
+library(tidyverse)
+library(randomForest)
+
 shinyUI(pageWithSidebar(
   headerPanel("Looking at Pairwise Relationships"),
   ##
