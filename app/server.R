@@ -68,6 +68,7 @@ shinyServer(function(input, output, session) {
   ## Preliminary objects 
   ##
   pObjects <- reactive({
+    df <- df()
     data <- predictions()
     if (is.null(data)) return(NULL) 
     Levels <- levels(droplevels(data$preds))
@@ -77,6 +78,8 @@ shinyServer(function(input, output, session) {
   })
   
   outputNodes <- reactive({ # output node names
+    df <- df()
+    preds <- predictions()
     pobjects <- pObjects()
     if (is.null(pobjects)) return(NULL)  
     J <- pobjects$J
@@ -88,6 +91,8 @@ shinyServer(function(input, output, session) {
   ## make the UI in each tab - TRICK: use input$tab0 as the current counter, not i ! 
   ##
   observe({ 
+    df <- df()
+    preds <- predictions()
     pobjects <- pObjects()
     if (!is.null(pobjects)) {
       outnodes <- outputNodes()
@@ -95,8 +100,6 @@ shinyServer(function(input, output, session) {
       pnodes <- outnodes$pnodes
       plot_types <- pobjects$Levels
       J <- pobjects$J
-      dat <- df()
-      
       output$dataplot <- renderPlot({
         df <- df()
         colnames <- discrete_cols()
@@ -104,16 +107,20 @@ shinyServer(function(input, output, session) {
       })
       
       pred_df <- predictions()
+      dat <- df()
       ## overall plot in the first tab :
       output$dataplot <- renderText({
        'hello'
       })
       ## tab 1, 2, ..., J
       I <- input$tab0
+      #print(I)
       for(i in 1:J){ 
         if(I==i){
           plot_type <- plot_types[as.numeric(I)] 
+          #print(plot_type)
           dd <- droplevels(subset(pred_df, subset= preds == plot_type))
+          #print(dd)
           output[[tnodes[i]]] <- renderTable({ # table in each tab 
             dd
           })
@@ -129,6 +136,8 @@ shinyServer(function(input, output, session) {
   ## make the tabs 
   ##
   output$twotabs <- renderUI({
+    df <- df()
+    preds <- predictions()
     tabs <- list(NULL)
     ## temporary firsttab (disappears after data selection) :
     tabs[[1]] <- tabPanel("Begin", 
@@ -146,7 +155,7 @@ shinyServer(function(input, output, session) {
                           h3("Overview of Data"), 
                           h3("Click on the tabs to run the analysis for each test"), 
                           h3("When done, click on the Summary tab to check and generate a report"),
-                          plotOutput("dataplot"),
+                          textOutput("dataplot"),
                           value="firsttab")
       for(i in 1:J){
         tabs[[i+1]] <- tabPanel(tabnames[i], 
