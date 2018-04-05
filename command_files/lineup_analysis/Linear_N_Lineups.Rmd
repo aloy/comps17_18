@@ -39,11 +39,14 @@ lineup_scags <- lineup_scags %>% arrange(position)
 chosen_plots <- subset(plots, plots$ID %in% lineup_scags$ID)
 lineup_plots <- merge(chosen_plots, lineup_scags[,c(1,12)],
                       by.x = "ID", by.y = "ID") %>% arrange(position)
-cat("Signal: ", which(lineup_scags$signal == 1))
+
 #To scale all plots, scales = "free" in facet_wrap
 ggplot(lineup_plots, aes(x, y)) +
   geom_point() +
-  facet_wrap(~position, nrow = 4, labeller = label_context, scales = "free") 
+  facet_wrap(~position, nrow = 4, labeller = label_context, scales = "free") +
+  theme(axis.ticks = element_blank(), axis.text = element_blank())
+
+cat("Signal: ", which(lineup_scags$signal == 1))
 ```
 
 
