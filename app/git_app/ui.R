@@ -1,11 +1,28 @@
 shinyUI(pageWithSidebar(
-  headerPanel("Generating an arbitrary number of tabs - assay 7bis"),
+  headerPanel("Looking at Pairwise Relationships"),
   ##
   ## sidebar panel
   ##
   sidebarPanel(   
-    selectInput("datatest", "Select a dataset", choices=c(none=0, test1=1, test2=2), selected=0),
-    uiOutput("Radio")
+    # Input: Select a file ----
+    fileInput("file1", "Choose CSV File",
+              multiple = TRUE,
+              accept = c("text/csv",
+                         "text/comma-separated-values,text/plain",
+                         ".csv")),
+    
+    # Horizontal line ----
+    tags$hr(),
+    
+    # Input: Checkbox if file has header ----
+    checkboxInput("header", "Header", TRUE),
+    
+    # Input: Select separator ----
+    radioButtons("sep", "Separator",
+                 choices = c(Comma = ",",
+                             Semicolon = ";",
+                             Tab = "\t"),
+                 selected = ",")
   ),
   ##
   ## main panel 

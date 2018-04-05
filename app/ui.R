@@ -9,7 +9,7 @@
 
 library(shiny)
 
-# Define UI for application that draws a histogram
+
 shinyUI(fluidPage(
   fluidRow(
     column(3,
@@ -33,14 +33,9 @@ shinyUI(fluidPage(
                                     Tab = "\t"),
                         selected = ",")
     ),
-    column(3,
-           tableOutput("contents")
-           
-    ),
-    column(5,
-           plotOutput("pairs")
-           
+    column(10,
+           uiOuput("twotabs")
     )
   )
-
+  
 ))
