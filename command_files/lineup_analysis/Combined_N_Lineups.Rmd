@@ -233,5 +233,7 @@ table3 <- colMeans(accuracy, na.rm = TRUE)
 #EU - .826, MAH - .703, LDA - .955, QDA - .985, LOG - .983, KNN - .941, RF - .989
 #Accuracy when unknown number of signal plots
 #EU = .819, MAH - .722, LDA - .864, QDA - .972, LOG - .962, KNN - .953, RF - .979
+#False positive rate with unknown number of signal plots
+#EU = .181, MAH - .278, LDA - .026, QDA - .037, LOG - .022, KNN - .018, RF - .030
 ```
 
