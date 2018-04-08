@@ -54,7 +54,8 @@ levels(lineup_plots$ID) <- as.character(1:20)
 #To scale all plots, scales = "free" in facet_wrap
 ggplot(lineup_plots, aes(x, y)) +
   geom_line() +
-  facet_wrap(~ID, nrow = 4, labeller = label_context) 
+  facet_wrap(~ID, nrow = 4, labeller = label_context) +
+  theme(axis.ticks = element_blank(), axis.text = element_blank())
 #Plots aren't scaled the same, difficult to visually identify "signal"
 
 cat("Different Plot:", lineup_plots$ID[1])
