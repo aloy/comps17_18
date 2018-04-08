@@ -3,6 +3,7 @@ title: "Scagnostic_Examples"
 author: "Aidan Mullan"
 date: "4/5/2018"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
 ---
