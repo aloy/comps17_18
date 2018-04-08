@@ -2,7 +2,9 @@
 title: "Scagnostic_Examples"
 author: "Aidan Mullan"
 date: "4/5/2018"
-output: pdf_document
+output:
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -35,8 +37,8 @@ xy4 <- rbind(xy1, xy3, xy4)
 scagnostics(xy4[,1], xy4[,2])$s[1] #.976
 
 par(mfrow = c(2,2))
-plot(xy1[,1], xy1[,2], main = "Outlying: .0524", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
-plot(xy2[,1], xy2[,2], main = "Outlying: .5430", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+plot(xy1[,1], xy1[,2], main = "Outlying: .052", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+plot(xy2[,1], xy2[,2], main = "Outlying: .543", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
 plot(xy4[,1], xy4[,2], main = "Outlying: .976", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
 ```
 
@@ -62,9 +64,9 @@ plot(skew.test2$x, skew.test2$y)
 scagnostics(skew.test2$x, skew.test2$y)$s[2] #.877
 
 par(mfrow = c(2,2))
-plot(test$x, test$y, main = "Skewed: .382", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+plot(skew.test$x, skew.test$y, main = "Skewed: .382", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
 plot(xy$x,xy$y, main = "Skewed: .651", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
-plot(test2$x, test2$y, main = "Skewed: .877", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+plot(skew.test2$x, skew.test2$y, main = "Skewed: .877", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
 ```
 
 ```{r, fig.height=4, fig.width=5}
@@ -73,21 +75,18 @@ set.seed(1)
 sigma <- matrix(c(.1, 0, 0, .1), 2) 
 c1.xy1 <- mvrnorm(100, mu = c(2,2), Sigma = sigma); c1.xy2 <- mvrnorm(100, mu = c(10,4), Sigma = sigma)
 clump1.xy <- rbind(c1.xy1, c1.xy2)
-plot(clump1.xy[,1], clump1.xy[,2])
 scagnostics(clump1.xy[,1], clump1.xy[,2])$s[3] #.900
 
 sigma <- matrix(c(1.3, 0, 0, 1.3), 2)
 c2.xy1 <- mvrnorm(100, mu = c(0,4), Sigma = sigma); c2.xy2 <- mvrnorm(100, mu = c(4.5,4), Sigma = sigma)
 c2.xy3 <- mvrnorm(100, mu = c(0,9), Sigma = sigma); c2.xy4 <- mvrnorm(100, mu = c(4.5,9), Sigma = sigma)
 clump2.xy <- rbind(c2.xy1, c2.xy2, c2.xy3, c2.xy4)
-plot(clump2.xy[,1], clump2.xy[,2])
 scagnostics(clump2.xy[,1], clump2.xy[,2])$s[3] #.007
 
 sigma <- matrix(c(.6, 0, 0, .6), 2)
 c3.xy1 <- mvrnorm(100, mu = c(1,1), Sigma = sigma); c3.xy2 <- mvrnorm(100, mu = c(6,2), Sigma = sigma)
 c3.xy3 <- mvrnorm(100, mu = c(4,6), Sigma = sigma)
 clump3.xy <- rbind(c3.xy1, c3.xy2, c3.xy3)
-plot(clump3.xy[,1], clump3.xy[,2])
 scagnostics(clump3.xy[,1], clump3.xy[,2])$s[3]  #.446
 
 par(mfrow = c(2,2))
