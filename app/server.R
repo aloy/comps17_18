@@ -4,12 +4,6 @@ library(ggplot2)
 #### Server
 ####
 shinyServer(function(input, output, session) {
-  
-
-  ##
-  ## get the selected dataset
-  ##
-
   ##
   ## get the selected dataset
   ##
@@ -58,7 +52,7 @@ shinyServer(function(input, output, session) {
       scag_randomForest <- readRDS("model_4.2.18.rds")
       preds <- predict(scag_randomForest, newdata = output)
       pred_df<- as.data.frame(preds)
-      pred_df$name <- lapply(pairs_list, string_fun)
+      pred_df$Relationship <- lapply(pairs_list, string_fun)
       pred_df <- pred_df %>% arrange(preds)
       
       return(pred_df)
@@ -108,10 +102,7 @@ shinyServer(function(input, output, session) {
       
       pred_df <- predictions()
       dat <- df()
-      ## overall plot in the first tab :
-      output$dataplot <- renderText({
-       'hello'
-      })
+      
       ## tab 1, 2, ..., J
       I <- input$tab0
       #print(I)
@@ -122,14 +113,14 @@ shinyServer(function(input, output, session) {
           dd <- droplevels(subset(pred_df, subset= preds == plot_type))
           #print(dd)
           output[[tnodes[i]]] <- renderTable({ # table in each tab 
-            dd
+            dd["Relationship"]
+            
           })
           output[[pnodes[i]]] <- renderPlot({ # plot in each tab
             plot(dat[,1], dat[,2])
           }, width=600, height=300)
         }
       }
-
     }
   })
   ##
@@ -153,16 +144,15 @@ shinyServer(function(input, output, session) {
       J <- length(tabnames)
       tabs[[1]] <- tabPanel("Plot Type:",
                           h3("Overview of Data"), 
-                          h3("Click on the tabs to run the analysis for each test"), 
-                          h3("When done, click on the Summary tab to check and generate a report"),
-                          textOutput("dataplot"),
+                          h3("Click on the tabs to run the analysis for each test"),
+                          plotOutput("dataplot"),
                           value="firsttab")
       for(i in 1:J){
         tabs[[i+1]] <- tabPanel(tabnames[i], 
-                            h3(tabnames[i]), 
-                            tableOutput(tnodes[i]), 
-                            plotOutput(pnodes[i]),
-                            value=i)
+                                fluidRow(
+                                  column(3, h3(tabnames[i]),  tableOutput(tnodes[i])),
+                                  column(4, plotOutput(pnodes[i]))
+                                ), value=i)
       }
     } 
     tabs$id <- "tab0"
