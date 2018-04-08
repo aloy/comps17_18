@@ -55,7 +55,7 @@ glm.results <- scags %>% summarize(accuracy = mean(signal == prediction.glm), pr
 set.seed(1)
 cost <- function(y, pi){mean(abs(y-pi) > 0.5)}
 cv.glm1 <- cv.glm(scags, QQ.glm, cost, K = 10)
-(accuracy <- 1- cv.glm1$delta[1])
+(accuracy1 <- 1- cv.glm1$delta[1])
 
 
 ```
@@ -134,7 +134,7 @@ summary(QQ.glm2)
 set.seed(1)
 cost <- function(y, pi){mean(abs(y-pi) > 0.5)}
 cv.glm2 <- cv.glm(scags, QQ.glm2, cost, K = 10)
-(accuracy <- 1- cv.glm2$delta[1])
+(accuracy2 <- 1- cv.glm2$delta[1])
 
 ```
 
@@ -191,3 +191,217 @@ QQ.knn2
 ```
 
 Cross validated accuracy of 83.5%.
+
+
+
+##Let's test out our home-made scagnostics
+
+#EDA for new scags
+```{r}
+ggplot(data = scags) + geom_histogram(aes(x = deviation.base)) + facet_wrap(~ distribution)
+
+ggplot(data = scags) + geom_histogram(aes(x = deviation.add)) + facet_wrap(~ distribution)
+
+ggplot(data = scags) + geom_histogram(aes(x = deviation.addLog)) + facet_wrap(~ distribution)
+
+ggplot(data = scags) + geom_histogram(aes(x = deviation.addSq)) + facet_wrap(~ distribution)
+
+ggplot(data = scags) + geom_histogram(aes(x = deviation.mult)) + facet_wrap(~ distribution)
+
+ggplot(data = scags) + geom_histogram(aes(x = deviation.multLog)) + facet_wrap(~ distribution)
+
+ggplot(data = scags) + geom_histogram(aes(x = deviation.multSq)) + facet_wrap(~ distribution)
+
+#Explore T vs. Normal
+ggplot(data = scags %>% filter(distribution %in% c("Normal", "T"))) + geom_boxplot(aes(y = deviation.base, x = distribution))
+
+ggplot(data = scags %>% filter(distribution %in% c("Normal", "T"))) + geom_boxplot(aes(y = deviation.add, x = distribution))
+
+ggplot(data = scags %>% filter(distribution %in% c("Normal", "T"))) + geom_boxplot(aes(y = deviation.addLog, x = distribution))
+
+ggplot(data = scags %>% filter(distribution %in% c("Normal", "T"))) + geom_boxplot(aes(y = deviation.addSq, x = distribution))
+
+ggplot(data = scags %>% filter(distribution %in% c("Normal", "T"))) + geom_boxplot(aes(y = deviation.mult, x = distribution))
+
+ggplot(data = scags %>% filter(distribution %in% c("Normal", "T"))) + geom_boxplot(aes(y = deviation.multLog, x = distribution))
+
+ggplot(data = scags %>% filter(distribution %in% c("Normal", "T"))) + geom_boxplot(aes(y = deviation.multSq, x = distribution))
+```
+
+#logistic3
+```{r}
+#deviation.base
+QQ.glm3 <- glm(as.factor(signal) ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + deviation.base, data = scags, family = "binomial")
+
+summary(QQ.glm3)
+
+#Cross-validate
+set.seed(1)
+cost <- function(y, pi){mean(abs(y-pi) > 0.5)}
+cv.glm3 <- cv.glm(scags, QQ.glm3, cost, K = 10)
+(accuracy3 <- 1- cv.glm3$delta[1])
+
+#deviation.add
+QQ.glm4 <- glm(as.factor(signal) ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + deviation.add, data = scags, family = "binomial")
+
+summary(QQ.glm4)
+
+#Cross-validate
+set.seed(1)
+cv.glm4<- cv.glm(scags, QQ.glm4, cost, K = 10)
+(accuracy4 <- 1- cv.glm4$delta[1])
+
+#deviation.addLog
+QQ.glm5 <- glm(as.factor(signal) ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + deviation.addLog, data = scags, family = "binomial")
+
+summary(QQ.glm5)
+
+#Cross-validate
+set.seed(1)
+cv.glm5<- cv.glm(scags, QQ.glm5, cost, K = 10)
+(accuracy5 <- 1- cv.glm5$delta[1])
+
+#deviation.addSq
+QQ.glm6 <- glm(as.factor(signal) ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + deviation.addSq, data = scags, family = "binomial")
+
+summary(QQ.glm6)
+
+#Cross-validate
+set.seed(1)
+cv.glm6<- cv.glm(scags, QQ.glm6, cost, K = 10)
+(accuracy6 <- 1- cv.glm6$delta[1])
+
+#deviation.mult
+QQ.glm7 <- glm(as.factor(signal) ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + deviation.mult, data = scags, family = "binomial")
+
+summary(QQ.glm7)
+
+#Cross-validate
+set.seed(1)
+cv.glm7<- cv.glm(scags, QQ.glm7, cost, K = 10)
+(accuracy7 <- 1- cv.glm7$delta[1])
+
+
+#deviation.multLog
+QQ.glm8 <- glm(as.factor(signal) ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + deviation.multLog, data = scags, family = "binomial")
+
+summary(QQ.glm8)
+
+#Cross-validate
+set.seed(1)
+cv.glm8<- cv.glm(scags, QQ.glm8, cost, K = 10)
+(accuracy8 <- 1- cv.glm8$delta[1])
+
+
+#deviation.multSq
+QQ.glm9 <- glm(as.factor(signal) ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + deviation.multSq, data = scags, family = "binomial")
+
+summary(QQ.glm9)
+
+#Cross-validate
+set.seed(1)
+cv.glm9<- cv.glm(scags, QQ.glm9, cost, K = 10)
+(accuracy9 <- 1- cv.glm9$delta[1])
+```
+
+
+#random forest
+```{r}
+#deviation.base
+set.seed(1)
+QQ.rf3 <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + deviation.base, data = scags, ntree=100, importance =T)
+
+QQ.rf3
+
+varImpPlot(QQ.rf3)
+
+
+#deviation.add
+set.seed(1)
+QQ.rf4 <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + deviation.add, data = scags, ntree=100, importance =T)
+
+QQ.rf4$
+
+#deviation.addLog
+set.seed(1)
+QQ.rf5 <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + deviation.addLog, data = scags, ntree=100, importance =T)
+
+QQ.rf5
+
+#deviation.addSq
+set.seed(1)
+QQ.rf6 <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + deviation.addSq, data = scags, ntree=100, importance =T)
+
+QQ.rf6
+
+#deviation.mult
+set.seed(1)
+QQ.rf7 <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + deviation.mult, data = scags, ntree=100, importance =T)
+
+QQ.rf7
+
+#deviation.multLog
+set.seed(1)
+QQ.rf8 <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + deviation.multLog, data = scags, ntree=100, importance =T)
+
+QQ.rf8
+
+#deviation.multSq
+set.seed(1)
+QQ.rf9 <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + deviation.multSq, data = scags, ntree=100, importance =T)
+
+QQ.rf9
+```
+
+OOB estimated accuracy of 0.8401.  Random Forest now does a little worse.
+
+
+#LDA and QDA
+```{r}
+QQ.control <- trainControl(method = "cv", number = 5, classProbs = TRUE)
+
+set.seed(1)
+QQ.lda3 <- train(as.factor(signal)~ scag_num_1 +scag_num_2+ scag_num_3+ scag_num_4+ scag_num_5+ scag_num_6+ scag_num_7+ scag_num_8+scag_num_9 + deviation.multSq, data = scags, method = "lda", trControl = QQ.control)
+
+scags$prediction.lda3 <- predict(QQ.lda3, type = "raw")
+
+(lda.results3 <- scags %>% summarize(accuracy = mean(signal == prediction.lda3), precision = sum(signal == "Signal" &  prediction.lda3 == "Signal")/sum(prediction.lda3 == "Signal"), sensitivity = sum(signal == "Signal" & prediction.lda3 == "Signal")/sum(signal == "Signal"), specificity = sum(signal == "Noise" & prediction.lda3 == "Noise")/sum(signal == "Noise"))) 
+
+lda.results2
+lda.results
+
+#Our precision and specificity are great, but our accuracy and sensitivity are worse than when Norm test p-values are included. Everything has improved from just regular scagnostics model. 
+
+QQ.qda3 <- train(as.factor(signal)~ scag_num_1 +scag_num_2+ scag_num_3+ scag_num_4+ scag_num_5+ scag_num_6+ scag_num_7+ scag_num_8+scag_num_9 + deviation.multSq, data = scags, method = "qda", trControl = QQ.control)
+
+scags$prediction.qda3 <- predict(QQ.qda3, type = "raw")
+
+(qda.results3 <- scags %>% summarize(accuracy = mean(signal == prediction.qda3), precision = sum(signal == "Signal" &  prediction.qda3 == "Signal")/sum(prediction.qda3 == "Signal"), sensitivity = sum(signal == "Signal" & prediction.qda3 == "Signal")/sum(signal == "Signal"), specificity = sum(signal == "Noise" & prediction.qda3 == "Noise")/sum(signal == "Noise")))
+
+qda.results2
+qda.results
+
+#For LDA and QDA, specificity and precision is better than norm tests, but sensitivity is down
+```
+
+~81% accuracy
+
+#K-nn
+```{r}
+QQ.control <- trainControl(method = "cv", number = 5, classProbs = TRUE)
+
+set.seed(1)
+QQ.knn3 <- train(as.factor(signal)~ scag_num_1 +scag_num_2+ scag_num_3+ scag_num_4+ scag_num_5+ scag_num_6+ scag_num_7+ scag_num_8+scag_num_9 + deviation.base, data = scags, method = "knn", trControl = QQ.control, tuneGrid = expand.grid(k = 1:25), metric = "Accuracy")
+
+QQ.knn3
+QQ.knn2
+
+QQ.knn4 <- train(as.factor(signal)~ scag_num_1 +scag_num_2+ scag_num_3+ scag_num_4+ scag_num_5+ scag_num_6+ scag_num_7+ scag_num_8+scag_num_9 + scale(deviation.multSq), data = scags, method = "knn", trControl = QQ.control, tuneGrid = expand.grid(k = 15:25), metric = "Accuracy")
+
+QQ.knn4
+QQ.knn2
+```
+
+KNN does better than norm test knn! (83.5% vs. 84.2%). 
+
+
