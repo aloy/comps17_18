@@ -30,10 +30,17 @@ plots16 <- plots16[,-1]
 
 scagnostics16$set <- info16$set
 ```
+both: 16_2, 16_15
+A: 
+16: 5, 9, 11, 16, 19
+18: 3, 4
 
+B: 
+16: 7, 10, 12, 14, 20
+18: 6, 14
 
 ```{r}
-choice <- 19
+choice <- 20
 choice_plots <- subset(plots16, plots16$set == choice)
 choice_info <- subset(info16, info16$set == choice)
 cat(subset(choice_info, choice_info$signal == 1)$in.lineup.ID)
@@ -41,7 +48,9 @@ cat(subset(choice_info, choice_info$signal == 1)$in.lineup.ID)
 #To scale all plots, scales = "free" in facet_wrap
 ggplot(choice_plots, aes(x, y)) +
   geom_point() +
-  facet_wrap(~in.lineup.ID, nrow = 4, labeller = label_context)
+  facet_wrap(~in.lineup.ID, nrow = 4, labeller = label_context) +  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(), axis.ticks.x=element_blank(), axis.title.y=element_blank(),
+        axis.text.y=element_blank(), axis.ticks.y=element_blank()) 
 ```
 
 
@@ -56,7 +65,14 @@ plots18 <- plots18[,-1]
 scagnostics18$set <- info18$set
 ```
 
+both: 16_2, 16_15
+A: 
+16: 5, 9, 11, 16, 19
+18: 3, 4
 
+B: 
+16: 7, 10, 12, 14, 20
+18: 6, 14
 ```{r}
 choice <- 14
 choice_plots <- subset(plots18, plots18$set == choice)
@@ -66,8 +82,9 @@ cat(subset(choice_info, choice_info$signal == 1)$in.lineup.ID)
 #To scale all plots, scales = "free" in facet_wrap
 ggplot(choice_plots, aes(x, y)) +
   geom_point() +
-  facet_wrap(~in.lineup.ID, nrow = 4, labeller = label_context)
-
-
+  facet_wrap(~in.lineup.ID, nrow = 4, labeller = label_context) +  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(), axis.ticks.x=element_blank(), axis.title.y=element_blank(),
+        axis.text.y=element_blank(), axis.ticks.y=element_blank()) 
 ```
+
 
