@@ -102,6 +102,20 @@ plot(clump1.xy[,1], clump1.xy[,2], main = "Clumpy: .900", xlab = "X", ylab = "Y"
 
 ```{r, fig.height=4, fig.width=5}
 #Striated
+stria.plots <- read_csv("simulation_data/striated_plots.csv")
+stria1.test <- subset(stria.plots, subset = ID == 488)
+scagnostics(stria1.test$x, stria1.test$y)$s[5] #.928
+
+stria2.test <- subset(stria.plots, subset = ID == 553)
+scagnostics(stria2.test$x, stria2.test$y)$s[5] #.514
+
+stria3.test <- subset(stria.plots, subset = ID == 300)
+scagnostics(stria3.test$x, stria3.test$y)$s[5]
+
+par(mfrow = c(2,2))
+plot(stria3.test$x, stria3.test$y, main = "Striated: .035", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+plot(stria2.test$x, stria2.test$y, main = "Striated: .514", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+plot(stria1.test$x, stria1.test$y, main = "Striated: .928", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
 ```
 
 ```{r, fig.height=4, fig.width=5}
@@ -128,11 +142,25 @@ par(mfrow = c(2,2))
 plot(string3.xy[,1], string3.xy[,2], main = "Stringy: .363", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
 plot(string2.x, string2.y, main = "Stringy: .611", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
 plot(string1.x, string1.y, main = "Stringy: .892", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
-
-
 ```
 
 ```{r, fig.height=4, fig.width=5}
 #Monotonic
+set.seed(1)
+mono1.xy <- mvrnorm(200, mu = c(0,0), Sigma = matrix(c(2,0,0,2),2))
+scagnostics(mono1.xy[,1], mono1.xy[,2])$s[9] #>.001
+
+mono.plots <- read_csv("simulation_data/turk16_plots.csv")
+mono.test <- subset(mono.plots, mono.plots$ID == 3)
+scagnostics(mono.test$x, mono.test$y)$s[9] #.948
+
+mono.plots2 <- read_csv("simulation_data/TS_Plots.csv")
+mono.test2 <- subset(mono.plots2, subset = ID == 1705) 
+scagnostics(mono.test2$x, mono.test2$y)$s[9] #.416
+
+par(mfrow = c(2,2))
+plot(mono1.xy[,1], mono1.xy[,2], main = "Monotonic: .001", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+plot(mono.test2$x, mono.test2$y, main = "Monotonic: .506", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+plot(mono.test$x, mono.test$y, main = "Monotonic: .948", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
 ```
 
