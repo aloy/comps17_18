@@ -32,6 +32,7 @@ shinyServer(function(input, output, session) {
   #generates predictions
   predictions <- reactive({
     df <- df()
+    if (is.null(df)) return(NULL) 
     if (!is.null(df)) {
       colnames <- discrete_cols()
       
@@ -80,6 +81,20 @@ shinyServer(function(input, output, session) {
     list(tnodes=paste0("tnode", LETTERS[1:J]), # table outputs
          pnodes=paste0("pnode", LETTERS[1:J])) # plot outputs
   })
+  Selecteds <- reactive({ # return the values selected in the tabs (selectInput is defined in the tabs)
+    dat <- df()
+    preds <- predictions()
+    if (is.null(dat)) return(NULL) 
+    if (is.null(preds)) return(NULL) 
+    J <- length(levels(droplevels(preds$preds)))
+    selecteds <- rep(NA, J)
+    for(i in 1:J){ 
+      if (is.null(input[[paste0("sel",i)]])) return(NULL)
+      match <- input[[paste0("sel",i)]]
+      selecteds[i] <- strsplit(match, " vs ")
+    }
+    selecteds
+  })
 
   ##
   ## make the UI in each tab - TRICK: use input$tab0 as the current counter, not i ! 
@@ -88,6 +103,7 @@ shinyServer(function(input, output, session) {
     df <- df()
     preds <- predictions()
     pobjects <- pObjects()
+  
     if (!is.null(pobjects)) {
       outnodes <- outputNodes()
       tnodes <- outnodes$tnodes
@@ -105,7 +121,6 @@ shinyServer(function(input, output, session) {
       
       ## tab 1, 2, ..., J
       I <- input$tab0
-      #print(I)
       for(i in 1:J){ 
         if(I==i){
           plot_type <- plot_types[as.numeric(I)] 
@@ -117,7 +132,8 @@ shinyServer(function(input, output, session) {
             
           })
           output[[pnodes[i]]] <- renderPlot({ # plot in each tab
-            plot(dat[,1], dat[,2])
+            selecteds <- Selecteds()
+            ggplot(data = dat) + geom_point(aes_string(x = selecteds[[as.numeric(I)]][1], y = selecteds[[as.numeric(I)]][2]))
           }, width=600, height=300)
         }
       }
@@ -151,7 +167,9 @@ shinyServer(function(input, output, session) {
         tabs[[i+1]] <- tabPanel(tabnames[i], 
                                 fluidRow(
                                   column(3, h3(tabnames[i]),  tableOutput(tnodes[i])),
-                                  column(4, plotOutput(pnodes[i]))
+                                  column(4, 
+                                         plotOutput(pnodes[i]),
+                                         selectInput(paste0("sel",i), "Select relationship to view!", choices=preds[preds$preds == tabnames[i],][,2]))
                                 ), value=i)
       }
     } 
