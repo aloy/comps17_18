@@ -54,12 +54,31 @@ ggplot(lineup_plots, aes(x, y)) +
 
 
 #final_scags <- rbind(final_scags, lineup_scags)
-write.csv(final_scags, "exp_linear_scagnostics.csv")
+
 ```
 
 ```{r}
 #Turk16 2,5,11,15,7,10,12,14
 #Turk18 3,4,6,14
+t16_info <- read.csv("simulation_data/turk16_info.csv")
+t16_choice_info <- subset(t16_info, t16_info$set %in% c(2,5,11,15,7,10,12,14))
+t16_scagnostics <- read.csv("simulation_data/turk16_scagnostics.csv")
+t16_scagnostics <- t16_scagnostics[,-1]
+t16_choice_scags <- subset(t16_scagnostics, t16_scagnostics$ID %in% t16_choice_info$ID)
+t16_choice_scags$position <- rep(1:20, 8)
+#final_scags <- rbind(final_scags, t16_choice_scags)
+
+t18_info <- read.csv("simulation_data/turk18_info.csv")
+t18_choice_info <- subset(t18_info, t18_info$set %in% c(3,4,6,14))
+t18_scagnostics <- read.csv("simulation_data/turk18_scagnostics.csv")
+t18_scagnostics <- t18_scagnostics[,-1]
+t18_choice_scags <- subset(t18_scagnostics, t18_scagnostics$ID %in% t18_choice_info$ID)
+t18_choice_scags$position <- rep(1:20, 4)
+t18_choice_scags2 <- t18_choice_scags[,-11]
+
+final_scags <- rbind(final_scags, t18_choice_scags2)
+final_scags$lineup <- rep(1:18, each = 20)
+write.csv(final_scags, "exp_linear_scagnostics.csv")
 ```
 
 
