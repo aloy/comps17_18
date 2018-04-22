@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(readr)
-responses <- read_csv('for_study/Carl_Responses.csv')
+responses <- read_csv('for_study/Carl_Responses1.csv')
 experiment_scagnostics <- read_csv('for_study/experiment_scagnostics.csv')
 setA1 <- responses[c(3:52),c(1:10, 23)]
 setB1 <- responses[c(3:52),c(1:4, 11:16, 23)]
