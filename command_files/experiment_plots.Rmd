@@ -78,8 +78,17 @@ t18_choice_scags2 <- t18_choice_scags[,-11]
 
 final_scags <- rbind(final_scags, t18_choice_scags2)
 final_scags$lineup <- rep(1:18, each = 20)
-write.csv(final_scags, "exp_linear_scagnostics.csv")
+#write.csv(final_scags, "exp_linear_scagnostics.csv")
 ```
+
+```{r}
+study_scags <- read.csv("simulation_data/exp_linear_scagnostics.csv")
+study_scags$condition_lineup <- rep(c("A1_2", "B1_1", "A1_6", "B1_4", "AN_2", "BN_2", "A1_1", "A1_3", "A1_4", "A1_5", "B1_2", "B1_3", "B1_5", "B1_6", "BN_1", "BN_3", "AN_1", "AN_3"), each = 20)
+
+study_scags$corr_plots <- rep(c(2,20,8,8,"7,8,15","5,7,10,11,15",14,15,1,14,14,17,8,9,"3,12","2,6","14,17","6,14"), each = 20)
+write.csv(study_scags, "experiment_scagnostics.csv")
+```
+
 
 
 
