@@ -1,0 +1,224 @@
+---
+title: "sophie_presentation"
+author: "Sophie Gunn"
+date: "May 1, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = F)
+```
+```{r, eval = T}
+
+library(ggpubr)
+library(gridExtra)
+library(ggplot2)
+library(GGally)
+library(datasauRus)
+library(dplyr)
+library(pastecs)
+library(knitr)
+```
+
+opening:
+```{r, eval = F}
+#let's use the pollution and mortality data set from sleuth, example 1217
+write.csv(data[,2:17], "pollution.csv")
+data$logNox <- log(data$NOX)
+
+head(data)
+ggplot(data) + geom_point(aes(x = NOX, y = Mortality)) + labs(x= "NOX", y= "Mortality" ) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+ggsave("for_presentation/plot1.png", width = 8, height = 6, dpi = 500)
+ggplot(data) + geom_point(aes(x = logNox, y = Mortality)) + labs(x= "NOX", y= "Mortality" ) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+ggsave("for_presentation/plot2.png", width = 8, height = 6, dpi = 500)
+
+summary(data$Mortality)
+summary(data$logNox)
+cor(data$Mortality,data$logNox)
+
+
+
+pairs(data)
+ggpairs(data[, c(2:5, 14:17)], upper = list(continuous = "points"),
+  lower = "blank", axisLabels="internal", diag = list(na = "naDiag"))
+ggsave("for_presentation/plot3.png", width = 8, height = 6, dpi = 500)
+
+
+ggplot(airquality) + geom_point(aes(x = Temp, y = Ozone)) + labs(x= "Temperature (F)", y= "Mean Ozone (ppb)" )
+ggsave("for_presentation/open_aq.png", width = 8, height = 6, dpi = 500)
+ggpairs(airquality[,c(1:4,6)], upper = list(continuous = "points"),
+  lower = list(continuous = "points"), axisLabels="internal", diag = list(na = "naDiag"))
+ggsave("for_presentation/open_pairs_aq.png", width = 8, height = 6, dpi = 500)
+```
+
+
+```{r, eval = T}
+library(Sleuth3)
+data <- ex1217
+data$logNox <- log(data$NOX)
+
+tab <- stat.desc(data[,c("Mortality", "logNox")], basic=F)
+kable(tab[c(1:2,5:6),], format = "latex")
+```
+
+```{r, eval = F}
+
+
+ggplot(datasaurus_dozen, aes(x=x, y=y, colour=dataset))+
+  geom_point()+
+  theme_void()+
+  theme(legend.position = "none")+
+  facet_wrap(~dataset, ncol=3)
+
+p1 <- datasaurus_dozen %>% filter(dataset == 'dino') %>% ggplot(aes(x=x, y=y))+
+  geom_point()+
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(), axis.ticks.x=element_blank(), axis.title.y=element_blank(),
+        axis.text.y=element_blank(), axis.ticks.y=element_blank()) + 
+  theme(legend.position = "none")
+
+p2 <- datasaurus_dozen %>% filter(dataset == 'dots') %>% ggplot(aes(x=x, y=y))+
+  geom_point()+
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(), axis.ticks.x=element_blank(), axis.title.y=element_blank(),
+        axis.text.y=element_blank(), axis.ticks.y=element_blank()) + 
+  theme(legend.position = "none")
+
+
+p3 <- datasaurus_dozen %>% filter(dataset == 'slant_up') %>% ggplot(aes(x=x, y=y))+
+  geom_point()+
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(), axis.ticks.x=element_blank(), axis.title.y=element_blank(),
+        axis.text.y=element_blank(), axis.ticks.y=element_blank()) + 
+  theme(legend.position = "none")
+
+
+p4 <- datasaurus_dozen %>% filter(dataset == 'wide_lines') %>% ggplot(aes(x=x, y=y))+
+  geom_point()+
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(), axis.ticks.x=element_blank(), axis.title.y=element_blank(),
+        axis.text.y=element_blank(), axis.ticks.y=element_blank()) + 
+  theme(legend.position = "none")
+
+grid.arrange(p3, p2, p4, p1, ncol = 2)
+
+ggsave("for_presentation/four.png", width = 8, height = 8, dpi = 500)
+```
+
+
+#simple plots
+```{r}
+#simple linear
+x <- c(1:20) + runif(20, min = -1, max = 1)
+y <- c(1:20) + runif(20, min = -1, max = 1)
+dat1 <- as.data.frame(x)
+dat1$y <- y
+p1 <- ggplot(dat1, aes( x = x, y = y)) + geom_point() +
+  theme(
+        axis.text.x=element_blank(), axis.ticks.x=element_blank(),
+        axis.text.y=element_blank(), axis.ticks.y=element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+plot(p1)
+
+
+#curved
+x <- c(c(0:5), c(0:5) +0.5 )
+y <- x^3
+x <- x + runif(12, min = -0.5, max = 0.5) 
+y <- y +  runif(12, min = -0.5, max = 0.5) + 1
+dat2 <- as.data.frame(x)
+dat2$y <- y
+p2 <- ggplot(dat2, aes( x = x, y = y)) + geom_point()  +
+  theme(
+        axis.text.x=element_blank(), axis.ticks.x=element_blank(), 
+        axis.text.y=element_blank(), axis.ticks.y=element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+plot(p2)
+p2 + geom_smooth(method = "lm", se = F)
+
+#logged
+dat2$log.y <- log(y) 
+p2a <- ggplot(dat2, aes( x = x, y = log.y)) + geom_point() +
+  theme(
+        axis.text.x=element_blank(), axis.ticks.x=element_blank(), 
+        axis.text.y=element_blank(), axis.ticks.y=element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+plot(p2a)
+p2a + geom_smooth(method = "lm", se = F)
+
+
+#cluster
+x <- c(rep(1, 8), rep(3, 8), rep(5, 8))
+y <- c(rep(3,8), rep(1, 8), rep(3, 8) )
+x <- x + runif(24, min = -0.25, max = 0.25) 
+y <- y +  runif(24, min = -0.25, max = 0.25) 
+dat3 <- as.data.frame(x)
+dat3$y <- y
+p3 <- ggplot(dat3, aes( x = x, y = y)) + geom_point() + scale_x_continuous(limits = c(0, 6))  + scale_y_continuous(limits = c(0, 4)) +
+  theme(
+        axis.text.x=element_blank(), axis.ticks.x=element_blank(), 
+        axis.text.y=element_blank(), axis.ticks.y=element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+plot(p3)
+
+
+
+#striated
+x <- c(rep(1, 5), rep(3, 5), rep(5, 10))
+y <- c(1:5, 2:6, 3:5, c(2:6) + 0.5 )
+y <- y +  runif(20, min = -0.5, max = 0.5) 
+dat4 <- as.data.frame(x)
+dat4$y <- y
+p4 <- ggplot(dat4, aes( x = x, y = y)) + geom_point() + scale_x_continuous(limits = c(0, 6))  + scale_y_continuous(limits = c(0, 6)) +
+  theme(
+        axis.text.x=element_blank(), axis.ticks.x=element_blank(), 
+        axis.text.y=element_blank(), axis.ticks.y=element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+plot(p4)
+p4 + geom_smooth(method = "lm", se = F)
+
+
+ggarrange(p1, nrow = 2, ncol = 2)
+ggsave("for_presentation/quad1.png", width = 8, height = 6, dpi = 500)
+ggarrange(p1 + geom_smooth(method = "lm", se = F, colour = "#ff4447"), nrow = 2, ncol = 2)
+ggsave("for_presentation/quad2.png", width = 8, height = 6, dpi = 500)
+
+ggarrange(p1 + geom_smooth(method = "lm", se = F, colour = "#ff4447"), p2
+          , nrow = 2, ncol = 2)
+ggsave("for_presentation/quad3.png", width = 8, height = 6, dpi = 500)
+ggarrange(p1 + geom_smooth(method = "lm", se = F, colour = "#ff4447"), p2 + geom_smooth(method = "lm", se = F, colour = "#ff4447")
+          , nrow = 2, ncol = 2)
+ggsave("for_presentation/quad4.png", width = 8, height = 6, dpi = 500)
+ggarrange(p1 + geom_smooth(method = "lm", se = F, colour = "#ff4447"), p2a 
+          , nrow = 2, ncol = 2)
+ggsave("for_presentation/quad5.png", width = 8, height = 6, dpi = 500)
+ggarrange(p1 + geom_smooth(method = "lm", se = F, colour = "#ff4447"), p2a + geom_smooth(method = "lm", se = F, colour = "#ff4447")
+          , nrow = 2, ncol = 2)
+ggsave("for_presentation/quad6.png", width = 8, height = 6, dpi = 500)
+
+ggarrange(p1 + geom_smooth(method = "lm", se = F, colour = "#ff4447"), p2a + geom_smooth(method = "lm", se = F, colour = "#ff4447"),
+          p3
+          , nrow = 2, ncol = 2)
+ggsave("for_presentation/quad7.png", width = 8, height = 6, dpi = 500)
+
+ggarrange(p1 + geom_smooth(method = "lm", se = F, colour = "#ff4447"), p2a + geom_smooth(method = "lm", se = F, colour = "#ff4447"),
+          p3 + geom_smooth(method = "lm", se = F, colour = "#ff4447")
+          , nrow = 2, ncol = 2)
+ggsave("for_presentation/quad8.png", width = 8, height = 6, dpi = 500)
+
+ggarrange(p1 + geom_smooth(method = "lm", se = F, colour = "#ff4447"), p2a + geom_smooth(method = "lm", se = F, colour = "#ff4447"),
+          p3 + geom_smooth(method = "lm", se = F, colour = "#ff4447"),
+          p4, nrow = 2, ncol = 2)
+ggsave("for_presentation/quad9.png", width = 8, height = 6, dpi = 500)
+
+ggarrange(p1 + geom_smooth(method = "lm", se = F, colour = "#ff4447"), p2a + geom_smooth(method = "lm", se = F, colour = "#ff4447"),
+          p3 + geom_smooth(method = "lm", se = F, colour = "#ff4447"),
+          p4 + geom_smooth(method = "lm", se = F, colour = "#ff4447"), nrow = 2, ncol = 2)
+ggsave("for_presentation/quad10.png", width = 8, height = 6, dpi = 500)
+
+ggarrange(p1 , p2a ,p3 ,  p4, nrow = 2, ncol = 2)
+ggsave("for_presentation/quad_all.png", width = 8, height = 6, dpi = 500)
+
+plot(p3)
+ggsave("for_presentation/cluster.png", width = 8, height = 6, dpi = 500)
+
+
+plot(p4)
+ggsave("for_presentation/striated.png", width = 8, height = 6, dpi = 500)
+```
