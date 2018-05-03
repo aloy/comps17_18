@@ -1,0 +1,36 @@
+intro:
+-purpose
+
+-scagnostics: 
+Aidan: "Our study is a robust test of scagnostics"
+  - intro/background
+  - measures/definition
+  
+-learning methods (how do we use scags)
+
+methods:
+- sim data (move details to appendix)
+- goals: automatic signal detection (pattern)
+- train model (proof of concept) +lineup training
+  - results: acc, sens., spec, etc
+  - compare models
+
+results:
+-actual lineup data (turk data)
+  - explain experiment
+    - pictures 
+    - human results
+    - our model results
+-qq plots
+  - we do poorly, people are also bad
+  
+discusison: we've shown that scagnostics work in these situations
+  - revisit problem
+  - results in context
+  - based on the physical shapes of a scatter plot we can characterize plots as either signal or null
+  - shortcomings & future directions (qqplot)
+  - applications
+  
+conclusion:
+  - ultimate goals
+  

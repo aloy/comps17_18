@@ -1,0 +1,110 @@
+---
+title: "cleaning_responses"
+author: "Sophie Gunn"
+date: "April 22, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+responses <- read_csv('for_study/Carl_Responses1.csv')
+experiment_scagnostics <- read_csv('for_study/experiment_scagnostics.csv')
+setA1 <- responses[c(3:52),c(1:10, 23)]
+setB1 <- responses[c(3:52),c(1:4, 11:16, 23)]
+setAN <- responses[c(3:52),c(1:4, 17:19, 23)]
+setBN <- responses[c(3:52),c(1:4, 20:23)]
+
+setA1 <- na.omit(setA1)
+setB1 <- na.omit(setB1)
+setAN <- na.omit(setAN)
+setBN <- na.omit(setBN)
+```
+
+setA1
+```{r}
+ac1 <- sum(setA1$`A-1-Q1` == 14)/26 #should be 14
+ac2 <- sum(setA1$`A-1-Q2` == 2)/26  #should be 2
+ac3 <- sum(setA1$`A-1-Q3` == 15)/26  #should be 15
+ac4 <- sum(setA1$`A-1-Q4` == 14)/26  #should be 14
+ac5 <- sum(setA1$`A-1-Q5` == 9)/26  #should be 9
+ac6 <- sum(setA1$`A-1-Q6` == 8)/26  #should be 8
+
+avgac <- (ac1 + ac2+ ac3 + ac4 + ac5 + ac6)/6
+avgac #77%
+```
+
+set AN
+accuracy <- num they got correct / number total plots that are signal 
+1 - (plots they got correct)/ones that they chose
+```{r}
+sum(setAN$`A-N-Q1` ) #should be 14 and 17
+setAN %>% select(`A-N-Q1`) %>% 
+  mutate( points_a = as.numeric(str_detect(`A-N-Q1`, '14')) ) %>% 
+  mutate( points_b = as.numeric(str_detect(`A-N-Q1`, '17')) ) %>% 
+  mutate( acc = (points_a + points_b)/2 ) %>% 
+  summarize(acc_tot = mean(acc))
+
+sum(setAN$`A-N-Q2` ) #should be 5, 7, 10, 11, 15
+setAN %>% select(`A-N-Q1`) %>% 
+  mutate( points_a = as.numeric(str_detect(`A-N-Q1`, '5')) ) %>% 
+  mutate( points_b = as.numeric(str_detect(`A-N-Q1`, '7')) ) %>% 
+  mutate( points_c = as.numeric(str_detect(`A-N-Q1`, '10')) ) %>% 
+  mutate( points_d = as.numeric(str_detect(`A-N-Q1`, '11')) ) %>% 
+  mutate( points_e = as.numeric(str_detect(`A-N-Q1`, '15')) ) %>% 
+  mutate( acc = (points_a + points_b + points_c + points_d + points_e)/5 ) %>%
+  summarize(acc_tot = mean(acc))
+
+sum(setAN$`A-N-Q3` ) #should be 6 and 14
+setAN %>% select(`A-N-Q3`) %>% 
+  mutate( points_a = as.numeric(str_detect(`A-N-Q3`, '14')) ) %>% 
+  mutate( points_b = as.numeric(str_detect(`A-N-Q3`, '6')) ) %>% 
+  mutate( acc = (points_a + points_b)/2 ) %>% 
+  summarize(acc_tot = mean(acc))
+```
+
+setB1
+```{r}
+ac1 <- sum(setB1$`B-1-Q1` == 20)/24
+ac2 <- sum(setB1$`B-1-Q2` == 1)/24
+ac3 <- sum(setB1$`B-1-Q3` == 14)/24 
+ac4 <- sum(setB1$`B-1-Q4` == 8)/24 
+ac5 <- sum(setB1$`B-1-Q5` == 17)/24 
+ac6 <- sum(setB1$`B-1-Q6` == 8)/24
+
+avgac <- (ac1 + ac2+ ac3 + ac4 + ac5 + ac6)/6
+avgac #84%
+
+
+```
+
+set BN
+accuracy <- num they got correct / number total plots that are signal 
+1 - (plots they got correct)/ones that they chose
+```{r}
+library(dplyr)
+library(stringr)
+
+sum(setBN$`B-N-Q1` ) #should be 3, 12
+setBN %>% select(`B-N-Q1`) %>% 
+  mutate( points_3 = as.numeric(str_detect(`B-N-Q1`, '3')) ) %>% 
+  mutate( points_12 = as.numeric(str_detect(`B-N-Q1`, '12')) ) %>% 
+  mutate( acc = (points_3 + points_12)/2 ) %>% summarize(acc_tot = mean(acc))
+
+sum(setBN$`B-N-Q2` ) #should be 7, 8, 15
+setBN %>% select(`B-N-Q2`) %>% 
+  mutate( points_7 = as.numeric(str_detect(`B-N-Q2`, '7')) ) %>% 
+  mutate( points_8 = as.numeric(str_detect(`B-N-Q2`, '8')) ) %>% 
+  mutate( points_15 = as.numeric(str_detect(`B-N-Q2`, '15')) ) %>% 
+  mutate( acc = (points_7 + points_8 + points_15)/3 ) %>% 
+  summarize(acc_tot = mean(acc))
+
+sum(setBN$`B-N-Q3` ) #should be 2, 6
+setBN %>% select(`B-N-Q3`) %>% 
+  mutate( points_2 = as.numeric(str_detect(`B-N-Q3`, '2')) ) %>% 
+  mutate( points_6 = as.numeric(str_detect(`B-N-Q3`, '6')) ) %>% 
+  mutate( acc = (points_2 + points_6)/2 ) %>% summarize(acc_tot = mean(acc))
+```
