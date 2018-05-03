@@ -50,18 +50,15 @@ set.seed(1)
 x <- rnorm(100, 5,1); y <- 4.65*x + rnorm(100, 0, 5)
 x2 <- rnorm(100, 5, 1); y2 <- 0*x2 + rnorm(100, 0, 3)
 xy <- data.frame(x = c(x,x2), y=c(y,y2))
-plot(xy$x,xy$y)
 scagnostics(xy$x,xy$y)$s[2] #.651
 
 
 skew.plots <- read_csv("simulation_data/sparse_trend_plots.csv")
 skew.test <- subset(skew.plots, skew.plots$ID == 314)
-plot(skew.test$x, skew.test$y)
 scagnostics(skew.test$x, skew.test$y)$s[2] #.382
 
 skew.plots2 <- read_csv("simulation_data/turk16_plots.csv")
 skew.test2 <- subset(skew.plots2, skew.plots2$ID == 254)
-plot(skew.test2$x, skew.test2$y)
 scagnostics(skew.test2$x, skew.test2$y)$s[2] #.877
 
 par(mfrow = c(2,2))
@@ -120,6 +117,7 @@ plot(stria1.test$x, stria1.test$y, main = "Striated: .928", xlab = "X", ylab = "
 
 ```{r, fig.height=4, fig.width=5}
 #Convex
+
 ```
 
 ```{r, fig.height=4, fig.width=5}
@@ -154,7 +152,7 @@ mono.plots <- read_csv("simulation_data/turk16_plots.csv")
 mono.test <- subset(mono.plots, mono.plots$ID == 3)
 scagnostics(mono.test$x, mono.test$y)$s[9] #.948
 
-mono.plots2 <- read_csv("simulation_data/TS_Plots.csv")
+mono.plots2 <- read.csv("simulation_data/TS_Plots.csv")
 mono.test2 <- subset(mono.plots2, subset = ID == 1705) 
 scagnostics(mono.test2$x, mono.test2$y)$s[9] #.416
 

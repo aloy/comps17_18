@@ -135,7 +135,7 @@ for(i in c(1:4,7:14)){
   print(i)
   test_data <- subset(scagnostics2, scagnostics2$lineup == i)
   train_data <- subset(scagnostics2, scagnostics2$lineup != i)
-  choices$correct.choice[i] <- which(test_data$signal == 1)
+  choices2$correct.choice[i] <- which(test_data$signal == 1)
 
   model_LDA <- lda(signal~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+
                      scag_num_6+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data)
@@ -230,44 +230,45 @@ for(i in c(5,6,15:18)){
   choices2$maha.choice[i] <- list(which(mah_dists %in% mah_max))
 }
 
-#choices2[18,6:8] <- 0
+choices2[18,6:8] <- 0
 accuracy2 <- data.frame(Euclidean = numeric(K), Mahalanobis = numeric(K), LDA = numeric(K), QDA = numeric(K), Logistic = numeric(K), KNN = numeric(K), Random.Forest = numeric(K))
 
 for(set in 1:K){
-  correct <- choices$correct.choice[[set]]
+  correct <- choices2$correct.choice[[set]]
   len <- length(correct)
-  eu.acc <- sum(choices$eu.choice[[set]] %in% correct)/len
+  eu.acc <- sum(choices2$eu.choice[[set]] %in% correct)/len
   accuracy2$Euclidean[set] <- ifelse(is.na(eu.acc), 0, eu.acc)
-  mah.acc <- sum(choices$maha.choice[[set]] %in% correct)/len
+  mah.acc <- sum(choices2$maha.choice[[set]] %in% correct)/len
   accuracy2$Mahalanobis[set] <- ifelse(is.na(mah.acc), 0, mah.acc)
-  lda.acc <- sum(choices$lda.choice[[set]] %in% correct)/len
+  lda.acc <- sum(choices2$lda.choice[[set]] %in% correct)/len
   accuracy2$LDA[set] <- ifelse(is.na(lda.acc), 0, lda.acc)
-  qda.acc <- sum(choices$qda.choice[[set]] %in% correct)/len
+  qda.acc <- sum(choices2$qda.choice[[set]] %in% correct)/len
   accuracy2$QDA[set] <- ifelse(is.na(qda.acc), 0, qda.acc)
-  log.acc <- sum(choices$logit.choice[[set]] %in% correct)/len
+  log.acc <- sum(choices2$logit.choice[[set]] %in% correct)/len
   accuracy2$Logistic[set] <- ifelse(is.na(log.acc), 0, log.acc)
-  knn.acc  <- sum(choices$knn.choice[[set]] %in% correct)/len
+  knn.acc  <- sum(choices2$knn.choice[[set]] %in% correct)/len
   accuracy2$KNN[set] <- ifelse(is.na(knn.acc), 0, knn.acc)
-  rf.acc <- sum(choices$rf.choice[[set]] %in% correct)/len
+  rf.acc <- sum(choices2$rf.choice[[set]] %in% correct)/len
   accuracy2$Random.Forest[set] <- ifelse(is.na(rf.acc), 0, rf.acc)
 } 
 
 fp2 <- data.frame(Euclidean = numeric(K), Mahalanobis = numeric(K), LDA = numeric(K), QDA = numeric(K), Logistic = numeric(K), KNN = numeric(K), Random.Forest = numeric(K))
 
 for(set in 1:K){
-  correct <- choices$correct.choice[[set]]
-  fp2$Euclidean[set] <- 1 - mean(choices$eu.choice[[set]] %in% correct)
-  fp2$Mahalanobis[set] <- 1 - mean(choices$maha.choice[[set]] %in% correct)
-  fp2$LDA[set] <- 1 - mean(choices$lda.choice[[set]] %in% correct)
-  fp2$QDA[set] <- 1 - mean(choices$qda.choice[[set]] %in% correct)
-  fp2$Logistic[set] <- 1 - mean(choices$logit.choice[[set]] %in% correct)
-  fp2$KNN[set] <- 1 - mean(choices$knn.choice[[set]] %in% correct)
-  fp2$Random.Forest[set] <- 1 - mean(choices$rf.choice[[set]] %in% correct)
+  correct <- choices2$correct.choice[[set]]
+  fp2$Euclidean[set] <- 1 - mean(choices2$eu.choice[[set]] %in% correct)
+  fp2$Mahalanobis[set] <- 1 - mean(choices2$maha.choice[[set]] %in% correct)
+  fp2$LDA[set] <- 1 - mean(choices2$lda.choice[[set]] %in% correct)
+  fp2$QDA[set] <- 1 - mean(choices2$qda.choice[[set]] %in% correct)
+  fp2$Logistic[set] <- 1 - mean(choices2$logit.choice[[set]] %in% correct)
+  fp2$KNN[set] <- 1 - mean(choices2$knn.choice[[set]] %in% correct)
+  fp2$Random.Forest[set] <- 1 - mean(choices2$rf.choice[[set]] %in% correct)
 }  
 
 colMeans(accuracy2)
 colMeans(fp2)
-#EU - .878, MAH - .709, LDA - .815, QDA - .815, LOG - .833, KNN - .778, RF - .944
+#Acc: EU - .878, MAH - .709, LDA - .781, QDA - .772, LOG - .822, KNN - .654, RF - .883
+#FalPo: EU - .122, MAH - .291, LDA - .185, QDA - .185, LOG - .167, KNN - .250, RF - .056
 ```
 
 These first two prediction sets model signal based solely on the plots included in the experiment lineups. No differentiation was made between the linear and Turk lineups. The next step is to fit models to outside datasets specific to the lineup distribution and re-predict.
