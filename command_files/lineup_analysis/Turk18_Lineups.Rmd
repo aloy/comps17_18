@@ -27,10 +27,15 @@ plots <- read.csv("simulation_data/turk18_plots.csv")
 plots <- plots[,-1]
 
 scagnostics$set <- info$set
+
 ```
 
 ```{r}
+<<<<<<< HEAD
 choice <- 17
+=======
+choice <- 4
+>>>>>>> 824577183e67a5fc0d8777e615360be51177b3d6
 choice_plots <- subset(plots, plots$set == choice)
 choice_info <- subset(info, info$set == choice)
 cat(subset(choice_info, choice_info$signal == 1)$in.lineup.ID)
@@ -38,14 +43,14 @@ cat(subset(choice_info, choice_info$signal == 1)$in.lineup.ID)
 #To scale all plots, scales = "free" in facet_wrap
 ggplot(choice_plots, aes(x, y)) +
   geom_point() +
-  facet_wrap(~in.lineup.ID, nrow = 4, labeller = label_context) 
+  facet_wrap(~in.lineup.ID, nrow = 4, labeller = label_context)
 ```
 
 
 ```{r, warning = FALSE}
-choices <- data.frame(set = numeric(140), choice1 = numeric(140), choice2 = numeric(140))
+choices <- data.frame(set = numeric(189), choice1 = numeric(189), choice2 = numeric(189))
 
-for(i in 1:20){
+for(i in 1:27){
   print(i)
   a <- 7*(i-1)+1
   z <- 7*i
@@ -97,16 +102,16 @@ for(i in 1:20){
   choices[a+6,2:3] <- which(mah_dists %in% mah_max)
 }
 
-choices$model <- rep(1:7, 20)
+choices$model <- rep(1:7, 27)
 all_choices <- choices %>% gather(Choice, values, choice1:choice2)
 final_choice <- all_choices %>% unite(temp, model, Choice) %>% spread(temp, values)
 
 colnames(final_choice) <- c("set", "Cor1", "Cor2", "LDA1", "LDA2", "Log1", "Log2", "KNN1", "KNN2", "RF1", "RF2", "EU1", "EU2", "MAH1", "MAH2")
 
 
-accuracy <- data.frame(Euclidean = numeric(20), Mahalanobis = numeric(20), LDA = numeric(20), Logistic = numeric(20), KNN = numeric(20), Random.Forest = numeric(20))
+accuracy <- data.frame(Euclidean = numeric(27), Mahalanobis = numeric(27), LDA = numeric(27), Logistic = numeric(27), KNN = numeric(27), Random.Forest = numeric(27))
 
-for(set in 1:20){
+for(set in 1:27){
   correct <- c(final_choice$Cor1[set], final_choice$Cor2[set])
   accuracy$Euclidean[set] <- mean(c(final_choice$EU1[set] %in% correct, final_choice$EU2[set] %in% correct))
   accuracy$Mahalanobis[set] <- mean(c(final_choice$MAH1[set] %in% correct, final_choice$MAH2[set] %in% correct))
@@ -117,8 +122,7 @@ for(set in 1:20){
 }          
 
 colMeans(accuracy)
-#EU - .85, MAH - .55, LDA - .75, Log - .775, KNN - .925, RF - .95
-#MAH got 0/2 twice, KNN got 0/2 once, all other models got at least 1 signal plot every time
+#EU - .852, MAH - .537, LDA - .704, Log - .722, KNN - .870, RF - .926
 ```
 
 
