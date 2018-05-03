@@ -1,0 +1,36 @@
+---
+title: "Testing"
+author: "Aidan Mullan"
+date: "5/3/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, fig.height = 2, fig.width = 4}
+library("mlbench")
+library("igraph")
+data <- ex1217
+x <- cbind(log(data$NOX), data$Mortality)
+x <- unique(x)
+svg("scagnosticsBase.svg", width=10, height=3)
+par(mfrow=c(1,2))
+hull  <- chull(x)
+hull <- c(hull, hull[1])
+plot(x, main="Convex Hull", axes=F, pch=19, cex=0.5, xlab = "", ylab = "")
+lines(x[hull, ])
+box()
+graph <- graph.adjacency(as.matrix(dist(x)), weighted=TRUE)
+mst   <- as.undirected(minimum.spanning.tree(graph))
+idx   <- get.edges(mst, E(mst))
+plot(x, main="Minimal Spanning Tree", axes=F, pch=19, cex=0.5, xlab = "", ylab = "")
+for (i in seq(nrow(idx))) {
+  ft <- idx[i,]
+  lines(x[ft,1], x[ft,2])
+}
+box()
+dev.off()
+```
+
