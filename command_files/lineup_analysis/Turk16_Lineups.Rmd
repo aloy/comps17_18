@@ -30,7 +30,7 @@ scagnostics$set <- info$set
 ```
 
 ```{r}
-choice <- 3
+choice <- 11
 choice_plots <- subset(plots, plots$set == choice)
 choice_info <- subset(info, info$set == choice)
 cat(subset(choice_info, choice_info$signal == 1)$in.lineup.ID)
