@@ -1,0 +1,67 @@
+talk outline
+
+intro:
+-purpose
+
+-scagnostics: 
+Aidan: "Our study is a robust test of scagnostics"
+  - intro/background
+  - measures/definition
+  
+methods:
+
+BIG PICTURE STEPS:
+
+problem: intro to the idea of null vs  signal / visual perception
+  figure out how to explain in layman's terms
+
+first attempts
+  how does perception work
+  Q to the audience: what would you look for?
+    shape
+    spread
+    
+
+possible solution: scagnostics
+  explain what they are with examples
+  
+transition to data, aka building our model "our study is a robust test of scagnostics"
+  how we trained the model, the different ones we tried, brief explanation of random forest
+  supervised 
+  vs unsupervised
+  application: lineups
+  idea of random chance, 
+
+proof of concept, our model seem to work: let's check with real data
+
+turk data: we do as well!
+
+applications & why you care
+
+
+Initial Exploration of Concept, We are able to detect patterns using scagnostics
+- sim data (move details to appendix)
+- goals: automatic signal detection (pattern)
+- train model (proof of concept) +lineup training
+  - results: acc, sens., spec, etc
+  - compare models
+
+results: how do we do compared to humans?
+-actual lineup data (turk data)
+  - explain experiment
+    - pictures 
+    - human results
+    - our model results
+-qq plots
+  - we do poorly, people are also bad
+  
+discusison: we've shown that scagnostics work in these situations
+  - revisit problem
+  - results in context
+  - based on the physical shapes of a scatter plot we can characterize plots as either signal or null
+  - shortcomings & future directions (qqplot)
+  - applications
+  
+conclusion:
+  - ultimate goals
+  

@@ -121,7 +121,8 @@ for(set in 1:K){
   fp$Random.Forest[set] <- 1 - mean(choices$rf.choice[[set]] %in% correct)
 }    
 
-colMeans(accuracy)
+colMeans(accuracy[c(1:4,7:14),])
+colMeans(accuracy[c(5,6,15:18),])
 colMeans(fp)
 #Acc: EU - .878, MAH - .709, LDA - .861, QDA - .811, LOG - .850, KNN - .972, RF - .917
 #FalPo: EU - .122, MAH - .291, LDA - .139, QDA - .189, LOG - .150, KNN - .352, RF - .083
