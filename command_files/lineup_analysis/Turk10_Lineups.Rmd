@@ -254,20 +254,20 @@ choices <- data.frame(correct.choice = numeric(48), eu.choice = numeric(48), mah
 for(i in 1:48){
   print(i)
   test_data <- subset(scagnostics, scagnostics$lineup == i)
-  choices$correct.choice[i] <- which(test_data$signal == 1)
+  choices$correct.choice[i] <- list(which(test_data$signal == 1))
 
 
   LDA_preds <- predict(model_LDA, test_data, type = "response")
-  choices$lda.choice[i] <- which(LDA_preds$posterior[,2] == max(LDA_preds$posterior[,2]))
+  choices$lda.choice[i] <- list(which(LDA_preds$posterior[,2] == max(LDA_preds$posterior[,2])))
   
   logit_preds <- predict(model_logit, test_data, type = "response")
-  choices$logit.choice[i] <- which(logit_preds == max(logit_preds))
+  choices$logit.choice[i] <- list(which(logit_preds == max(logit_preds)))
 
   knn_preds <- predict.train(model_knn, test_data, type = "prob")
-  choices$knn.choice[i] <- which(knn_preds[,2] == max(knn_preds[,2]))
+  choices$knn.choice[i] <- list(which(knn_preds[,2] == max(knn_preds[,2])))
   
   rf_preds <- predict(model_rf, newdata = test_data[,c(2:8,10)], type = "prob")
-  choices$rf.choice[i] <- which(rf_preds[,2] == max(rf_preds[,2]))  
+  choices$rf.choice[i] <- list(which(rf_preds[,2] == max(rf_preds[,2])))  
   
   dscags <- test_data[,c(2:8, 10)]
   means <- colMeans(dscags)
@@ -275,10 +275,10 @@ for(i in 1:48){
   for (j in 1:20){
     eu_dists <- c(eu_dists, (dist(rbind(dscags[j,],means))))
   }
-  choices$eu.choice[i] <- which(eu_dists == max(eu_dists))
+  choices$eu.choice[i] <- list(which(eu_dists == max(eu_dists)))
   
   mah_dists <- mahalanobis(dscags, means, cov(dscags))
-  choices$maha.choice[i] <- which(mah_dists == max(mah_dists))
+  choices$maha.choice[i] <- list(which(mah_dists == max(mah_dists)))
 }
 
 #accuracy <- data.frame(Euclidean = mean(choices$eu.choice == choices$correct.choice), 
@@ -288,20 +288,29 @@ for(i in 1:48){
     #                   KNN = mean(choices$knn.choice == choices$correct.choice),
      #                  Random.Forest = mean(choices$rf.choice == choices$correct.choice))
 
-accuracy <- data.frame(Euclidean = mean(choices$eu.choice == 20), 
-                       Mahalanobis = mean(choices$maha.choice == 20),
-                       LDA = mean(choices$lda.choice == 20),
-                       Logistic = mean(choices$logit.choice == 20),
-                       KNN = mean(choices$knn.choice == 20),
-                       Random.Forest = mean(choices$rf.choice == 20))
-accuracy
+accuracy <- data.frame(Euclidean = 1:48, 
+                       Mahalanobis = 1:48,
+                       LDA = 1:48,
+                       Logistic = 1:48,
+                       KNN = 1:48,
+                       Random.Forest = 1:48)
+for(i in 1:48){
+  accuracy$Euclidean[i] <- isTRUE(20 %in% choices$eu.choice[i])
+  accuracy$Mahalanobis[i] <- isTRUE(20 %in% choices$maha.choice[i])
+  accuracy$LDA[i] <- isTRUE(20 %in% choices$lda.choice[i])
+  accuracy$Logistic[i] <- isTRUE(20 %in% choices$logit.choice[i])
+  accuracy$KNN[i] <- isTRUE(20 %in% choices$knn.choice[i])
+  accuracy$Random.Forest[i] <- isTRUE(20 %in% choices$rf.choice[i])  
+}
+
+colMeans(accuracy)
 #EU - .083, MAH - .000, LDA - .063, LOG - .021, KNN - .063, RF - .063
-#EU - .167, MAH - .146, LDA - .250, LOG - .333, KNN - .208, RF - .313 
+#EU - .167, MAH - .146, LDA - .250, LOG - .396, KNN - .208, RF - .313 
 
 ```
 
 ```{r}
-all_turk_responses <- read.csv("simulation_data/all_turk_responses.csv")
+all_turk_responses <- read.csv("simulation_data/turk10_responses.csv")
 all_turk_responses$signal <- NA
 all_turk_responses$weighted <- NA
 for(i in 1:21838){
@@ -319,7 +328,7 @@ mean(na.omit(all_turk_responses$weighted))
 
 turk_groups <- all_turk_responses %>% group_by(index) %>% summarise(signal = mean(signal, na.rm = TRUE), weighted = mean(weighted, na.rm = TRUE))
 
-summary(turk_groups)  
+colMeans(turk_groups)  
 #Raw Accuracy: Min - 0.000, Mean - 0.426, Max - 1.000
 #Weighted Acc: Min - 0.000, Mean - 0.403, Max - 0.993
 
