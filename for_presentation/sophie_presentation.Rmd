@@ -61,6 +61,7 @@ tab <- stat.desc(data[,c("Mortality", "logNox")], basic=F)
 kable(tab[c(1:2,5:6),], format = "latex")
 ```
 
+datasaurus dozen
 ```{r, eval = F}
 
 
@@ -70,13 +71,15 @@ ggplot(datasaurus_dozen, aes(x=x, y=y, colour=dataset))+
   theme(legend.position = "none")+
   facet_wrap(~dataset, ncol=3)
 
+
+
 p1 <- datasaurus_dozen %>% filter(dataset == 'dino') %>% ggplot(aes(x=x, y=y))+
   geom_point()+
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(), axis.ticks.x=element_blank(), axis.title.y=element_blank(),
         axis.text.y=element_blank(), axis.ticks.y=element_blank()) + 
   theme(legend.position = "none")
-
+p1
 p2 <- datasaurus_dozen %>% filter(dataset == 'dots') %>% ggplot(aes(x=x, y=y))+
   geom_point()+
   theme(axis.title.x=element_blank(),
@@ -84,16 +87,31 @@ p2 <- datasaurus_dozen %>% filter(dataset == 'dots') %>% ggplot(aes(x=x, y=y))+
         axis.text.y=element_blank(), axis.ticks.y=element_blank()) + 
   theme(legend.position = "none")
 
-
+p2
 p3 <- datasaurus_dozen %>% filter(dataset == 'slant_up') %>% ggplot(aes(x=x, y=y))+
   geom_point()+
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(), axis.ticks.x=element_blank(), axis.title.y=element_blank(),
         axis.text.y=element_blank(), axis.ticks.y=element_blank()) + 
   theme(legend.position = "none")
-
+p3
 
 p4 <- datasaurus_dozen %>% filter(dataset == 'wide_lines') %>% ggplot(aes(x=x, y=y))+
+  geom_point()+
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(), axis.ticks.x=element_blank(), axis.title.y=element_blank(),
+        axis.text.y=element_blank(), axis.ticks.y=element_blank()) + 
+  theme(legend.position = "none")
+p4
+p5 <- datasaurus_dozen %>% filter(dataset == 'away') %>% ggplot(aes(x=x, y=y))+
+  geom_point()+
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(), axis.ticks.x=element_blank(), axis.title.y=element_blank(),
+        axis.text.y=element_blank(), axis.ticks.y=element_blank()) + 
+  theme(legend.position = "none")
+p5 +  geom_smooth(method = "lm", se = F, colour = "#ff4447")
+
+p6 <- datasaurus_dozen %>% filter(dataset == 'circle') %>% ggplot(aes(x=x, y=y))+
   geom_point()+
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(), axis.ticks.x=element_blank(), axis.title.y=element_blank(),
@@ -102,7 +120,22 @@ p4 <- datasaurus_dozen %>% filter(dataset == 'wide_lines') %>% ggplot(aes(x=x, y
 
 grid.arrange(p3, p2, p4, p1, ncol = 2)
 
-ggsave("for_presentation/four.png", width = 8, height = 8, dpi = 500)
+a <- grid.arrange(p5, ncol = 2, nrow = 2)
+ggsave("for_presentation/four1.png", plot = a,width = 8, height = 8, dpi = 500)
+
+b <- grid.arrange(p5, p3, ncol = 2, nrow = 2)
+ggsave("for_presentation/four2.png", plot = b, width = 8, height = 8, dpi = 500)
+c <- grid.arrange(p5, p3, p2, p6, ncol = 2, nrow = 2)
+ggsave("for_presentation/four3.png", plot = c, width = 8, height = 8, dpi = 500)
+d <- grid.arrange(p5 + geom_smooth(method = "lm", se = F, colour = "#ff4447"), 
+             p3 + geom_smooth(method = "lm", se = F, colour = "#ff4447"), 
+             p2 + geom_smooth(method = "lm", se = F, colour = "#ff4447"), 
+             p6 + geom_smooth(method = "lm", se = F, colour = "#ff4447"), ncol = 2, nrow = 2)
+ggsave("for_presentation/four4.png", plot = d, width = 8, height = 8, dpi = 500)
+
+
+
+ggsave("for_presentation/four_dino.png", plot = p1, width = 8, height = 8, dpi = 500)
 ```
 
 
@@ -221,4 +254,35 @@ ggsave("for_presentation/cluster.png", width = 8, height = 6, dpi = 500)
 
 plot(p4)
 ggsave("for_presentation/striated.png", width = 8, height = 6, dpi = 500)
+```
+
+#signal vs. null
+```{r}
+ggplot(data = xy) + geom_point(aes(x = V1, y = V2))   +
+  theme( axis.text.x=element_blank(), axis.ticks.x=element_blank(), 
+        axis.text.y=element_blank(), axis.ticks.y=element_blank()) + labs(x= "x", y= "y" ) 
+ggsave("for_presentation/cluster_signal.png", width = 8, height = 6, dpi = 500)
+
+ggplot(data = nullxy) + geom_point(aes(x = V1, y = V2))  +
+  theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), axis.text.y=element_blank(), axis.ticks.y=element_blank()) + labs(x= "x", y= "y" ) 
+ggsave("for_presentation/cluster_null.png", width = 8, height = 6, dpi = 500)
+
+
+
+
+```
+
+
+looking at katie's survey:
+```{r}
+survey <- read.csv('for_presentation/Survey.csv')
+survey %>% filter(Question.15 < 4 & Question.15 > 0 ) %>% ggplot() + geom_point(aes(x = Question.14, y = Question.15)) + labs(y = "GPA", x = "Hours of TV per Week")
+
+
++ geom_smooth(aes(x = Question.14, y = Question.15), method = "lm", se = F, colour = "#ff4447")
+
+
+survey %>% filter(Question.15 < 4 & Question.15 > 0 & Question.13 < 100 ) %>% ggplot() + geom_point(aes(x = Question.13, y = Question.15)) + labs(y = "GPA", x = "Hours of Exercise per Week") + geom_smooth(aes(x = Question.13, y = Question.15), method = "lm", se = F, colour = "#ff4447")
+
+
 ```

@@ -46,7 +46,7 @@ setAN %>% select(`A-N-Q1`) %>%
   mutate( points_a = as.numeric(str_detect(`A-N-Q1`, '14')) ) %>% 
   mutate( points_b = as.numeric(str_detect(`A-N-Q1`, '17')) ) %>% 
   mutate( acc = (points_a + points_b)/2 ) %>% 
-  summarize(acc_tot = mean(acc))
+  summarize(acc_tot = mean(acc)) #68
 
 sum(setAN$`A-N-Q2` ) #should be 5, 7, 10, 11, 15
 setAN %>% select(`A-N-Q1`) %>% 
@@ -56,14 +56,14 @@ setAN %>% select(`A-N-Q1`) %>%
   mutate( points_d = as.numeric(str_detect(`A-N-Q1`, '11')) ) %>% 
   mutate( points_e = as.numeric(str_detect(`A-N-Q1`, '15')) ) %>% 
   mutate( acc = (points_a + points_b + points_c + points_d + points_e)/5 ) %>%
-  summarize(acc_tot = mean(acc))
+  summarize(acc_tot = mean(acc)) #12
 
 sum(setAN$`A-N-Q3` ) #should be 6 and 14
 setAN %>% select(`A-N-Q3`) %>% 
   mutate( points_a = as.numeric(str_detect(`A-N-Q3`, '14')) ) %>% 
   mutate( points_b = as.numeric(str_detect(`A-N-Q3`, '6')) ) %>% 
   mutate( acc = (points_a + points_b)/2 ) %>% 
-  summarize(acc_tot = mean(acc))
+  summarize(acc_tot = mean(acc)) #62
 ```
 
 setB1
@@ -92,7 +92,7 @@ sum(setBN$`B-N-Q1` ) #should be 3, 12
 setBN %>% select(`B-N-Q1`) %>% 
   mutate( points_3 = as.numeric(str_detect(`B-N-Q1`, '3')) ) %>% 
   mutate( points_12 = as.numeric(str_detect(`B-N-Q1`, '12')) ) %>% 
-  mutate( acc = (points_3 + points_12)/2 ) %>% summarize(acc_tot = mean(acc))
+  mutate( acc = (points_3 + points_12)/2 ) %>% summarize(acc_tot = mean(acc)) #80
 
 sum(setBN$`B-N-Q2` ) #should be 7, 8, 15
 setBN %>% select(`B-N-Q2`) %>% 
@@ -100,11 +100,11 @@ setBN %>% select(`B-N-Q2`) %>%
   mutate( points_8 = as.numeric(str_detect(`B-N-Q2`, '8')) ) %>% 
   mutate( points_15 = as.numeric(str_detect(`B-N-Q2`, '15')) ) %>% 
   mutate( acc = (points_7 + points_8 + points_15)/3 ) %>% 
-  summarize(acc_tot = mean(acc))
+  summarize(acc_tot = mean(acc)) #82.7
 
 sum(setBN$`B-N-Q3` ) #should be 2, 6
 setBN %>% select(`B-N-Q3`) %>% 
   mutate( points_2 = as.numeric(str_detect(`B-N-Q3`, '2')) ) %>% 
   mutate( points_6 = as.numeric(str_detect(`B-N-Q3`, '6')) ) %>% 
-  mutate( acc = (points_2 + points_6)/2 ) %>% summarize(acc_tot = mean(acc))
+  mutate( acc = (points_2 + points_6)/2 ) %>% summarize(acc_tot = mean(acc)) #72
 ```
