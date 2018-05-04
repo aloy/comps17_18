@@ -190,8 +190,8 @@ p3 <- ggplot(dat3, aes( x = x, y = y)) + geom_point() + scale_x_continuous(limit
         axis.text.x=element_blank(), axis.ticks.x=element_blank(), 
         axis.text.y=element_blank(), axis.ticks.y=element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 plot(p3)
-
-
+library(scagnostics)
+scagnostics(dat3)
 
 #striated
 x <- c(rep(1, 5), rep(3, 5), rep(5, 10))
@@ -205,7 +205,7 @@ p4 <- ggplot(dat4, aes( x = x, y = y)) + geom_point() + scale_x_continuous(limit
         axis.text.y=element_blank(), axis.ticks.y=element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 plot(p4)
 p4 + geom_smooth(method = "lm", se = F)
-
+scagnostics(dat4)
 
 ggarrange(p1, nrow = 2, ncol = 2)
 ggsave("for_presentation/quad1.png", width = 8, height = 6, dpi = 500)
@@ -258,6 +258,7 @@ ggsave("for_presentation/striated.png", width = 8, height = 6, dpi = 500)
 
 #signal vs. null
 ```{r}
+#cluster
 ggplot(data = xy) + geom_point(aes(x = V1, y = V2))   +
   theme( axis.text.x=element_blank(), axis.ticks.x=element_blank(), 
         axis.text.y=element_blank(), axis.ticks.y=element_blank()) + labs(x= "x", y= "y" ) 
@@ -268,8 +269,40 @@ ggplot(data = nullxy) + geom_point(aes(x = V1, y = V2))  +
 ggsave("for_presentation/cluster_null.png", width = 8, height = 6, dpi = 500)
 
 
+#exponential
+exp <- read.csv('simulation_data/Exponential_Plots.csv')
+head(exp)
 
+pa <- exp %>% filter(ID == 36) %>% ggplot() + geom_point(aes(x = x, y = y))   +
+  theme( axis.text.x=element_blank(), axis.ticks.x=element_blank(), 
+        axis.text.y=element_blank(), axis.ticks.y=element_blank()) + labs(x= "x", y= "y" ) 
 
+pb <- exp %>% filter(ID == 160) %>% ggplot() + geom_point(aes(x = x, y = y))   +
+  theme( axis.text.x=element_blank(), axis.ticks.x=element_blank(), 
+        axis.text.y=element_blank(), axis.ticks.y=element_blank()) + labs(x= "x", y= "y" ) 
+
+exp_info %>% filter(Rate == 0.5, N == 200, SD == 1, signal == 0)
+
+pc <- exp %>% filter(ID == 1786)%>% ggplot() + geom_point(aes(x = x, y = y))   +
+  theme( axis.text.x=element_blank(), axis.ticks.x=element_blank(), 
+        axis.text.y=element_blank(), axis.ticks.y=element_blank()) + labs(x= "x", y= "y" ) 
+
+exp_info %>% filter(Rate == 2, N == 500, SD == 4, signal == 0)
+pd <- exp %>% filter(ID == 1910) %>% ggplot() + geom_point(aes(x = x, y = y))   +
+  theme( axis.text.x=element_blank(), axis.ticks.x=element_blank(), 
+        axis.text.y=element_blank(), axis.ticks.y=element_blank()) + labs(x= "x", y= "y" )
+
+ggarrange(pa , pc , pb,  pd, nrow = 2, ncol = 2)
+ggsave("for_presentation/exp.png", width = 8, height = 6, dpi = 500)
+
+pa
+ggsave("for_presentation/exp1.png", width = 8, height = 6, dpi = 500)
+pb
+ggsave("for_presentation/exp2.png", width = 8, height = 6, dpi = 500)
+pc 
+ggsave("for_presentation/exp3.png", width = 8, height = 6, dpi = 500)
+pd 
+ggsave("for_presentation/exp4.png", width = 8, height = 6, dpi = 500)
 ```
 
 
@@ -277,7 +310,7 @@ looking at katie's survey:
 ```{r}
 survey <- read.csv('for_presentation/Survey.csv')
 survey %>% filter(Question.15 < 4 & Question.15 > 0 ) %>% ggplot() + geom_point(aes(x = Question.14, y = Question.15)) + labs(y = "GPA", x = "Hours of TV per Week")
-
+ggsave("for_presentation/intro_survey.png", width = 8, height = 6, dpi = 500)
 
 + geom_smooth(aes(x = Question.14, y = Question.15), method = "lm", se = F, colour = "#ff4447")
 

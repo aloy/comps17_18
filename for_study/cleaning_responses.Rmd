@@ -49,14 +49,14 @@ setAN %>% select(`A-N-Q1`) %>%
   summarize(acc_tot = mean(acc)) #68
 
 sum(setAN$`A-N-Q2` ) #should be 5, 7, 10, 11, 15
-setAN %>% select(`A-N-Q1`) %>% 
-  mutate( points_a = as.numeric(str_detect(`A-N-Q1`, '5')) ) %>% 
-  mutate( points_b = as.numeric(str_detect(`A-N-Q1`, '7')) ) %>% 
-  mutate( points_c = as.numeric(str_detect(`A-N-Q1`, '10')) ) %>% 
-  mutate( points_d = as.numeric(str_detect(`A-N-Q1`, '11')) ) %>% 
-  mutate( points_e = as.numeric(str_detect(`A-N-Q1`, '15')) ) %>% 
+setAN %>% select(`A-N-Q2`) %>% 
+  mutate( points_a = as.numeric(str_detect(`A-N-Q2`, '5,')) ) %>% 
+  mutate( points_b = as.numeric(str_detect(`A-N-Q2`, '7')) ) %>% 
+  mutate( points_c = as.numeric(str_detect(`A-N-Q2`, '10')) ) %>% 
+  mutate( points_d = as.numeric(str_detect(`A-N-Q2`, '11')) ) %>% 
+  mutate( points_e = as.numeric(str_detect(`A-N-Q2`, '15')) ) %>% 
   mutate( acc = (points_a + points_b + points_c + points_d + points_e)/5 ) %>%
-  summarize(acc_tot = mean(acc)) #12
+  summarize(acc_tot = mean(acc)) #67.2
 
 sum(setAN$`A-N-Q3` ) #should be 6 and 14
 setAN %>% select(`A-N-Q3`) %>% 
@@ -64,6 +64,33 @@ setAN %>% select(`A-N-Q3`) %>%
   mutate( points_b = as.numeric(str_detect(`A-N-Q3`, '6')) ) %>% 
   mutate( acc = (points_a + points_b)/2 ) %>% 
   summarize(acc_tot = mean(acc)) #62
+
+#false positives
+setAN %>% select(`A-N-Q1`) %>% 
+  mutate( len = as.numeric(str_detect(`A-N-Q1`, ',')) + 1 ) %>%  
+  mutate( points_a = as.numeric(str_detect(`A-N-Q1`, '14')) ) %>% 
+  mutate( points_b = as.numeric(str_detect(`A-N-Q1`, '17')) ) %>% 
+   mutate( false_pos = 1 - (points_a + points_b)/len ) %>% summarize(false_pos_tot = mean(false_pos)) #0.0800
+
+
+sum(setAN$`A-N-Q2` ) #should be 5, 7, 10, 11, 15
+setAN %>% select(`A-N-Q2`) %>% 
+  mutate( len = as.numeric(str_count(`A-N-Q2`, ',')) + 1 ) %>%  
+  mutate( points_a = as.numeric(str_detect(`A-N-Q2`, '5,')) ) %>% 
+  mutate( points_b = as.numeric(str_detect(`A-N-Q2`, '7')) ) %>% 
+  mutate( points_c = as.numeric(str_detect(`A-N-Q2`, '10')) ) %>% 
+  mutate( points_d = as.numeric(str_detect(`A-N-Q2`, '11')) ) %>% 
+  mutate( points_e = as.numeric(str_detect(`A-N-Q2`, '15')) ) %>% 
+  mutate( false_pos = 1 - (points_a + points_b + points_c + points_d + points_e)/len )%>% 
+  summarize(false_pos_tot = mean(false_pos)) #0.0233
+
+sum(setAN$`A-N-Q3` ) #should be 6 and 14
+setAN %>% select(`A-N-Q3`) %>% 
+   mutate( len = as.numeric(str_count(`A-N-Q3`, ',')) + 1 ) %>%  
+  mutate( points_a = as.numeric(str_detect(`A-N-Q3`, '14')) ) %>% 
+  mutate( points_b = as.numeric(str_detect(`A-N-Q3`, '6')) ) %>% 
+  mutate( false_pos = 1 - (points_a + points_b)/len ) %>% 
+  summarize(false_pos_tot = mean(false_pos)) #0.270
 ```
 
 setB1
@@ -107,4 +134,51 @@ setBN %>% select(`B-N-Q3`) %>%
   mutate( points_2 = as.numeric(str_detect(`B-N-Q3`, '2')) ) %>% 
   mutate( points_6 = as.numeric(str_detect(`B-N-Q3`, '6')) ) %>% 
   mutate( acc = (points_2 + points_6)/2 ) %>% summarize(acc_tot = mean(acc)) #72
+
+#accuracy for select more than 1 
+(80 + 82.7 + 72 + 68 + 67.2 + 62)/6
+71.98
+
+mutate( len = length(unlist(strsplit(`B-N-Q1`, split=","))))
+
+
+#false positives
+setBN %>% select(`B-N-Q1`) %>% 
+  mutate( len = as.numeric(str_detect(`B-N-Q1`, ',')) + 1 ) %>%  
+  mutate( points_3 = as.numeric(str_detect(`B-N-Q1`, '3')) ) %>% 
+  mutate( points_12 = as.numeric(str_detect(`B-N-Q1`, '12')) ) %>% 
+  mutate( false_pos = 1 - (points_3 + points_12)/len ) %>% summarize(false_pos_tot = mean(false_pos)) #0.0800
+
+setBN %>% select(`B-N-Q2`) %>% 
+  mutate( len = as.numeric(str_count(`B-N-Q2`, ',')) + 1) %>% 
+  mutate( points_7 = as.numeric(str_detect(`B-N-Q2`, '7')) ) %>% 
+  mutate( points_8 = as.numeric(str_detect(`B-N-Q2`, '8')) ) %>% 
+  mutate( points_15 = as.numeric(str_detect(`B-N-Q2`, '15')) ) %>% 
+  mutate( false_pos = 1 -  (points_7 + points_8 + points_15)/len ) %>% 
+  summarize(false_pos_tot = mean(false_pos)) #0.04
+
+setBN %>% select(`B-N-Q3`) %>% 
+  mutate( len = as.numeric(str_count(`B-N-Q3`, ',')) + 1) %>% 
+  mutate( points_2 = as.numeric(str_detect(`B-N-Q3`, '2')) ) %>% 
+  mutate( points_6 = as.numeric(str_detect(`B-N-Q3`, '6')) ) %>% 
+  mutate( false_pos = 1 -  (points_2 + points_6)/len ) %>% 
+  summarize(false_pos_tot = mean(false_pos)) #0.140
+
+#false pos rates for set B
+(0.08 + 0.04 + 0.14)/3
+0.0866
+
+#false pos rates for set A
+(0.08 + 0.023 +0.27)/3
+0.1243
+(0.0866 + 0.1243)/2
+#total false positive: 10.5
 ```
+
+###TOTAL RATES:
+select more than 1:
+false positive: 10.5%
+accuracy: 71.98
+
+accuracy for select 1: 80.5%
+
