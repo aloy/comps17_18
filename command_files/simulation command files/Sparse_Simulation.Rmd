@@ -16,12 +16,14 @@ install.packages('devtools')
 devtools::install_github("aloy/scagnostics")
 library(scagnostics)
 library(ggplot2)
+library(tidyverse)
+library(plyr)
 ```
 
 Sparse(product of integer[1,3] with itself)
 ```{r}
 R <- 50 #replication
-N <- c(3:15) #number of total points
+N <- c(3:10) #number of total points
 X <- c(1:15) #choose x coords
 Y <- c(1:15) #choose y coords
 
@@ -29,22 +31,50 @@ scatter <- vector(mode = "list")
 info <- vector(mode = "list")
 index = 1
 
-for (r in R){
+for (r in 1:R){
   for (n in N){
     x <- sample(X, n)
     y <- sample(Y, n)
-    index = index + 1
     scatter[[index]] <- list(ID = index,  x = x , y = y)
     info[[index]] <- list(ID = index, N = n, signal = 1)
+    index = index + 1
+    
+    x1 <- runif(n*50,1,15)
+    y1 <- runif(n*50,1,15)
+    scatter[[index]] <- list(ID = index,  x = x1 , y = y1)
+    info[[index]] <- list(ID = index, N = n*50, signal = 0)
+    index = index + 1
   }
 }
 ```
 
 ```{r}
+#yikes
 plot(scatter[[14]][["x"]],scatter[[14]][["y"]])
-scagnostics(scatter[[1]][["x"]],scatter[[14]][["y"]])
-x <- c(1:3)
-y <- c(1:3)
-plot(x,y)
-scagnostics(x,y)
+scagnostics(scatter[[14]][["x"]],scatter[[14]][["y"]])$s
+
+plot(scatter[[15]][["x"]],scatter[[15]][["y"]])
+scagnostics(scatter[[15]][["x"]],scatter[[15]][["y"]])$s
+```
+
+```{r}
+scagnostics1 <- vector(mode = "list")
+
+index = 1
+for (plot in scatter) {
+  if (index%%100 == 0){print(index)}
+  scagnostics1[[index]] <- list(ID = index, scagnostics = scagnostics(plot$x, plot$y)$s)
+  index = index + 1
+}
+
+info_df <- ldply(info, data.frame)
+scatter_df <- ldply(scatter, data.frame)
+
+scagnostics_df <- ldply(scagnostics1, data.frame)
+scag_num <- rep(seq(1:9), 800)
+scagnostics_df$scag_num <- scag_num
+  
+write.csv(info_df, "sparse_info.csv")
+write.csv(scatter_df, "sparse_trend_plots.csv")
+write.csv(scagnostics_df, "sparse_scagnostics.csv")
 ```
