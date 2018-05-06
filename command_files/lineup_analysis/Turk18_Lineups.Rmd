@@ -31,7 +31,11 @@ scagnostics$set <- info$set
 ```
 
 ```{r}
+<<<<<<< HEAD
+choice <- 17
+=======
 choice <- 4
+>>>>>>> 824577183e67a5fc0d8777e615360be51177b3d6
 choice_plots <- subset(plots, plots$set == choice)
 choice_info <- subset(info, info$set == choice)
 cat(subset(choice_info, choice_info$signal == 1)$in.lineup.ID)

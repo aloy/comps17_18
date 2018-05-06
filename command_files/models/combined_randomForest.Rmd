@@ -36,4 +36,5 @@ predictors <- predictors[!predictors %in% c("ID","signal","model")]
 cv1 <- rfcv(data[,predictors], as.factor(data$signal), cv.fold = 10)
 cv1$error.cv
 #.014 error for both
+1-.014
 ```
