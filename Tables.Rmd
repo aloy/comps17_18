@@ -1,0 +1,23 @@
+---
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE, results='asis'}
+library(knitr)
+df <- matrix(c("K-Nearest Neighbors", "Linear Discriminant Analysis", "Support Vector Machine","Logistic Regression",  "Quadratic Discriminant Analysis", "Random Forest", "69.6%","93.9%", "97.3%","97.4%", "98.1%", "98.6%"), ncol = 2, byrow = FALSE)
+df <- as.data.frame(df)
+colnames(df) <- c("Model", "Accuracy")
+kable(df)
+
+#Logistic: .974
+#KNN: 0.696 with k=4
+#LDA: 0.939
+#QDA: 0.981
+#SVM: 0.973
+#Random Forest: 0.986
+```
+
