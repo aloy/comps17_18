@@ -149,11 +149,11 @@ dat1$y <- y
 p1 <- ggplot(dat1, aes( x = x, y = y)) + geom_point() +
   theme(
         axis.text.x=element_blank(), axis.ticks.x=element_blank(),
-        axis.text.y=element_blank(), axis.ticks.y=element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+        axis.text.y=element_blank(), axis.ticks.y=element_blank())
 
 plot(p1)
 
-
+ggplot(dat1, aes( x = x, y = y)) + geom_point()
 #curved
 x <- c(c(0:5), c(0:5) +0.5 )
 y <- x^3
@@ -161,19 +161,19 @@ x <- x + runif(12, min = -0.5, max = 0.5)
 y <- y +  runif(12, min = -0.5, max = 0.5) + 1
 dat2 <- as.data.frame(x)
 dat2$y <- y
-p2 <- ggplot(dat2, aes( x = x, y = y)) + geom_point()  +
+p2 <- ggplot(dat2, aes( x = x, y = y)) + geom_point()  +  ylim(0,200) +
   theme(
         axis.text.x=element_blank(), axis.ticks.x=element_blank(), 
-        axis.text.y=element_blank(), axis.ticks.y=element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+        axis.text.y=element_blank(), axis.ticks.y=element_blank()) 
 plot(p2)
-p2 + geom_smooth(method = "lm", se = F)
+p2 + geom_smooth(method = "lm", se = F)  
 
 #logged
 dat2$log.y <- log(y) 
 p2a <- ggplot(dat2, aes( x = x, y = log.y)) + geom_point() +
   theme(
         axis.text.x=element_blank(), axis.ticks.x=element_blank(), 
-        axis.text.y=element_blank(), axis.ticks.y=element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+        axis.text.y=element_blank(), axis.ticks.y=element_blank())
 plot(p2a)
 p2a + geom_smooth(method = "lm", se = F)
 
@@ -188,7 +188,7 @@ dat3$y <- y
 p3 <- ggplot(dat3, aes( x = x, y = y)) + geom_point() + scale_x_continuous(limits = c(0, 6))  + scale_y_continuous(limits = c(0, 4)) +
   theme(
         axis.text.x=element_blank(), axis.ticks.x=element_blank(), 
-        axis.text.y=element_blank(), axis.ticks.y=element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+        axis.text.y=element_blank(), axis.ticks.y=element_blank())
 plot(p3)
 library(scagnostics)
 scagnostics(dat3)
@@ -202,7 +202,7 @@ dat4$y <- y
 p4 <- ggplot(dat4, aes( x = x, y = y)) + geom_point() + scale_x_continuous(limits = c(0, 6))  + scale_y_continuous(limits = c(0, 6)) +
   theme(
         axis.text.x=element_blank(), axis.ticks.x=element_blank(), 
-        axis.text.y=element_blank(), axis.ticks.y=element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+        axis.text.y=element_blank(), axis.ticks.y=element_blank())
 plot(p4)
 p4 + geom_smooth(method = "lm", se = F)
 scagnostics(dat4)
