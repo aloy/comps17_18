@@ -1,5 +1,6 @@
 # setwd("~/Work/RD/MacroStab")
 library(ggplot2)
+library(GGally)
 ####
 #### Server
 ####
@@ -113,7 +114,7 @@ shinyServer(function(input, output, session) {
       output$dataplot <- renderPlot({
         df <- df()
         colnames <- discrete_cols()
-        return(pairs(df[,colnames]))
+        return(colnames)
       })
       
       pred_df <- predictions()
