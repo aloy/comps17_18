@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r, fig.height = 2, fig.width = 4}
 library("mlbench")
 library("igraph")
+library(Sleuth3)
 data <- ex1217
 x <- cbind(log(data$NOX), data$Mortality)
 x <- unique(x)
@@ -33,4 +34,64 @@ for (i in seq(nrow(idx))) {
 box()
 dev.off()
 ```
+
+```{r}
+df <- ex1217
+df <- data.frame(Mortality = scale(df$Mortality), NOX = df$NOX)
+
+df2 = na.omit(df) %>%
+  mutate(hull = 1:n(), hull = factor(hull, chull(log(NOX), Mortality))) %>%
+  arrange(hull)
+
+q <- ggplot(df2, aes(log(NOX), Mortality)) +
+  geom_polygon(aes(color = "raspberry"), data = filter(df2, !is.na(hull)), alpha = 0.5, fill = NA) +
+  geom_point() +
+  theme(legend.position = "none") + 
+  ggtitle("Convex Hull")
+
+p <- ggplot(df2, aes(log(NOX), Mortality)) + geom_point() + ggtitle("Minimal Spanning Tree") + theme(legend.position = "none")
+x <- cbind(log(df$NOX), df$Mortality)
+x <- unique(x)
+graph <- graph.adjacency(as.matrix(dist(x)), weighted=TRUE)
+mst   <- as.undirected(minimum.spanning.tree(graph))
+idx   <- get.edges(mst, E(mst))
+for (i in seq(nrow(idx))) {
+  ft <- idx[i,]
+  p <- p + geom_segment(aes(color = "raspberry"), x = x[ft,1][1], xend = x[ft,1][2], y = x[ft,2][1], yend = x[ft,2][2])
+}
+
+p
+q
+```
+
+```{r, fig.height = 2, fig.width = 4}
+library("mlbench")
+library("igraph")
+data <- read.csv('for_presentation/Survey.csv')
+data2 <- data %>% filter(Question.15 < 4 & Question.15 > 0 ) 
+
+
+x <- cbind(data2$Question.14, data2$Question.15)
+x <- unique(x)
+x <- na.omit(x)
+svg("scagnosticsBase.svg", width=10, height=3)
+par(mfrow=c(1,2))
+hull  <- chull(x)
+hull <- c(hull, hull[1])
+plot(x, main="Convex Hull", axes=F, pch=19, cex=0.5, xlab = "", ylab = "")
+lines(x[hull, ])
+box()
+graph <- graph.adjacency(as.matrix(dist(x)), weighted=TRUE)
+mst   <- as.undirected(minimum.spanning.tree(graph))
+idx   <- get.edges(mst, E(mst))
+plot(x, main="Minimal Spanning Tree", axes=F, pch=19, cex=0.5, xlab = "", ylab = "")
+for (i in seq(nrow(idx))) {
+  ft <- idx[i,]
+  lines(x[ft,1], x[ft,2])
+}
+box()
+dev.off()
+```
+
+
 
