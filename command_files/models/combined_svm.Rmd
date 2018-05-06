@@ -51,6 +51,8 @@ test$svm.preds <- ifelse(new < .5, 0, 1)
 mean(test$signal == test$svm.preds)
 ```
 
+0.9726374
+
 ```{r}
 data$model_type <- data$model
 data$model_type <- as.character(data$model_type)
@@ -63,8 +65,6 @@ train <- data[train_ind, ]
 test <- data[-train_ind, ] 
 
 svm.2 <- randomForest(train$model_type_fac ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train, probability = T)
-
-
 ```
 
 
@@ -82,3 +82,21 @@ failed <- test %>% filter(test$preds != test$model_type_fac)
 
 failed %>% group_by(preds, model_type_fac) %>% select(preds, model_type_fac) %>% table()
 ```
+
+```{r}
+#logistic
+model1 <- glm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train, family = "binomial")
+
+
+new <- predict(model1, test, decision.values = TRUE, probability = TRUE)
+
+logistic.probs <- predict(model1,type="response")
+
+test$logistic.probs <- new
+
+test$logistic.probs <- ifelse(new < .5, 0, 1)
+
+mean(test$signal == test$logistic.probs)
+```
+
+0.9735165
