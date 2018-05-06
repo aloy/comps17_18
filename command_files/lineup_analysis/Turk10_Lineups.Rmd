@@ -20,6 +20,7 @@ library(tidyverse)
 library(caret)
 library(randomForest)
 
+
 scagnostics <- read.csv("simulation_data/turk10_scagnostics.csv")
 scagnostics <- scagnostics[,-1]
 info <- read.csv("simulation_data/turk10_info.csv")
@@ -27,6 +28,7 @@ info <- info[,-1]
 colnames(info) <- c("lineup", "lineup.ID", "ID", "n", "df", "signal", "seed")
 plots <- read.csv("simulation_data/turk10_plots.csv")
 plots <- plots[,-1]
+
 
 scagnostics$lineup <- info$lineup
 ```
@@ -361,6 +363,96 @@ ggplot(data_1_2_15_50_2_13_6, aes(naive1.qq.x, naive1.qq.y)) +
   facet_wrap(~.n, nrow = 4, labeller = label_context) 
 ```
 
+
+#how well does the new scagnostic do?
+```{r, warning = FALSE}
+#calculate new scagnostic for Turk data
+deviation.multSq <- function(x,y){
+  data <- (y - mean(y))/sd(y)
+  qqplot <- qqnorm(data, plot.it = F)
+  x2 <- qqplot$x
+  y2 <- qqplot$y
+  deviation <- (1/length(y2))*sum((x2^2+1)*(y2 - x2)^2)
+  return(deviation)
+}
+
+deviation <- plots %>% group_by(ID) %>% summarize(deviation.multSq = deviation.multSq(x, y))
+scagnostics <- scagnostics %>% left_join(deviation)
+
+#fit models
+model_LDA_new <- lda(signal~scag_num_1+scag_num_4+scag_num_5+
+                     scag_num_6+scag_num_6+scag_num_9 + deviation.multSq, data = old_scags)
+model_logit_new <- glm(signal~ scag_num_6 + scag_num_9 + deviation.multSq, 
+                     data = old_scags, family ="binomial")
+control <- trainControl(method = "cv", number = 10, classProbs = TRUE, returnData = TRUE)
+model_knn_new <- train(make.names(as.factor(signal))~scag_num_1+scag_num_2+scag_num_3+scag_num_4+
+                       scag_num_5+scag_num_6+scag_num_6+scag_num_7+scag_num_9 + + deviation.multSq, 
+                     data = old_scags, method = "knn", trControl = control, 
+                   tuneGrid = expand.grid(k = 1:25))
+set.seed(1)
+model_rf_new <- randomForest(as.factor(signal) ~scag_num_1+scag_num_4
+                             +scag_num_6+scag_num_9 + deviation.multSq, data = old_scags,
+                           ntree=100, importance =T)
+
+varImpPlot(model_rf_new)
+
+choices2 <- data.frame(correct.choice = numeric(48), eu.choice = numeric(48), maha.choice = numeric(48), rf.choice = numeric(48), knn.choice = numeric(48), lda.choice = numeric(48), logit.choice = numeric(48))
+for(i in 1:48){
+  test_data <- subset(scagnostics, scagnostics$lineup == i)
+  choices2$correct.choice[i] <- list(which(test_data$signal == 1))
+
+
+  LDA_preds <- predict(model_LDA_new, test_data, type = "response")
+  choices2$lda.choice[i] <- list(which(LDA_preds$posterior[,2] == max(LDA_preds$posterior[,2])))
+  
+  logit_preds <- predict(model_logit_new, test_data, type = "response")
+  choices2$logit.choice[i] <- list(which(logit_preds == max(logit_preds)))
+
+  knn_preds <- predict.train(model_knn_new, test_data, type = "prob")
+  choices2$knn.choice[i] <- list(which(knn_preds[,2] == max(knn_preds[,2])))
+  
+  rf_preds <- predict(model_rf_new, newdata = test_data[,c(2:8,10, 12)], type = "prob")
+  choices2$rf.choice[i] <- list(which(rf_preds[,2] == max(rf_preds[,2])))  
+  
+  dscags <- test_data[,c(2:8, 10, 12)]
+  means <- colMeans(dscags)
+  eu_dists <- NULL
+  for (j in 1:20){
+    eu_dists <- c(eu_dists, (dist(rbind(dscags[j,],means))))
+  }
+  choices2$eu.choice[i] <- list(which(eu_dists == max(eu_dists)))
+  
+  mah_dists <- mahalanobis(dscags, means, cov(dscags))
+  choices2$maha.choice[i] <- list(which(mah_dists == max(mah_dists)))
+}
+
+#accuracy <- data.frame(Euclidean = mean(choices$eu.choice == choices$correct.choice), 
+ #                      Mahalanobis = mean(choices$maha.choice == choices$correct.choice),
+  #                     LDA = mean(choices$lda.choice == choices$correct.choice),
+   #                    Logistic = mean(choices$logit.choice == choices$correct.choice),
+    #                   KNN = mean(choices$knn.choice == choices$correct.choice),
+     #                  Random.Forest = mean(choices$rf.choice == choices$correct.choice))
+
+accuracy2 <- data.frame(Euclidean = 1:48, 
+                       Mahalanobis = 1:48,
+                       LDA = 1:48,
+                       Logistic = 1:48,
+                       KNN = 1:48,
+                       Random.Forest = 1:48)
+for(i in 1:48){
+  accuracy2$Euclidean[i] <- isTRUE(20 %in% choices2$eu.choice[i])
+  accuracy2$Mahalanobis[i] <- isTRUE(20 %in% choices2$maha.choice[i])
+  accuracy2$LDA[i] <- isTRUE(20 %in% choices2$lda.choice[i])
+  accuracy2$Logistic[i] <- isTRUE(20 %in% choices2$logit.choice[i])
+  accuracy2$KNN[i] <- isTRUE(20 %in% choices2$knn.choice[i])
+  accuracy2$Random.Forest[i] <- isTRUE(20 %in% choices2$rf.choice[i])  
+}
+
+colMeans(accuracy2)
+#EU - .083, MAH - .000, LDA - .063, LOG - .021, KNN - .063, RF - .063
+#EU - .167, MAH - .146, LDA - .250, LOG - .396, KNN - .208, RF - .313 
+
+```
 
 
 

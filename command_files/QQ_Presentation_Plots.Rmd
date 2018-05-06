@@ -1,0 +1,63 @@
+---
+title: "Presentation"
+author: "Logan Crowl"
+date: "5/4/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#example data for QQ
+set.seed(25)
+data <- rt(15, 3)
+
+qqnorm(data)
+abline(a = 0, b = 1)
+```
+
+#high medium and low deviation scags
+```{r}
+scags <- read_csv("simulation_data/QQPlots_scagnostics.csv", 
+    col_types = cols(X1 = col_skip()))
+info <- read_csv("simulation_data/QQPlots_info.csv",
+                 col_types = cols(X1 = col_skip()))
+
+scags <- info %>%
+  dplyr::select(ID, distribution, N) %>%
+  right_join(scags)
+
+scags <- scags %>%
+  mutate(signal = ifelse(distribution == "Normal", "Noise", "Signal")) %>%
+  spread(key = scag_num, value = scagnostics, sep = "_")
+
+plots <- read_csv("simulation_data/QQplots.csv", 
+                  col_types = cols(X1 = col_skip()))
+
+#high
+highID <- first(scags$ID[scags$deviation.base > 0.8])
+ggplot(plots %>% filter(ID == highID )) + 
+  geom_point(aes(x = x, y = y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+scags %>% filter(ID == highID ) %>% dplyr::select(deviation.multSq)
+
+
+#medium
+medID <- first(scags$ID[scags$deviation.multSq > 0.52 & scags$deviation.multSq < 0.53])
+ggplot(plots %>% filter(ID == medID )) + 
+  geom_point(aes(x = x, y = y))+ 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+scags %>% filter(ID == medID ) %>% dplyr::select(deviation.multSq)
+
+
+#low
+lowID <- first(scags$ID[scags$deviation.multSq < 0.01])
+ggplot(plots %>% filter(ID == lowID )) + 
+  geom_point(aes(x = x, y = y))+ 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+scags %>% filter(ID == lowID ) %>% dplyr::select(deviation.multSq)
+
+
+```

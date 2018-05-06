@@ -1,0 +1,27 @@
+---
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE, results='asis'}
+library(knitr)
+df <- matrix(c("Mean(X)", "Mean(Y)", "SD(X)","SD(Y)",  "Correlation", "54.26","47.83", "16.76","26.93", "-0.06"), ncol = 2, byrow = FALSE)
+df <- as.data.frame(df)
+#colnames(df) <- c("Model", "Accuracy")
+kable(df)
+```
+
+
+```{r}
+x <- rgamma(100,.004,1)
+y <- rnorm(100,1)
+plot(y~x)
+library(scagnostics)
+scagnostics(x,y)$s
+```
+
+```{r}
+```

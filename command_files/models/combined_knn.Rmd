@@ -32,8 +32,9 @@ TS_knn
 tc <- tune.control(cross = 10)
 test <- tune.knn(y = as.factor(data$signal), x = data$scag_num_1+data$scag_num_2+data$scag_num_3+data$scag_num_4+data$scag_num_5+data$scag_num_6+data$scag_num_7+data$scag_num_8+data$scag_num_9, tunecontrol = tc, k = 1:25)
 test$best.performance
-
 ```
+
+0.696 with k=4
 
 ```{r}
 all_LDA <- train(make.names(as.factor(signal))~.-ID, data = data, method = "lda", trControl = TS_control)
@@ -42,4 +43,5 @@ all_QDA <- train(make.names(as.factor(signal))~.-ID, data = data, method = "qda"
 all_QDA
 ```
 
-
+LDA: 0.939
+QDA: 0.981

@@ -16,6 +16,9 @@ knitr::opts_chunk$set(echo = TRUE)
 library(MASS)
 library(scagnostics)
 library(tidyverse)
+library(mlbench)
+library(igraph)
+library(vegan)
 ```
 
 
@@ -41,6 +44,19 @@ par(mfrow = c(2,2))
 plot(xy1[,1], xy1[,2], main = "Outlying: .052", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
 plot(xy2[,1], xy2[,2], main = "Outlying: .543", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
 plot(xy4[,1], xy4[,2], main = "Outlying: .976", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+
+#Low
+ggplot(as.data.frame(xy1)) + geom_point(aes(x = V1, y = V2)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+
+#Medium
+ggplot(as.data.frame(xy2)) + geom_point(aes(x = V1, y = V2)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+
+#High
+ggplot(as.data.frame(xy4)) + geom_point(aes(x = V1, y = V2)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+
 ```
 
 
@@ -127,8 +143,8 @@ plot(stria1.test$x, stria1.test$y, main = "Striated: .928", xlab = "X", ylab = "
 ```{r, fig.height=4, fig.width=5}
 #Stringy
 set.seed(1)
-string1.x <- runif(200,-20,20); string1.y <- string1.x^3 + rnorm(200,0,72)
-scagnostics(string1.x, string1.y)$s[8] #.892
+string1.x <- runif(200,-20,20); string1.y <- string1.x^3 + rnorm(200,0,85)
+scagnostics(string1.x, string1.y)$s[8] #.894
 
 string2.x <- runif(100,-10,10); string2.y <- string2.x^4 + rnorm(100, 0, 200)
 scagnostics(string2.x, string2.y)$s[8] #.611
@@ -139,7 +155,54 @@ scagnostics(string3.xy[,1], string3.xy[,2])$s[8] #.363
 par(mfrow = c(2,2))
 plot(string3.xy[,1], string3.xy[,2], main = "Stringy: .363", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
 plot(string2.x, string2.y, main = "Stringy: .611", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
-plot(string1.x, string1.y, main = "Stringy: .892", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+plot(string1.x, string1.y, main = "Stringy: .894", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+
+stringy1 <- data.frame(id = 1, Stringy = "0.363", x = string3.xy[,1], y = string3.xy[,2])
+stringy2 <- data.frame(id = 2, Stringy = "0.611", x = string2.x, y = string2.y)
+stringy3 <- data.frame(id = 3, Stringy = "0.894", x = string1.x, y = string1.y)
+stringy <- rbind(stringy1, stringy2, stringy3)
+
+ggplot(stringy %>% filter(id == 1)) + geom_point(aes(x = x, y = y)) +
+  theme(axis.line=element_blank(),
+        axis.text = element_blank(),
+      axis.ticks=element_blank(),
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank())+
+  labs(title = "Stringy = 0.363")
+
+ggplot(stringy %>% filter(id == 2)) + geom_point(aes(x = x, y = y)) +
+  theme(axis.line=element_blank(),
+        axis.text = element_blank(),
+      axis.ticks=element_blank(),
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank())+
+  labs(title = "Stringy = 0.611")
+
+ggplot(stringy %>% filter(id == 3)) + geom_point(aes(x = x, y = y)) +
+  theme(axis.line=element_blank(),
+        axis.text = element_blank(),
+      axis.ticks=element_blank(),
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank()) +
+  labs(title = "Stringy = 0.894")
+
+#Initial Example Plot
+set.seed(1)
+labels <- as.factor(sample(LETTERS[1:5], 100, replace=TRUE))
+dat <- mvrnorm(n=100, mu = c(1:4), Sigma=matrix(1:16, ncol=4)) + as.numeric(labels)^2
+dat2 <- mvrnorm(100, mu = c(0,0), Sigma = matrix(c(3,0,0,3),2)) + as.numeric(labels)
+
+plot(dat2)
+d <- dist(dat2)
+x <- spantree(d, toolong = 0)
+plot(x)
+plot(dat)
 ```
 
 ```{r, fig.height=4, fig.width=5}
@@ -160,5 +223,17 @@ par(mfrow = c(2,2))
 plot(mono1.xy[,1], mono1.xy[,2], main = "Monotonic: .001", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
 plot(mono.test2$x, mono.test2$y, main = "Monotonic: .506", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
 plot(mono.test$x, mono.test$y, main = "Monotonic: .948", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+
+#Low
+ggplot(as.data.frame(xy1)) + geom_point(aes(x = V1, y = V2)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+
+#Medium
+ggplot(as.data.frame(xy2)) + geom_point(aes(x = V1, y = V2)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+
+#High
+ggplot(as.data.frame(xy4)) + geom_point(aes(x = V1, y = V2)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
 ```
 

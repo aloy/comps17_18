@@ -311,7 +311,7 @@ cv.glm9<- cv.glm(scags, QQ.glm9, cost, K = 10)
 set.seed(1)
 QQ.rf3 <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + deviation.base, data = scags, ntree=100, importance =T)
 
-QQ.rf3
+QQ.rf3 #error rate = 16.34%
 
 varImpPlot(QQ.rf3)
 
@@ -320,37 +320,37 @@ varImpPlot(QQ.rf3)
 set.seed(1)
 QQ.rf4 <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + deviation.add, data = scags, ntree=100, importance =T)
 
-QQ.rf4$
+QQ.rf4 #error rate = 16.55%
 
 #deviation.addLog
 set.seed(1)
 QQ.rf5 <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + deviation.addLog, data = scags, ntree=100, importance =T)
 
-QQ.rf5
+QQ.rf5 #error rate = 16.51%
 
 #deviation.addSq
 set.seed(1)
 QQ.rf6 <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + deviation.addSq, data = scags, ntree=100, importance =T)
 
-QQ.rf6
+QQ.rf6 #error rate = 16.19%
 
 #deviation.mult
 set.seed(1)
 QQ.rf7 <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + deviation.mult, data = scags, ntree=100, importance =T)
 
-QQ.rf7
+QQ.rf7 #error rate = 16.28%
 
 #deviation.multLog
 set.seed(1)
 QQ.rf8 <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + deviation.multLog, data = scags, ntree=100, importance =T)
 
-QQ.rf8
-
+QQ.rf8 #error rate = 16.18%
+ 
 #deviation.multSq
 set.seed(1)
 QQ.rf9 <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + deviation.multSq, data = scags, ntree=100, importance =T)
 
-QQ.rf9
+QQ.rf9 #error rate = 15.99%
 ```
 
 OOB estimated accuracy of 0.8401.  Random Forest now does a little worse.
