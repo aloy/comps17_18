@@ -12,7 +12,11 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r, fig.height = 2, fig.width = 4}
 library("mlbench")
 library("igraph")
+library("alphahull")
 library(Sleuth3)
+library(ggplot2)
+library(dplyr)
+
 data <- ex1217
 x <- cbind(log(data$NOX), data$Mortality)
 x <- unique(x)
@@ -20,8 +24,12 @@ svg("scagnosticsBase.svg", width=10, height=3)
 par(mfrow=c(1,2))
 hull  <- chull(x)
 hull <- c(hull, hull[1])
+shape <- ashape(x, alpha=5)
 plot(x, main="Convex Hull", axes=F, pch=19, cex=0.5, xlab = "", ylab = "")
 lines(x[hull, ])
+box()
+plot(x, main="Alpha shape", axes=F, pch=19, cex=0.5)
+plot(shape, add=T, wpoints=F)
 box()
 graph <- graph.adjacency(as.matrix(dist(x)), weighted=TRUE)
 mst   <- as.undirected(minimum.spanning.tree(graph))
@@ -36,6 +44,7 @@ dev.off()
 ```
 
 ```{r}
+### Retrieving plotted variables ###
 df <- ex1217
 df <- data.frame(Mortality = scale(df$Mortality), NOX = df$NOX)
 
@@ -43,12 +52,14 @@ df2 = na.omit(df) %>%
   mutate(hull = 1:n(), hull = factor(hull, chull(log(NOX), Mortality))) %>%
   arrange(hull)
 
+### Convex Hull ###
 q <- ggplot(df2, aes(log(NOX), Mortality)) +
   geom_polygon(aes(color = "raspberry"), data = filter(df2, !is.na(hull)), alpha = 0.5, fill = NA) +
   geom_point() +
   theme(legend.position = "none") + 
   ggtitle("Convex Hull")
 
+### Minimum Spanning Tree ###
 p <- ggplot(df2, aes(log(NOX), Mortality)) + geom_point() + ggtitle("Minimal Spanning Tree") + theme(legend.position = "none")
 x <- cbind(log(df$NOX), df$Mortality)
 x <- unique(x)
@@ -60,9 +71,67 @@ for (i in seq(nrow(idx))) {
   p <- p + geom_segment(aes(color = "raspberry"), x = x[ft,1][1], xend = x[ft,1][2], y = x[ft,2][1], yend = x[ft,2][2])
 }
 
+### Alpha Hull ###
+ex = data.frame(x = log(df2$NOX), y = df2$Mortality)
+ex_ashape = ashape(ex, alpha = 1.5)
+ex_mat = ex_ashape$edges[, c("ind1", "ind2")] # Take the coordinates of points on the edges of the alpha shape
+
+# Convert 'numeric' matrix to 'character' matrix, to avoid wrong node orders 
+# (Otherwise 'graph.edgelist()' interprets number as order of nodes)
+class(ex_mat) = "character"
+ex_graph = graph.edgelist(ex_mat, directed = F) # Make the graph of points
+
+# Cut open the graph to walk through it in order
+cut_graph = ex_graph - E(ex_graph)[1]  # Cut the first edge
+ends = names(which(degree(cut_graph) == 1))   # Get two nodes with degree = 1
+path = get.shortest.paths(cut_graph, ends[1], ends[2])$vpath[[1]] # Compute a path
+path_nodes = as.numeric(V(ex_graph)[path]$name) # Get node names (= row numbers in original data.frame)
+
+s <- ggplot(ex, aes(x = x, y = y)) +
+  geom_point() +
+  geom_polygon(data = ex[path_nodes, ], aes(color = "raspberry"), alpha = 0.5, fill = NA) +
+  theme(legend.position = "none") + 
+  ggtitle("Alpha Hull") + 
+  labs(x = "log(NOX)", y = "Mortality")
+  
+
+q
+s
+p
+
+```
+
+```{r}
+library(datasauRus)
+df <- subset(datasaurus_dozen, subset = dataset == "dino")
+
+df2 <- na.omit(df) %>%
+  mutate(hull = 1:n(), hull = factor(hull, chull(x, y))) %>%
+  arrange(hull)
+
+q <- ggplot(df2, aes(x, y)) +
+  geom_polygon(aes(color = "raspberry"), data = filter(df2, !is.na(hull)), alpha = 0.5, fill = NA) +
+  geom_point() +
+  theme(legend.position = "none") + 
+  ggtitle("Convex Hull")
+
+p <- ggplot(df2, aes(x, y)) + geom_point() + ggtitle("Minimal Spanning Tree") + theme(legend.position = "none")
+x <- cbind(df$x, df$y)
+x <- unique(x)
+graph <- graph.adjacency(as.matrix(dist(x)), weighted=TRUE)
+mst   <- as.undirected(minimum.spanning.tree(graph))
+idx   <- get.edges(mst, E(mst))
+for (i in seq(nrow(idx))) {
+  ft <- idx[i,]
+  p <- p + geom_segment(aes(color = "raspberry"), x = x[ft,1][1], xend = x[ft,1][2], y = x[ft,2][1], yend = x[ft,2][2])
+}
+
 p
 q
+library(scagnostics)
+scagnostics(df$x, df$y)$s
 ```
+
 
 ```{r, fig.height = 2, fig.width = 4}
 library("mlbench")
