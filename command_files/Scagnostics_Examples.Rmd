@@ -195,6 +195,7 @@ ggsave("for_presentation/convexPlotHigh.png", width = 8, height = 6, dpi = 500)
 
 ```{r, fig.height=4, fig.width=5}
 #Skinny
+
 ```
 
 ```{r, fig.height=4, fig.width=5}
@@ -282,15 +283,15 @@ plot(mono.test2$x, mono.test2$y, main = "Monotonic: .506", xlab = "X", ylab = "Y
 plot(mono.test$x, mono.test$y, main = "Monotonic: .948", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
 
 #Low
-ggplot(as.data.frame(xy1)) + geom_point(aes(x = V1, y = V2)) + 
+ggplot(as.data.frame(mono1.xy)) + geom_point(aes(x = V1, y = V2)) + 
   theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
 
 #Medium
-ggplot(as.data.frame(xy2)) + geom_point(aes(x = V1, y = V2)) + 
+ggplot(mono.test2) + geom_point(aes(x = x, y = y)) + 
   theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
 
 #High
-ggplot(as.data.frame(xy4)) + geom_point(aes(x = V1, y = V2)) + 
+ggplot(as.data.frame(mono.test)) + geom_point(aes(x = x, y = y)) + 
   theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
 ```
 

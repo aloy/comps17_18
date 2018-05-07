@@ -9,13 +9,15 @@ Aidan: "Our study is a robust test of scagnostics"
 -learning methods (how do we use scags)
 
 methods:
+
+Initial Exploration of Concept, We are able to detect patterns using scagnostics
 - sim data (move details to appendix)
 - goals: automatic signal detection (pattern)
 - train model (proof of concept) +lineup training
   - results: acc, sens., spec, etc
   - compare models
 
-results:
+results: how do we do compared to humans?
 -actual lineup data (turk data)
   - explain experiment
     - pictures 
