@@ -81,6 +81,28 @@ hull <- c(hull, hull[1])
 plot(x, main="Convex Hull", axes=F, pch=19, cex=0.5, xlab = "", ylab = "")
 lines(x[hull, ])
 box()
+```
+
+
+#stringy scagnostic
+```{r}
+n <- 100
+set.seed(10)
+x <- rnorm(n)
+y <- (x^4 + (-1)^(rbernoulli(n, p = 0.5))*rexp(n, rate = 0.8))
+plot(x,y)
+
+stringy <- data.frame(x = x, y = y)
+
+ggplot(stringy) + 
+  geom_point(aes(x = x, y = y)) + 
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank())
+
+
+x <- cbind(scale(stringy$x), scale(stringy$y))
+x <- unique(x)
+svg("scagnosticsBase.svg", width=10, height=3)
+par(mfrow=c(1,1))
 graph <- graph.adjacency(as.matrix(dist(x)), weighted=TRUE)
 mst   <- as.undirected(minimum.spanning.tree(graph))
 idx   <- get.edges(mst, E(mst))
@@ -90,8 +112,4 @@ for (i in seq(nrow(idx))) {
   lines(x[ft,1], x[ft,2])
 }
 box()
-dev.off()
 ```
-
-
-
