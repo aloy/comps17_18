@@ -29,7 +29,7 @@ data$logNox <- log(data$NOX)
 head(data)
 ggplot(data) + geom_point(aes(x = NOX, y = Mortality)) + labs(x= "NOX", y= "Mortality" ) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 ggsave("for_presentation/plot1.png", width = 8, height = 6, dpi = 500)
-ggplot(data) + geom_point(aes(x = logNox, y = Mortality)) + labs(x= "NOX", y= "Mortality" ) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+ggplot(data) + geom_point(aes(x = logNox, y = Mortality)) + labs(x= "log(NOX)", y= "Mortality" )
 ggsave("for_presentation/plot2.png", width = 8, height = 6, dpi = 500)
 
 summary(data$Mortality)
@@ -70,8 +70,34 @@ ggplot(datasaurus_dozen, aes(x=x, y=y, colour=dataset))+
   theme_void()+
   theme(legend.position = "none")+
   facet_wrap(~dataset, ncol=3)
+library(dplyr)
+library(datasauRus)
+dino <- datasaurus_dozen %>% filter(dataset == 'dino') %>% select(x,y)
+scagnostics(dino$x, dino$y)$s
 
+dino$x.s <- scale(dino$x)
+dino$y.s <- scale(dino$y)
 
+plot(dino$x.s, dino$y.s)
+
+dots <- datasaurus_dozen %>% filter(dataset == 'dots') %>% select(x,y)
+scagnostics(dots$x, dots$y)$s
+
+slant_up <- datasaurus_dozen %>% filter(dataset == 'slant_up') %>% select(x,y)
+scagnostics(slant_up$x, slant_up$y)$s
+
+slant_down <- datasaurus_dozen %>% filter(dataset == 'slant_down') %>% select(x,y)
+scagnostics(slant_down$x, slant_down$y)$s
+
+away <- datasaurus_dozen %>% filter(dataset == 'away') %>% select(x,y)
+scagnostics(away$x, away$y)$s
+
+circle <- datasaurus_dozen %>% filter(dataset == 'circle') %>% select(x,y)
+scagnostics(circle$x, circle$y)$s
+
+wide_lines <- datasaurus_dozen %>% filter(dataset == 'wide_lines') %>% select(x,y)
+plot(wide_lines)
+scagnostics(wide_lines$x, wide_lines$y)$s
 
 p1 <- datasaurus_dozen %>% filter(dataset == 'dino') %>% ggplot(aes(x=x, y=y))+
   geom_point()+
@@ -88,6 +114,7 @@ p2 <- datasaurus_dozen %>% filter(dataset == 'dots') %>% ggplot(aes(x=x, y=y))+
   theme(legend.position = "none")
 
 p2
+ggsave("for_presentation/dots.png",width = 8, height = 8, dpi = 500)
 p3 <- datasaurus_dozen %>% filter(dataset == 'slant_up') %>% ggplot(aes(x=x, y=y))+
   geom_point()+
   theme(axis.title.x=element_blank(),
@@ -95,7 +122,7 @@ p3 <- datasaurus_dozen %>% filter(dataset == 'slant_up') %>% ggplot(aes(x=x, y=y
         axis.text.y=element_blank(), axis.ticks.y=element_blank()) + 
   theme(legend.position = "none")
 p3
-
+ggsave("for_presentation/slant_up.png", width = 8, height = 8, dpi = 500)
 p4 <- datasaurus_dozen %>% filter(dataset == 'wide_lines') %>% ggplot(aes(x=x, y=y))+
   geom_point()+
   theme(axis.title.x=element_blank(),
@@ -103,13 +130,15 @@ p4 <- datasaurus_dozen %>% filter(dataset == 'wide_lines') %>% ggplot(aes(x=x, y
         axis.text.y=element_blank(), axis.ticks.y=element_blank()) + 
   theme(legend.position = "none")
 p4
+ggsave("for_presentation/wide_lines.png",width = 8, height = 8, dpi = 500)
 p5 <- datasaurus_dozen %>% filter(dataset == 'away') %>% ggplot(aes(x=x, y=y))+
   geom_point()+
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(), axis.ticks.x=element_blank(), axis.title.y=element_blank(),
         axis.text.y=element_blank(), axis.ticks.y=element_blank()) + 
   theme(legend.position = "none")
-p5 +  geom_smooth(method = "lm", se = F, colour = "#ff4447")
+p5 
+ggsave("for_presentation/away.png",width = 8, height = 8, dpi = 500)
 
 p6 <- datasaurus_dozen %>% filter(dataset == 'circle') %>% ggplot(aes(x=x, y=y))+
   geom_point()+
@@ -117,6 +146,8 @@ p6 <- datasaurus_dozen %>% filter(dataset == 'circle') %>% ggplot(aes(x=x, y=y))
         axis.text.x=element_blank(), axis.ticks.x=element_blank(), axis.title.y=element_blank(),
         axis.text.y=element_blank(), axis.ticks.y=element_blank()) + 
   theme(legend.position = "none")
+p6
+ggsave("for_presentation/circle.png" ,width = 8, height = 8, dpi = 500)
 
 grid.arrange(p3, p2, p4, p1, ncol = 2)
 

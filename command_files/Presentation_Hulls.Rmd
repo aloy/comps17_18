@@ -57,8 +57,12 @@ q <- ggplot(df2, aes(log(NOX), Mortality)) +
   theme(legend.position = "none") + 
   ggtitle("Convex Hull")
 
+
+p <- ggplot(df2, aes(log(NOX), Mortality)) + geom_point() + ggtitle("Minimal Spanning Tree") + theme(legend.position = "none", axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+
 ### Minimum Spanning Tree ###
 p <- ggplot(df2, aes(log(NOX), Mortality)) + geom_point() + ggtitle("Minimal Spanning Tree") + theme(legend.position = "none")
+
 x <- cbind(log(df$NOX), df$Mortality)
 x <- unique(x)
 graph <- graph.adjacency(as.matrix(dist(x)), weighted=TRUE)
@@ -198,19 +202,19 @@ ggplot(stringy) +
   theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank())
 
 
+p <- ggplot(stringy, aes(x = scale(x), y = scale(y))) + geom_point() + ggtitle("Minimum Spanning Tree") + theme(legend.position = "none", axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
 x <- cbind(scale(stringy$x), scale(stringy$y))
 x <- unique(x)
 svg("scagnosticsBase.svg", width=10, height=3)
-par(mfrow=c(1,1))
 graph <- graph.adjacency(as.matrix(dist(x)), weighted=TRUE)
 mst   <- as.undirected(minimum.spanning.tree(graph))
 idx   <- get.edges(mst, E(mst))
-plot(x, main="Minimal Spanning Tree", axes=F, pch=19, cex=0.5, xlab = "", ylab = "")
 for (i in seq(nrow(idx))) {
   ft <- idx[i,]
-  lines(x[ft,1], x[ft,2])
+  p <- p + geom_segment(aes(color = "raspberry"), x = x[ft,1][1], xend = x[ft,1][2], y = x[ft,2][1], yend = x[ft,2][2])
 }
-box()
+
+p
 ```
 
 ```{r}
