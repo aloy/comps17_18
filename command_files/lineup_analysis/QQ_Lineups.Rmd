@@ -214,6 +214,59 @@ mean(QQ_preds$pred.full==1)
 mean(QQ_preds$pred.AD==1)
 mean(QQ_preds$pred.tests==1)
 
-
-
 ```
+
+```{r}
+K <- 1000
+choices <- data.frame(correct.choice = numeric(K), RF.choice = numeric(K), MAH.choice = numeric(K))
+
+for(i in 1:K){
+  print(i)
+  n <- sample(1:20, 1)
+
+  lineup_signal <- sample_n(signal, n)
+  lineup_null <- sample_n(null, 20-n)
+  lineup_scags <- rbind(lineup_signal, lineup_null) 
+  lineup_scags$position <- sample(1:20, 20)
+  test_data <- lineup_scags %>% arrange(position)
+  choices$correct.choice[i] <- list(which(test_data$signal == 1))
+  
+  index <- which(scagnostics$ID %in% lineup_scags$ID)
+  other_data <- scagnostics[-index,]
+  train_data <- sample_n(other_data, 2000)
+  
+  model_rf <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+
+                             scag_num_5+scag_num_6+scag_num_7+scag_num_9, data = train_data,
+                           ntree=100, importance =T)
+  rf_preds <- predict(model_rf, newdata = test_data[,c(15:21, 23)], type = "prob")
+  choices$RF.choice[i] <- list(which(rf_preds[,2] > 0.5)) 
+  
+  dscags <- test_data[,c(15:21, 23)]
+  means <- colMeans(dscags)
+  mah_dists <- mahalanobis(dscags, means, cov(dscags))
+  mah_max <- sort(mah_dists, decreasing = TRUE)[1:n]
+  choices$MAH.choice[i] <- list(which(mah_dists %in% mah_max))
+}
+
+accuracy <- data.frame(Mahalanobis = numeric(K), Random.Forest = numeric(K))
+
+for(set in 1:K){
+  correct <- choices$correct.choice[[set]]
+  accuracy$Mahalanobis[set] <- mean(choices$MAH.choice[[set]] %in% correct)
+  accuracy$Random.Forest[set] <- mean(choices$RF.choice[[set]] %in% correct)
+}   
+
+false.pos <- data.frame(Mahalanobis = numeric(K), Random.Forest = numeric(K))
+
+for(set in 1:K){
+  correct <- choices$correct.choice[[set]]
+  mah.fp <- mean(choices$MAH.choice[[set]] %in% correct)
+  false.pos$Mahalanobis[set] <- ifelse(is.na(mah.fp), 0, 1-mah.fp)
+  rf.fp <- mean(choices$RF.choice[[set]] %in% correct)
+  false.pos$Random.Forest[set] <- ifelse(is.na(rf.fp), 0, 1-rf.fp)
+} 
+
+colMeans(na.omit(accuracy))
+colMeans(false.pos)
+```
+

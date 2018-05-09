@@ -82,10 +82,26 @@ c3.xy3 <- mvrnorm(100, mu = c(4,6), Sigma = sigma)
 clump3.xy <- rbind(c3.xy1, c3.xy2, c3.xy3)
 scagnostics(clump3.xy[,1], clump3.xy[,2])$s[3]  #.446
 
-par(mfrow = c(2,2))
-plot(clump2.xy[,1], clump2.xy[,2], main = "Clumpy: .007", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
-plot(clump3.xy[,1], clump3.xy[,2], main = "Clumpy: .446", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
-plot(clump1.xy[,1], clump1.xy[,2], main = "Clumpy: .900", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+#par(mfrow = c(2,2))
+clump2.xy <- as.data.frame(clump2.xy)
+clump3.xy <- as.data.frame(clump3.xy)
+clump1.xy <- as.data.frame(clump1.xy)
+
+#plot(clump2.xy[,1], clump2.xy[,2], main = "Clumpy: .007", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+
+ggplot(clump2.xy) + geom_point(aes(x = V1, y = V2)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/clumpyPlotLow.png", width = 8, height = 8, dpi = 500)
+
+#plot(clump3.xy[,1], clump3.xy[,2], main = "Clumpy: .446", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+ggplot(clump3.xy) + geom_point(aes(x = V1, y = V2)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/clumpyPlotMed.png", width = 8, height = 8, dpi = 500)
+
+#plot(clump1.xy[,1], clump1.xy[,2], main = "Clumpy: .900", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+ggplot(clump1.xy) + geom_point(aes(x = V1, y = V2)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/clumpyPlotHigh.png", width = 8, height = 8, dpi = 500)
 ```
 
 ```{r, fig.height=4, fig.width=5}
@@ -146,15 +162,57 @@ par(mfrow = c(2,2))
 plot(stria3.test$x, stria3.test$y, main = "Striated: .035", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
 plot(stria2.test$x, stria2.test$y, main = "Striated: .514", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
 plot(stria1.test$x, stria1.test$y, main = "Striated: .928", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+
+ggplot(stria3.test) + geom_point(aes(x = x, y = y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/striatedPlotLow.png", width = 8, height = 8, dpi = 500)
+
+ggplot(stria2.test) + geom_point(aes(x = x, y = y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/striatedPlotMed.png", width = 8, height = 8, dpi = 500)
+
+ggplot(stria1.test) + geom_point(aes(x = x, y = y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/striatedPlotHigh.png", width = 8, height = 8, dpi = 500)
 ```
 
 ```{r, fig.height=4, fig.width=5}
 #Convex
+par(mfrow = c(1,1))
+set.seed(10)
+x <- rexp(100,4)
+y <- rexp(100,4)
+minx <- min(x)
+miny <- min(y)
+df <- as.data.frame(matrix(c(rep(minx,100), x, y, rep(miny,100)), nrow = 200, ncol = 2, byrow = FALSE))
+scagnostics(df$V1,df$V2)$s #low 0.0038
 
+ggplot(df) + geom_point(aes(x = V1, y = V2)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/convexPlotLow.png", width = 8, height = 6, dpi = 500)
+
+set.seed(2)
+x1 <- rexp(100,.5)
+y1 <- rnorm(100,0,20)
+df1 <- as.data.frame(matrix(c(x1,y1), ncol = 2, byrow = FALSE))
+scagnostics(x1,y1)$s #medium 0.4028
+
+ggplot(df1) + geom_point(aes(x = V1, y = V2)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/convexPlotMed.png", width = 8, height = 6, dpi = 500)
+
+x2 <- runif(2000,0,1)
+y2 <- runif(2000,0,1)
+scagnostics(x2,y2)$s #high 0.68
+df2 <- as.data.frame(matrix(c(x2,y2), ncol = 2, byrow = FALSE))
+ggplot(df2) + geom_point(aes(x = V1, y = V2)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/convexPlotHigh.png", width = 8, height = 6, dpi = 500)
 ```
 
 ```{r, fig.height=4, fig.width=5}
 #Skinny
+
 set.seed(10)
 skinny1.x <- runif(1000,-50,50); skinny1.y <- skinny1.x
 plot(skinny1.x, skinny1.y)
@@ -371,15 +429,15 @@ plot(mono.test2$x, mono.test2$y, main = "Monotonic: .506", xlab = "X", ylab = "Y
 plot(mono.test$x, mono.test$y, main = "Monotonic: .948", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
 
 #Low
-ggplot(as.data.frame(xy1)) + geom_point(aes(x = V1, y = V2)) + 
+ggplot(as.data.frame(mono1.xy)) + geom_point(aes(x = V1, y = V2)) + 
   theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
 
 #Medium
-ggplot(as.data.frame(xy2)) + geom_point(aes(x = V1, y = V2)) + 
+ggplot(mono.test2) + geom_point(aes(x = x, y = y)) + 
   theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
 
 #High
-ggplot(as.data.frame(xy4)) + geom_point(aes(x = V1, y = V2)) + 
+ggplot(as.data.frame(mono.test)) + geom_point(aes(x = x, y = y)) + 
   theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
 ```
 
