@@ -60,28 +60,7 @@ ggplot(as.data.frame(xy4)) + geom_point(aes(x = V1, y = V2)) +
 ```
 
 
-```{r, fig.height=4, fig.width=5}
-#Skewed
-set.seed(1)
-x <- rnorm(100, 5,1); y <- 4.65*x + rnorm(100, 0, 5)
-x2 <- rnorm(100, 5, 1); y2 <- 0*x2 + rnorm(100, 0, 3)
-xy <- data.frame(x = c(x,x2), y=c(y,y2))
-scagnostics(xy$x,xy$y)$s[2] #.651
 
-
-skew.plots <- read_csv("simulation_data/sparse_trend_plots.csv")
-skew.test <- subset(skew.plots, skew.plots$ID == 314)
-scagnostics(skew.test$x, skew.test$y)$s[2] #.382
-
-skew.plots2 <- read_csv("simulation_data/turk16_plots.csv")
-skew.test2 <- subset(skew.plots2, skew.plots2$ID == 254)
-scagnostics(skew.test2$x, skew.test2$y)$s[2] #.877
-
-par(mfrow = c(2,2))
-plot(skew.test$x, skew.test$y, main = "Skewed: .382", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
-plot(xy$x,xy$y, main = "Skewed: .651", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
-plot(skew.test2$x, skew.test2$y, main = "Skewed: .877", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
-```
 
 ```{r, fig.height=4, fig.width=5}
 #Clumpy
@@ -103,15 +82,69 @@ c3.xy3 <- mvrnorm(100, mu = c(4,6), Sigma = sigma)
 clump3.xy <- rbind(c3.xy1, c3.xy2, c3.xy3)
 scagnostics(clump3.xy[,1], clump3.xy[,2])$s[3]  #.446
 
-par(mfrow = c(2,2))
-plot(clump2.xy[,1], clump2.xy[,2], main = "Clumpy: .007", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
-plot(clump3.xy[,1], clump3.xy[,2], main = "Clumpy: .446", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
-plot(clump1.xy[,1], clump1.xy[,2], main = "Clumpy: .900", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+#par(mfrow = c(2,2))
+clump2.xy <- as.data.frame(clump2.xy)
+clump3.xy <- as.data.frame(clump3.xy)
+clump1.xy <- as.data.frame(clump1.xy)
+
+#plot(clump2.xy[,1], clump2.xy[,2], main = "Clumpy: .007", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+
+ggplot(clump2.xy) + geom_point(aes(x = V1, y = V2)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/clumpyPlotLow.png", width = 8, height = 8, dpi = 500)
+
+#plot(clump3.xy[,1], clump3.xy[,2], main = "Clumpy: .446", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+ggplot(clump3.xy) + geom_point(aes(x = V1, y = V2)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/clumpyPlotMed.png", width = 8, height = 8, dpi = 500)
+
+#plot(clump1.xy[,1], clump1.xy[,2], main = "Clumpy: .900", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+ggplot(clump1.xy) + geom_point(aes(x = V1, y = V2)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/clumpyPlotHigh.png", width = 8, height = 8, dpi = 500)
 ```
 
 ```{r, fig.height=4, fig.width=5}
 #Sparse
+
+set.seed(10)
+sparse1.x <- runif(50,-50,50); sparse1.y <- sparse1.x
+plot(sparse1.x, sparse1.y)
+scagnostics(sparse1.x, sparse1.y)$s[4] #0.0796938 
+
+set.seed(10)
+sparse2.x <- runif(10,-50,50); sparse2.y <- sparse2.x + c(rep(0, 9),rnorm(1,0,100))
+plot(sparse2.x, sparse2.y)
+scagnostics(sparse2.x, sparse2.y)$s[4] #0.415
+
+set.seed(11)
+sparse3.x <- runif(5,-50,50); sparse3.y <- sparse3.x + c(rep(0, 4),rnorm(1,0,40))
+plot(sparse3.x, sparse3.y)
+scagnostics(sparse3.x, sparse3.y)$s[4]# 0.754
+
+sparse1 <- as.data.frame(sparse1.x)
+sparse1$y <- sparse1.y
+
+sparse2 <- as.data.frame(sparse2.x)
+sparse2$y <- sparse2.y
+
+sparse3 <- as.data.frame(sparse3.x)
+sparse3$y <- sparse3.y
+
+ggplot(sparse1) + geom_point(aes(x = sparse1.x, y = y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/sparse1.png", width = 6, height = 6, dpi = 500)
+
+ggplot(sparse2) + geom_point(aes(x = sparse2.x, y = y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/sparse2.png", width = 6, height = 6, dpi = 500)
+
+ggplot(sparse3) + geom_point(aes(x = sparse3.x, y = y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/sparse3.png", width = 6, height = 6, dpi = 500)
 ```
+
+
 
 ```{r, fig.height=4, fig.width=5}
 #Striated
@@ -129,16 +162,90 @@ par(mfrow = c(2,2))
 plot(stria3.test$x, stria3.test$y, main = "Striated: .035", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
 plot(stria2.test$x, stria2.test$y, main = "Striated: .514", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
 plot(stria1.test$x, stria1.test$y, main = "Striated: .928", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+
+ggplot(stria3.test) + geom_point(aes(x = x, y = y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/striatedPlotLow.png", width = 8, height = 8, dpi = 500)
+
+ggplot(stria2.test) + geom_point(aes(x = x, y = y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/striatedPlotMed.png", width = 8, height = 8, dpi = 500)
+
+ggplot(stria1.test) + geom_point(aes(x = x, y = y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/striatedPlotHigh.png", width = 8, height = 8, dpi = 500)
 ```
 
 ```{r, fig.height=4, fig.width=5}
 #Convex
+par(mfrow = c(1,1))
+set.seed(10)
+x <- rexp(100,4)
+y <- rexp(100,4)
+minx <- min(x)
+miny <- min(y)
+df <- as.data.frame(matrix(c(rep(minx,100), x, y, rep(miny,100)), nrow = 200, ncol = 2, byrow = FALSE))
+scagnostics(df$V1,df$V2)$s #low 0.0038
 
+ggplot(df) + geom_point(aes(x = V1, y = V2)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/convexPlotLow.png", width = 8, height = 6, dpi = 500)
+
+set.seed(2)
+x1 <- rexp(100,.5)
+y1 <- rnorm(100,0,20)
+df1 <- as.data.frame(matrix(c(x1,y1), ncol = 2, byrow = FALSE))
+scagnostics(x1,y1)$s #medium 0.4028
+
+ggplot(df1) + geom_point(aes(x = V1, y = V2)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/convexPlotMed.png", width = 8, height = 6, dpi = 500)
+
+x2 <- runif(2000,0,1)
+y2 <- runif(2000,0,1)
+scagnostics(x2,y2)$s #high 0.68
+df2 <- as.data.frame(matrix(c(x2,y2), ncol = 2, byrow = FALSE))
+ggplot(df2) + geom_point(aes(x = V1, y = V2)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/convexPlotHigh.png", width = 8, height = 6, dpi = 500)
 ```
 
 ```{r, fig.height=4, fig.width=5}
 #Skinny
 
+set.seed(10)
+skinny1.x <- runif(1000,-50,50); skinny1.y <- skinny1.x
+plot(skinny1.x, skinny1.y)
+scagnostics(skinny1.x, skinny1.y)$s[7] #0.78
+skinny1 <- as.data.frame(skinny1.x)
+skinny1$y <- skinny1.y
+
+set.seed(10)
+skinny2.x <- runif(1000,-50,50); skinny2.y <- skinny2.x + rnorm(1000,0,200)
+plot(skinny2.x, skinny2.y)
+scagnostics(skinny2.x, skinny2.y)$s[7]  #0.35
+skinny2 <- as.data.frame(skinny2.x)
+skinny2$y <- skinny2.y
+
+
+set.seed(10)
+angle <- 2*pi*runif(1000)
+skinny3.x <- runif(1000)*cos(angle) 
+skinny3.y <- runif(1000)*sin(angle) 
+plot(skinny3.x, skinny3.y)
+scagnostics(skinny3.x, skinny3.y)$s[7] #0.118
+skinny3 <- as.data.frame(skinny3.x)
+skinny3$y <- skinny3.y
+
+ggplot(skinny1) + geom_point(aes(x = skinny1.x, y = y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/skinny1.png", width = 8, height = 8, dpi = 500)
+ggplot(skinny2) + geom_point(aes(x = skinny2.x, y = y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/skinny2.png", width = 8, height = 8, dpi = 500)
+ggplot(skinny3) + geom_point(aes(x = skinny3.x, y = y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/skinny3.png", width = 8, height = 8, dpi = 500)
 ```
 
 ```{r, fig.height=4, fig.width=5}
@@ -205,6 +312,102 @@ x <- spantree(d, toolong = 0)
 plot(x)
 plot(dat)
 ```
+
+```{r, fig.height=4, fig.width=5}
+#Skew
+
+
+set.seed(11)
+skew1.x <- c(runif(8,-50,50), runif(2,40,50)) ; skew1.y <- skew1.x
+plot(skew1.x, skew1.y)
+scagnostics(skew1.x, skew1.y)$s[2] #0.9319281 
+skew1 <- as.data.frame(skew1.x)
+skew1$y <- skew1.y
+
+skew_high <- skew1
+
+angle <- 2*pi*runif(100)
+skew3.x <- runif(100)*cos(angle) 
+skew3.y <- runif(100)*sin(angle) 
+skew_med.x <- skew3.x
+skew_med.y <- skew3.y
+plot(skew_med.x, skew_med.y)
+scagnostics(skew_med.x, skew_med.y)$s[7] #0.526
+skew3 <- as.data.frame(skew3.x)
+skew3$y <- skew3.y
+
+skew_med <- skew3
+
+skew2.x <- c(runif(4,0,10)) ; skew2.y <- skew2.x^2
+plot(skew2.x, skew2.y)
+scagnostics(skew2.x, skew2.y)$s[2] #1.919877e-05 
+skew2 <- as.data.frame(skew2.x)
+skew2$y <- skew2.y
+
+skew_low <- skew2
+
+ggplot(skew_low) + geom_point(aes(x = skew2.x, y = y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/skew1.png", width = 6, height = 6, dpi = 500)
+ggplot(skew_med) + geom_point(aes(x = skew3.x, y = y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/skew2.png", width = 8, height = 8, dpi = 500)
+ggplot(skew_high) + geom_point(aes(x = skew1.x, y = y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/skew3.png", width = 8, height = 8, dpi = 500)
+
+```
+
+
+
+```{r, fig.height=4, fig.width=5}
+#Skewed
+set.seed(1)
+x <- rnorm(100, 5,1); y <- 4.65*x + rnorm(100, 0, 5)
+x2 <- rnorm(100, 5, 1); y2 <- 0*x2 + rnorm(100, 0, 3)
+xy <- data.frame(x = c(x,x2), y=c(y,y2))
+scagnostics(xy$x,xy$y)$s[2] #.651
+
+library(scagnostics)
+library(readr)
+skew.plots <- read_csv("simulation_data/sparse_trend_plots.csv")
+skew.test <- subset(skew.plots, skew.plots$ID == 314)
+scagnostics(skew.test$x, skew.test$y)$s[2] #.382
+
+skew.plots2 <- read_csv("simulation_data/turk16_plots.csv")
+skew.test2 <- subset(skew.plots2, skew.plots2$ID == 254)
+scagnostics(skew.test2$x, skew.test2$y)$s[2] #.877
+
+par(mfrow = c(2,2))
+plot(skew.test$x, skew.test$y, main = "Skewed: .382", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+plot(xy$x,xy$y, main = "Skewed: .651", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+plot(skew.test2$x, skew.test2$y, main = "Skewed: .877", xlab = "X", ylab = "Y", xaxt = "n", yaxt = "n")
+
+```
+
+```{r}
+#new skew:
+
+#low:
+ggplot(skew.test) + geom_point(aes(x = x, y = y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/skew1.png", width = 6, height = 6, dpi = 500)
+
+#med
+ggplot(skew_med) + geom_point(aes(x = skew3.x, y = y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/skew2.png", width = 6, height = 6, dpi = 500)
+
+#high 
+ggplot(skew.test2) + geom_point(aes(x = x, y = y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/skew3.png", width = 6, height = 6, dpi = 500)
+
+
+```
+
+
+
 
 ```{r, fig.height=4, fig.width=5}
 #Monotonic

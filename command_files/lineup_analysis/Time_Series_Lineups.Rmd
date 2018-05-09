@@ -34,13 +34,14 @@ null = subset(scagnostics, scagnostics$signal == 0)
 
 ```{r}
 #Lineups with 19 simulated noise and 1 simulated signal
-signal_scagnostics <- sample_n(signal, 1)
-signal_plot <- subset(plots, plots$ID == signal_scagnostics$ID)
-signal_info <- subset(info, info$ID == signal_scagnostics$ID)
-sample_size <- signal_info$n
+sample_size <- 100
+signal_subinfo <- subset(info, info$n == sample_size & info$signal == 1)
+signal_info <- sample_n(signal_subinfo, 4)
+signal_plot <- subset(plots, plots$ID %in% signal_info$ID)
+signal_scagnostics <- subset(scagnostics, scagnostics$ID %in% signal_info$ID)
 
 null_sample <- subset(info, info$n == sample_size & info$signal == 0)
-null_info <- sample_n(null_sample, 19)
+null_info <- sample_n(null_sample, 16)
 null_plot <- subset(plots, plots$ID %in% null_info$ID)
 null_scagnostics <- subset(null, null$ID %in% null_info$ID)
 
@@ -53,12 +54,12 @@ levels(lineup_plots$ID) <- as.character(1:20)
 
 #To scale all plots, scales = "free" in facet_wrap
 ggplot(lineup_plots, aes(x, y)) +
-  geom_line() +
+  geom_point() +
   facet_wrap(~ID, nrow = 4, labeller = label_context) +
   theme(axis.ticks = element_blank(), axis.text = element_blank())
 #Plots aren't scaled the same, difficult to visually identify "signal"
 
-cat("Different Plot:", lineup_plots$ID[1])
+cat("Different Plot:", unique(lineup_plots$ID))
 cat("\n(", signal_info$ar_order, ",", signal_info$ma_order, ") \nAR = ", signal_info$ar_mag, ", MA = ", signal_info$ma_mag)
 ```
 
@@ -180,3 +181,58 @@ accuracy <- data.frame(Euclidean = mean(choices$eu.choice == choices$correct.cho
 accuracy
 #EU - .247, MA - .248, QDA - .358, LOG - .462, LEU - .247, LMA - .248, KNN - .306, RF - .425  
 ```
+
+```{r}
+K <- 1000
+choices <- data.frame(correct.choice = numeric(K), RF.choice = numeric(K), MAH.choice = numeric(K))
+
+for(i in 1:K){
+  print(i)
+  n <- sample(1:20, 1)
+
+  lineup_signal <- sample_n(signal, n)
+  lineup_null <- sample_n(null, 20-n)
+  lineup_scags <- rbind(lineup_signal, lineup_null) 
+  lineup_scags$position <- sample(1:20, 20)
+  test_data <- lineup_scags %>% arrange(position)
+  choices$correct.choice[i] <- list(which(test_data$signal == 1))
+  
+  index <- which(scagnostics$ID %in% lineup_scags$ID)
+  other_data <- scagnostics[-index,]
+  train_data <- sample_n(other_data, 2000)
+  
+  model_rf <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+
+                             scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = train_data,
+                           ntree=100, importance =T)
+  rf_preds <- predict(model_rf, newdata = test_data[,2:10], type = "prob")
+  choices$RF.choice[i] <- list(which(rf_preds[,2] > 0.5)) 
+  
+  dscags <- test_data[,2:10]
+  means <- colMeans(dscags)
+  mah_dists <- mahalanobis(dscags, means, cov(dscags))
+  mah_max <- sort(mah_dists, decreasing = TRUE)[1:n]
+  choices$MAH.choice[i] <- list(which(mah_dists %in% mah_max))
+}
+
+accuracy <- data.frame(Mahalanobis = numeric(K), Random.Forest = numeric(K))
+
+for(set in 1:K){
+  correct <- choices$correct.choice[[set]]
+  accuracy$Mahalanobis[set] <- mean(choices$MAH.choice[[set]] %in% correct)
+  accuracy$Random.Forest[set] <- mean(choices$RF.choice[[set]] %in% correct)
+}   
+
+false.pos <- data.frame(Mahalanobis = numeric(K), Random.Forest = numeric(K))
+
+for(set in 1:K){
+  correct <- choices$correct.choice[[set]]
+  mah.fp <- mean(choices$MAH.choice[[set]] %in% correct)
+  false.pos$Mahalanobis[set] <- ifelse(is.na(mah.fp), 0, 1-mah.fp)
+  rf.fp <- mean(choices$RF.choice[[set]] %in% correct)
+  false.pos$Random.Forest[set] <- ifelse(is.na(rf.fp), 0, 1-rf.fp)
+} 
+
+colMeans(accuracy)
+colMeans(false.pos)
+```
+
