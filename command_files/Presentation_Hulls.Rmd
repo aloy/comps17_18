@@ -18,13 +18,11 @@ library(ggplot2)
 library(dplyr)
 
 data <- ex1217
-x <- cbind(log(data$NOX), data$Mortality)
-x <- unique(x)
-svg("scagnosticsBase.svg", width=10, height=3)
+x <- ex
 par(mfrow=c(1,2))
 hull  <- chull(x)
 hull <- c(hull, hull[1])
-shape <- ashape(x, alpha=5)
+shape <- ashape(x, alpha=0.2)
 plot(x, main="Convex Hull", axes=F, pch=19, cex=0.5, xlab = "", ylab = "")
 lines(x[hull, ])
 box()
@@ -66,10 +64,14 @@ x <- unique(x)
 graph <- graph.adjacency(as.matrix(dist(x)), weighted=TRUE)
 mst   <- as.undirected(minimum.spanning.tree(graph))
 idx   <- get.edges(mst, E(mst))
+distances <- numeric(length(idx[,1]))
 for (i in seq(nrow(idx))) {
   ft <- idx[i,]
-  p <- p + geom_segment(aes(color = "raspberry"), x = x[ft,1][1], xend = x[ft,1][2], y = x[ft,2][1], yend = x[ft,2][2])
+  x1 <- x[ft,1][1]; x2 <- x[ft,1][2]; y1 <- x[ft,2][1]; y2 <- x[ft,2][2]
+  p <- p + geom_segment(aes(color = "raspberry"), x = x1, xend =x2 , y = y1, yend = y2)
+  distances[i] <- sqrt((x2-x1)^2+(y2-y1)^2)
 }
+hist(distances, xlab = "Edge Lengths", main = "Distribution of MST Edge Lengths")
 
 ### Alpha Hull ###
 ex = data.frame(x = log(df2$NOX), y = df2$Mortality)
@@ -121,14 +123,18 @@ x <- unique(x)
 graph <- graph.adjacency(as.matrix(dist(x)), weighted=TRUE)
 mst   <- as.undirected(minimum.spanning.tree(graph))
 idx   <- get.edges(mst, E(mst))
+distances <- numeric(141)
 for (i in seq(nrow(idx))) {
   ft <- idx[i,]
-  p <- p + geom_segment(aes(color = "raspberry"), x = x[ft,1][1], xend = x[ft,1][2], y = x[ft,2][1], yend = x[ft,2][2])
+  x1 <- x[ft,1][1]; x2 <- x[ft,1][2]; y1 <- x[ft,2][1]; y2 <- x[ft,2][2]
+  p <- p + geom_segment(aes(color = "raspberry"), x = x1, xend =x2 , y = y1, yend = y2)
+  distances[i] <- sqrt((x2-x1)^2+(y2-y1)^2)
 }
+hist(distances)
 
 ### Alpha Hull ###
-ex = data.frame(x = scale(df2$x), y = scale(df2$y))
-ex_ashape = ashape(ex, alpha = 1)
+ex = data.frame(x = df2$x, y = df2$y)
+ex_ashape = ashape(ex, alpha = 2)
 ex_mat = ex_ashape$edges[, c("ind1", "ind2")] # Take the coordinates of points on the edges of the alpha shape
 
 # Convert 'numeric' matrix to 'character' matrix, to avoid wrong node orders 
@@ -149,12 +155,11 @@ s <- ggplot(ex, aes(x = x, y = y)) +
   ggtitle("Alpha Hull") + 
   labs(x = "x", y = "y")
 
+s
 p
 q
-s
 
-library(scagnostics)
-scagnostics(df$x, df$y)$s
+
 ```
 
 
@@ -207,3 +212,85 @@ for (i in seq(nrow(idx))) {
 }
 box()
 ```
+
+```{r}
+### Alpha Hulls ###
+### Low Convex ###
+set.seed(10)
+x <- rexp(100,4)
+y <- rexp(100,4)
+minx <- min(x)
+miny <- min(y)
+df <- as.data.frame(matrix(c(rep(minx,100), x, y, rep(miny,100)), nrow = 200, ncol = 2, byrow = FALSE))
+
+ex = data.frame(x = df$V1, y = df$V2)
+ex = unique(ex)
+ex_ashape = ashape(ex, alpha = 0.2)
+ex_mat = ex_ashape$edges[, c("ind1", "ind2")]
+class(ex_mat) = "character"
+ex_graph = graph.edgelist(ex_mat, directed = F) # Make the graph of points
+cut_graph = ex_graph - E(ex_graph)[1]  # Cut the first edge
+ends = names(which(degree(cut_graph) == 1))   # Get two nodes with degree = 1
+path = get.shortest.paths(cut_graph, ends[1], ends[2])$vpath[[1]] # Compute a path
+path_nodes = as.numeric(V(ex_graph)[path]$name) # Get node names (= row numbers in original data.frame)
+
+convex.low <- ggplot(ex, aes(x = x, y = y)) +
+  geom_point() +
+  geom_polygon(data = ex[path_nodes, ], aes(color = "raspberry"),  alpha = 0.5, fill = NA) +
+  geom_segment(aes(color = "raspberry"), x = .002643, xend = .931209 , y = .004299, yend = .004299) +
+  geom_segment(aes(color = "raspberry"), x = .002643, xend = .002643 , y = .004299, yend = 1.114296) +
+  theme(legend.position = "none") + 
+  ggtitle("Alpha Hull") + 
+  labs(x = "log(NOX)", y = "Mortality")
+convex.low
+
+### Mid Convex ###
+set.seed(2)
+x1 <- rexp(100,.5)
+y1 <- rnorm(100,0,20)
+df1 <- as.data.frame(matrix(c(x1,y1), ncol = 2, byrow = FALSE))
+
+ex = data.frame(x = df1$V1, y = df1$V2)
+ex = unique(ex)
+ex_ashape = ashape(ex, alpha = 13)
+ex_mat = ex_ashape$edges[, c("ind1", "ind2")]
+class(ex_mat) = "character"
+ex_graph = graph.edgelist(ex_mat, directed = F) # Make the graph of points
+cut_graph = ex_graph - E(ex_graph)[1]  # Cut the first edge
+ends = names(which(degree(cut_graph) == 1))   # Get two nodes with degree = 1
+path = get.shortest.paths(cut_graph, ends[1], ends[2])$vpath[[1]] # Compute a path
+path_nodes = as.numeric(V(ex_graph)[path]$name) # Get node names (= row numbers in original data.frame)
+
+convex.med <- ggplot(ex, aes(x = x, y = y)) +
+  geom_point() +
+  geom_polygon(data = ex[path_nodes, ], aes(color = "raspberry"),  alpha = 0.5, fill = NA) +
+  theme(legend.position = "none") + 
+  ggtitle("Alpha Hull") + 
+  labs(x = "log(NOX)", y = "Mortality")
+convex.med
+
+### High Convex ###
+x2 <- runif(2000,0,1)
+y2 <- runif(2000,0,1)
+df2 <- as.data.frame(matrix(c(x2,y2), ncol = 2, byrow = FALSE))
+
+ex = data.frame(x = df2$V1, y = df2$V2)
+ex = unique(ex)
+ex_ashape = ashape(ex, alpha = 0.05)
+ex_mat = ex_ashape$edges[, c("ind1", "ind2")]
+class(ex_mat) = "character"
+ex_graph = graph.edgelist(ex_mat, directed = F) # Make the graph of points
+cut_graph = ex_graph - E(ex_graph)[1]  # Cut the first edge
+ends = names(which(degree(cut_graph) == 1))   # Get two nodes with degree = 1
+path = get.shortest.paths(cut_graph, ends[1], ends[2])$vpath[[1]] # Compute a path
+path_nodes = as.numeric(V(ex_graph)[path]$name) # Get node names (= row numbers in original data.frame)
+
+convex.high <- ggplot(ex, aes(x = x, y = y)) +
+  geom_point() +
+  geom_polygon(data = ex[path_nodes, ], aes(color = "raspberry"),  alpha = 0.5, fill = NA) +
+  theme(legend.position = "none") + 
+  ggtitle("Alpha Hull") + 
+  labs(x = "log(NOX)", y = "Mortality")
+convex.high
+```
+
