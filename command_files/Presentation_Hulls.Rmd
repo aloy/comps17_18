@@ -314,7 +314,6 @@ ggsave("for_presentation/convexPlotHigh_Hulls.png", width = 6, height = 6, dpi =
 
 ```
 
-<<<<<<< HEAD
 ```{r}
 ### Skinny Scagnostic Examples ###
 ### Low ###
@@ -336,13 +335,13 @@ ends = names(which(degree(cut_graph) == 1))   # Get two nodes with degree = 1
 path = get.shortest.paths(cut_graph, ends[1], ends[2])$vpath[[1]] # Compute a path
 path_nodes = as.numeric(V(ex_graph)[path]$name)
 
-skinny.high <- ggplot(df1, aes(x = x, y = y)) +
+skinny.low <- ggplot(df1, aes(x = x, y = y)) +
   geom_point() +
   geom_polygon(data = ex1[path_nodes, ], aes(color = "#257985"),  alpha = 0.5, fill = NA, size = 1.4) +
   theme(legend.position = "none", axis.text = element_blank(), axis.ticks = element_blank()) +
   labs(x = "", y = "")
-skinny.high
-ggsave("for_presentation/skinnyPlotHigh_Hulls.png", width = 6, height = 6, dpi = 500)
+skinny.low
+ggsave("for_presentation/skinnyPlotLow_Hulls.png", width = 8, height = 8, dpi = 500)
 
 ### Medium ###
 
@@ -368,46 +367,29 @@ skinny.med <- ggplot(df2, aes(x = x, y = y)) +
   labs(x = "", y = "")
 skinny.med
 ggsave("for_presentation/skinnyPlotMed_Hulls.png", width = 6, height = 6, dpi = 500)
+
+### High ###
+set.seed(10)
+skinny1.x <- runif(300,-50,50); skinny1.y <- skinny1.x + rnorm(300,0,1)
+df3 <- data.frame(x = skinny1.x, y = skinny1.y)
+
+ex3 = data.frame(x = df3$x, y = df3$y)
+ex3 = unique(ex3)
+ex_ashape = ashape(ex3, alpha = 125)
+ex_mat = ex_ashape$edges[, c("ind1", "ind2")]
+class(ex_mat) = "character"
+ex_graph = graph.edgelist(ex_mat, directed = F) # Make the graph of points
+cut_graph = ex_graph - E(ex_graph)[1]  # Cut the first edge
+ends = names(which(degree(cut_graph) == 1))   # Get two nodes with degree = 1
+path = get.shortest.paths(cut_graph, ends[1], ends[2])$vpath[[1]] # Compute a path
+path_nodes = as.numeric(V(ex_graph)[path]$name)
+
+skinny.high <- ggplot(df3, aes(x = x, y = y)) +
+  geom_point() +
+  geom_polygon(data = ex3[path_nodes, ], aes(color = "#257985"),  alpha = 0.5, fill = NA, size = 1.4) +
+  theme(legend.position = "none", axis.text = element_blank(), axis.ticks = element_blank()) +
+  labs(x = "", y = "")
+skinny.high
+ggsave("for_presentation/skinnyPlotHigh_Hulls.png", width = 8, height = 8, dpi = 500)
 ```
 
-=======
-#Euclidean/Mahalanobis distance
-```{r}
-set.seed(1)
-sigma1 <- matrix(c(1, 0, 0, 1), 2)
-eu <- mvrnorm(500, mu = c(2,2), Sigma = sigma1)
-set.seed(100)
-sigma2 <- matrix(c(1, 0.9, 0.9, 1), 2) 
-mah <- mvrnorm(500, mu = c(2,2), Sigma = sigma2)
-
-plot(eu[,1], eu[,2])
-plot(mah[,1], mah[,2])
-
-eu2 <- data.frame(x = eu[,1], y = eu[,2])
-mah2 <- data.frame(x = mah[,1], y = mah[,2])
-
-
-
-ggplot(eu2) + 
-  geom_point(aes(x = x, y = y)) + 
-  geom_point(aes(x = 0, y = 5), color = "red", size = 3) + 
-  geom_point(aes(x = 4, y = 5), color = "blue", size = 3) + 
-  theme(legend.position = "none", axis.text = element_blank(),
-        axis.title = element_blank(), axis.ticks = element_blank())
-
-ggplot(mah2) + 
-  geom_point(aes(x = x, y = y)) + 
-  geom_point(aes(x = 0, y = 5), color = "red", size = 3) + 
-  geom_point(aes(x = 4, y = 5), color = "blue", size = 3) + 
-  theme(legend.position = "none", axis.text = element_blank(),
-        axis.title = element_blank(), axis.ticks = element_blank())
-
-
-```
-
-
-
-
-
-
->>>>>>> aac5e0205fd9720a4b09e5913d696950b00b8091
