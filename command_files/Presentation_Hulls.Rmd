@@ -314,6 +314,7 @@ ggsave("for_presentation/convexPlotHigh_Hulls.png", width = 6, height = 6, dpi =
 
 ```
 
+<<<<<<< HEAD
 ```{r}
 ### Skinny Scagnostic Examples ###
 ### Low ###
@@ -369,3 +370,44 @@ skinny.med
 ggsave("for_presentation/skinnyPlotMed_Hulls.png", width = 6, height = 6, dpi = 500)
 ```
 
+=======
+#Euclidean/Mahalanobis distance
+```{r}
+set.seed(1)
+sigma1 <- matrix(c(1, 0, 0, 1), 2)
+eu <- mvrnorm(500, mu = c(2,2), Sigma = sigma1)
+set.seed(100)
+sigma2 <- matrix(c(1, 0.9, 0.9, 1), 2) 
+mah <- mvrnorm(500, mu = c(2,2), Sigma = sigma2)
+
+plot(eu[,1], eu[,2])
+plot(mah[,1], mah[,2])
+
+eu2 <- data.frame(x = eu[,1], y = eu[,2])
+mah2 <- data.frame(x = mah[,1], y = mah[,2])
+
+
+
+ggplot(eu2) + 
+  geom_point(aes(x = x, y = y)) + 
+  geom_point(aes(x = 0, y = 5), color = "red", size = 3) + 
+  geom_point(aes(x = 4, y = 5), color = "blue", size = 3) + 
+  theme(legend.position = "none", axis.text = element_blank(),
+        axis.title = element_blank(), axis.ticks = element_blank())
+
+ggplot(mah2) + 
+  geom_point(aes(x = x, y = y)) + 
+  geom_point(aes(x = 0, y = 5), color = "red", size = 3) + 
+  geom_point(aes(x = 4, y = 5), color = "blue", size = 3) + 
+  theme(legend.position = "none", axis.text = element_blank(),
+        axis.title = element_blank(), axis.ticks = element_blank())
+
+
+```
+
+
+
+
+
+
+>>>>>>> aac5e0205fd9720a4b09e5913d696950b00b8091
