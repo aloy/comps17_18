@@ -1,0 +1,168 @@
+---
+title: "Example Primary Family Plots"
+author: "Cari Comnick"
+date: "May 8, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+```
+
+```{r}
+setwd("~/Comps/comps17_18")
+striated_plots <- read_csv("simulation_data/striated_plots.csv")
+striated_info <- read_csv("simulation_data/striated_info.csv")
+```
+
+```{r}
+#signal plotID 527
+plotSigStriate <- striated_plots[which(striated_plots$ID == 527),]
+ggplot(plotSigStriate) + geom_point(aes(x, y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/striatedSig.png", width = 8, height = 6, dpi = 500)
+
+#non signal plot ID 920
+plotNull <- striated_plots[which(striated_plots$ID == 920),]
+ggplot(plotNull) + geom_point(aes(x, y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/striatedSig.png", width = 8, height = 6, dpi = 500)
+```
+
+```{r}
+linear_plots <- read_csv("simulation_data/linear2_plots.csv")
+linear_info <- read_csv("simulation_data/linear2_info.csv")
+```
+
+```{r}
+#signal 530
+plotSigLinear <- linear_plots[which(linear_plots$ID == 530),]
+ggplot(plotSigLinear) + geom_point(aes(x, y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/linearSig.png", width = 8, height = 6, dpi = 500)
+
+#noise 1866
+plotNull <- linear_plots[which(linear_plots$ID == 1866),]
+ggplot(plotNull) + geom_point(aes(x, y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/LinNull.png", width = 8, height = 6, dpi = 500)
+```
+
+```{r}
+setwd("~/Dropbox (Carleton College)/comps2018")
+quad_plots <- read_csv("quad_plots.csv")
+setwd("~/Comps/comps17_18")
+quad_info <- read_csv("simulation_data/quad_info.csv")
+```
+
+```{r}
+#signal 309
+plotSigQuad <- quad_plots[which(quad_plots$ID == 309),]
+ggplot(plotSigQuad) + geom_point(aes(x, y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/quadSig.png", width = 8, height = 6, dpi = 500)
+
+#null 19053
+```
+
+```{r}
+funnel_plots <- read_csv("simulation_data/funnel_trend_plots.csv")
+funnel_info <- read_csv("simulation_data/funnel_info.csv")
+```
+
+```{r}
+#signal 814
+plotSigFunnel <- funnel_plots[which(funnel_plots$ID == 814),]
+ggplot(plotSigFunnel) + geom_point(aes(x, y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/funnelSig.png", width = 8, height = 6, dpi = 500)
+
+#null 1352 or 1603
+```
+
+```{r}
+exponential_plots <- read_csv("simulation_data/Exponential_Plots.csv")
+exponential_info <- read_csv("simulation_data/Exponential_Info.csv")
+```
+
+```{r}
+#signal 824
+plotSigExponential <- exponential_plots[which(exponential_plots$ID == 824),]
+ggplot(plotSigExponential) + geom_point(aes(x, y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/exponentialSig.png", width = 8, height = 6, dpi = 500)
+
+#null 2982
+```
+
+
+```{r}
+cluster_plots <- read_csv("Cluster_Plots_Redo.csv")
+cluster_info <- read_csv("Cluster_Info_Redo.csv")
+```
+
+```{r}
+#signal 5621
+plotSigCluster <- cluster_plots[which(cluster_plots$ID == 5621),]
+ggplot(plotSigCluster) + geom_point(aes(x, y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/clusterSig.png", width = 8, height = 6, dpi = 500)
+
+#null 2786
+```
+
+```{r}
+ts_plots <- read_csv("simulation_data/TS_Plots.csv")
+ts_info <- read_csv("simulation_data/TS_Info.csv")
+```
+
+```{r}
+#Signal 1724
+plotSigTS <- ts_plots[which(ts_plots$ID == 1724),]
+ggplot(plotSigTS) + geom_point(aes(x, y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/tsSig.png", width = 8, height = 6, dpi = 500)
+
+#null 296
+plotNullTS <- ts_plots[which(ts_plots$ID == 296),]
+ggplot(plotNullTS) + geom_point(aes(x, y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/tsNull.png", width = 8, height = 6, dpi = 500)
+```
+
+```{r}
+qq_plots <- read_csv("simulation_data/QQplots.csv")
+qq_info <- read_csv("simulation_data/QQPlots_info.csv")
+qq_info$signal <- ifelse(qq_info$distribution == "Normal", 1, 0)
+```
+
+```{r}
+keep <- sample(unique(qq_plots$ID),15,replace = FALSE)
+qq_plots2 <- qq_plots[which(qq_plots$ID %in% keep),]
+qq_info2 <- qq_info[which(qq_info$ID %in% keep),]
+for (i in keep){
+  print(i)
+  for (a in c(0,1)){
+    x <- qq_plots$x[which(qq_plots$ID == i)]
+    y <- qq_plots$y[which(qq_plots$ID == i)]
+    intr <- qq_info$signal[which(qq_info$ID == i)]
+    plot(y ~ x, main = i, xlab = intr)
+  }
+}
+
+#signal (normal) 609
+plotSigQQ <- qq_plots[which(qq_plots$ID == 609),]
+ggplot(plotSigQQ) + geom_point(aes(x, y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/qqSig.png", width = 8, height = 6, dpi = 500)
+
+#null (not normal) 2216
+plotNullQQ <- qq_plots[which(qq_plots$ID == 2216),]
+ggplot(plotNullQQ) + geom_point(aes(x, y)) + 
+  theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+ggsave("for_presentation/qqNull.png", width = 8, height = 6, dpi = 500)
+```
