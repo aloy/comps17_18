@@ -243,7 +243,7 @@ path_nodes = as.numeric(V(ex_graph)[path]$name) # Get node names (= row numbers 
 
 convex.low <- ggplot(ex1, aes(x = V1, y = V2)) +
   geom_point() +
-  geom_polygon(data = ex1[path_nodes, ], aes(color = "raspberry"),  alpha = 0.5, fill = NA, size = 1.4) +
+  geom_polygon(data = ex1[path_nodes, ], aes(color = "raspberry"),  alpha = 0.5, fill = "#257985", size = 1.4) +
   geom_segment(aes(color = "raspberry"), x = .002643, xend = .931209 , y = .004299, yend = .0043299, size = 1.4) +
   geom_segment(aes(color = "raspberry"), x = .002643, xend = .002643 , y = .004299, yend = 1.114296, size = 1.4) +
   geom_segment(aes(color = "navyblue"), x = .002643, xend = .931209, y = 1.114296, yend = .004299, size = 1.4) +
@@ -252,7 +252,7 @@ convex.low <- ggplot(ex1, aes(x = V1, y = V2)) +
   theme(legend.position = "none", axis.text = element_blank(), axis.ticks = element_blank()) +
   labs(x = "", y = "")
 convex.low
-ggsave("for_presentation/convexPlotLow_Hulls.png", width = 6, height = 6, dpi = 500)
+ggsave("for_presentation/convexPlotLow_Hulls.png", width = 8, height = 8, dpi = 500)
 
 ### Mid Convex ###
 set.seed(2)
@@ -276,7 +276,7 @@ path_nodes = as.numeric(V(ex_graph)[path]$name) # Get node names (= row numbers 
 
 convex.med <- ggplot(df.main2, aes(x = V1, y = V2)) +
   geom_point() +
-  geom_polygon(data = ex2[path_nodes, ], aes(color = "raspberry"),  alpha = 0.5, fill = NA, size = 1.4) +
+  geom_polygon(data = ex2[path_nodes, ], aes(color = "raspberry"),  alpha = 0.5, fill = "#257985", size = 1.4) +
   geom_polygon(aes(color = "navyblue"), data = filter(df.hull2, !is.na(hull)), alpha = 0.5, fill = NA, size = 1.4) +
   theme(legend.position = "none", axis.text = element_blank(), axis.ticks = element_blank()) +
   labs(x = "", y = "")
@@ -305,7 +305,7 @@ path_nodes = as.numeric(V(ex_graph)[path]$name) # Get node names (= row numbers 
 
 convex.high <- ggplot(ex3, aes(x = V1, y = V2)) +
   geom_point() +
-  geom_polygon(data = ex[path_nodes, ], aes(color = "raspberry"),  alpha = 0.5, fill = NA, size = 1.4) +
+  geom_polygon(data = ex[path_nodes, ], aes(color = "raspberry"),  alpha = 0.5, fill = "#257985", size = 1.4) +
   geom_polygon(aes(color = "#257985"), data = filter(df.hull3, !is.na(hull)), alpha = 0.5, fill = NA, size = 1.4) +
   theme(legend.position = "none", axis.text = element_blank(), axis.ticks = element_blank()) +
   labs(x = "", y = "")
