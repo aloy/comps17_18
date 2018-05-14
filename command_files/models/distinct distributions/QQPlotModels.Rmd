@@ -28,7 +28,7 @@ info <- read_csv("simulation_data/QQPlots_info.csv",
                  col_types = cols(X1 = col_skip()))
 
 scags <- info %>%
-  select(ID, distribution, N) %>%
+  dplyr::select(ID, distribution, N) %>%
   right_join(scags)
 
 scags <- scags %>%
@@ -404,4 +404,9 @@ QQ.knn2
 
 KNN does better than norm test knn! (83.5% vs. 84.2%). 
 
+#Does our new scagnostic do better or worse that anderson darling
+```{r}
+scags$adpredict <- ifelse(scags$AD_pvalue < 0.05, "Signal", "Noise")
+mean(scags$adpredict == scags$signal)
+```
 

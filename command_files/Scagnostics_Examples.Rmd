@@ -286,7 +286,7 @@ ggsave("for_presentation/convexPlotHighW.png", width = 8, height = 6, dpi = 500)
 #Skinny
 
 set.seed(10)
-skinny1.x <- runif(1000,-50,50); skinny1.y <- skinny1.x
+skinny1.x <- runif(300,-50,50); skinny1.y <- skinny1.x + rnorm(300,0,1)
 plot(skinny1.x, skinny1.y)
 scagnostics(skinny1.x, skinny1.y)$s[7] #0.78
 skinny1 <- as.data.frame(skinny1.x)

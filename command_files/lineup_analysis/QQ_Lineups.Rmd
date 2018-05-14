@@ -187,9 +187,10 @@ test <- scagnostics[-index,]
 
 #train model
 set.seed(1)
-QQlineup.rf <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + AD_pvalue + SW_pvalue + CVM_pvalue + lillie_pvalue + pearson_pvalue + SF_pvalue, data = train_data, ntree=100, importance =T)
+QQlineup.rf <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9 + deviation.multSq, data = train, ntree=100, importance =T)
 
-QQlineup.rf2 <- randomForest(as.factor(signal) ~ AD_pvalue + SW_pvalue + CVM_pvalue + lillie_pvalue + pearson_pvalue + SF_pvalue, data = train_data, ntree=100, importance =T)
+set.seed(10)
+QQlineup.rf2 <- randomForest(as.factor(signal) ~ AD_pvalue + SW_pvalue + CVM_pvalue + lillie_pvalue + pearson_pvalue + SF_pvalue, data = train, ntree=100, importance =T)
 
 signal <- test %>% filter(signal == 1)
 null <- test %>% filter(signal == 0)
