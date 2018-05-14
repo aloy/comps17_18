@@ -192,7 +192,7 @@ ggplot(stringy) +
   geom_point(aes(x = x, y = y)) + 
   theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank())
 
-
+scagnostics(stringy)
 x <- cbind(scale(stringy$x), scale(stringy$y))
 x <- unique(x)
 svg("scagnosticsBase.svg", width=10, height=3)
