@@ -40,6 +40,7 @@ names(data)
 
 
 RANDOM FOREST
+Accuracy: 
 ```{r}
 forestModel <- randomForest(as.factor(signal) ~scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, ntree=100, importance =T)
 
@@ -54,9 +55,12 @@ predictors <- predictors[!predictors %in% c("ID","signal")]
 cv1 <- rfcv(data[,predictors], data$signal, cv.fold = 10)
 cv1$error.cv
  #The response has five or fewer unique values.  Are you sure you want to do regression?
+
+1-.0067
 ```
 
 LOGISTIC REGRESSION:
+Accuracy 99.53%
 ```{r}
 glmScag <- glm(signal ~ scag_num_1+scag_num_2+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, family = "binomial")
 
@@ -69,19 +73,10 @@ mean(data$signal == data$predictions)
 
 #cross validation
 1-cv.glm(data, glmScag, K=10)$delta[1]
-
-glmScag1 <- glm(signal ~ scag_num_1+scag_num_3+scag_num_4+scag_num_5+scag_num_6+scag_num_7+scag_num_8+scag_num_9, data = data, family = "binomial")
-summary(glmScag1)
-anova(glmScag1, test = "Chisq")
-anova(glmScag1, glmScag, test = "Chisq")
-#plot(glmScag1)
-
-glmScag2 <- glm(signal ~ scag_num_3, data = data, family = "binomial")
-summary(glmScag2)
-anova(glmScag2, glmScag, test = "Chisq")
 ```
 
-K Nearest Neighbors
+K Nearest Neighbors:
+Accuracy: 100%
 ```{r}
 k <- 5
 folds <- cut(sample(seq_len(nrow(data))),  breaks=k, labels=FALSE) 
@@ -107,6 +102,8 @@ print(paste("Average Accuracy", mean(knn_cv_accuracy$accuracy)))
 ```
 
 LDA-QDA
+LDA 97.62%
+QDA 98.57%
 ```{r}
 k <- 5
 folds <- cut(sample(seq_len(nrow(data))),  breaks=k, labels=FALSE) 
@@ -145,24 +142,6 @@ for (i in seq_len(k)) {
   qda1_cv_accuracy[i] <- mean(predictions_QDA1$class == predictions_QDA1$signal)
 }
 print(paste("Average Accuracy", mean(qda1_cv_accuracy$accuracy)))
-
-#QDA using only monotonic as a predictor
-k <- 5
-folds <- cut(sample(seq_len(nrow(data))),  breaks=k, labels=FALSE) 
-qda2_cv_accuracy <- data.frame(accuracy=numeric(5), stringsAsFactors = FALSE)
-
-for (i in seq_len(k)) {
-  train_data <- filter(data, folds != i) 
-  test_data <- filter(data, folds == i)
-
-  model_QDA2 <- qda(train_data$signal~scag_num_9, data = train_data)
-
-
-  predictions_QDA2 <- data.frame(predict(model_QDA2, test_data))
-  predictions_QDA2 <- cbind(test_data, predictions_QDA2)
-  qda2_cv_accuracy[i] <- mean(predictions_QDA2$class == predictions_QDA2$signal)
-}
-print(paste("Average Accuracy", mean(qda2_cv_accuracy$accuracy)))
 ```
 
 SVM
