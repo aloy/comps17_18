@@ -10,13 +10,37 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
+library(ggplot2)
+
+qqplot.data <- function (vec) # argument: vector of numbers
+{
+  # following four lines from base R's qqline()
+  y <- quantile(vec[!is.na(vec)], c(0.25, 0.75))
+  x <- qnorm(c(0.25, 0.75))
+  slope <- diff(y)/diff(x)
+  int <- y[1L] - slope * x[1L]
+
+  d <- data.frame(resids = vec)
+
+  ggplot(d, aes(sample = resids)) + stat_qq() + geom_abline(slope = slope, intercept = int)
+
+}
+```
+
+
+```{r}
 x <- seq(-4, 4, length=100)
 hx <- dnorm(x)
 
 colors <- c("red", "gold", "blue")
 labels <- c("df=2", "df=5", "normal")
 
-plot(x, hx, type="l", col = "blue", lty=2, xlab="x value",
+#normal curve ggplot
+ggplot(data = data.frame(x = c(-3, 3)), aes(x)) +
+  stat_function(fun = dnorm, n = 101, args = list(mean = 0, sd = 1)) +
+  labs(x = "x", y = "Density")
+
+plot(x, hx, type="l", col = "blue", lty=1, xlab="x value",
   ylab="Density")
 curve(dt(x, df=2), 
       col="red", lwd=2, add=TRUE, yaxt="n")
@@ -32,6 +56,20 @@ data <- rt(15, 3)
 
 m<-mean(data)
 std<-sqrt(var(data))
+
+#histogram
+ggplot(as.data.frame(data)) + 
+  geom_histogram(aes(x = data, y = ..density..), color = "#5ea8a7", fill = "#257985", bins = 20) + 
+  lims(x = c(-3.5,3.5), y = c(0,1.5)) + 
+  labs(x = "x", y = "Density")
+
+#Histogram with curve
+ggplot(as.data.frame(data)) + 
+  geom_histogram(aes(x = data, y = ..density..), color = "#5ea8a7", fill = "#257985", bins = 20) + 
+  lims(x = c(-3.5,3.5), y = c(0,1.5)) + 
+  labs(x = "x", y = "Density") + 
+  stat_function(fun = dnorm, args = list(mean = m, sd = std), col = "#ff4447", size = 2)
+
 hist(data, density=20, breaks=20, prob=TRUE, 
      xlab="x-variable", ylim=c(0, 2), 
      main="Histogram")
@@ -42,12 +80,24 @@ curve(dnorm(x, mean=m, sd=std),
 qqnorm(data)
 abline(a = 0, b = 1)
 
+##ggplot
+ggplot(as.data.frame(data), aes(sample = data)) + 
+  stat_qq() 
+
+ggplot(as.data.frame(data), aes(sample = data)) + 
+  stat_qq() +
+  geom_abline(intercept = 0, slope = 1)
+
+
 #normal data
 set.seed(18)
 data2 <- rnorm(15)
 
-qqnorm(data2)
-abline(a = 0, b = 1)
+qqplot.data(data2)
+
+ggplot(as.data.frame(data2), aes(sample = data2)) + 
+  stat_qq() +
+  geom_abline(intercept = 0, slope = 1)
 
 
 ```
