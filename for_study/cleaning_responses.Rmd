@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(readr)
+library(tidyverse)
 responses <- read_csv('for_study/Carl_Responses1.csv')
 experiment_scagnostics <- read_csv('for_study/experiment_scagnostics.csv')
 setA1 <- responses[c(3:52),c(1:10, 23)]
@@ -103,9 +104,7 @@ ac5 <- sum(setB1$`B-1-Q5` == 17)/24
 ac6 <- sum(setB1$`B-1-Q6` == 8)/24
 
 avgac <- (ac1 + ac2+ ac3 + ac4 + ac5 + ac6)/6
-avgac #84%
-
-
+avgac #84
 ```
 
 set BN
@@ -182,3 +181,66 @@ accuracy: 71.98
 
 accuracy for select 1: 80.5%
 
+```{r}
+#compare those who took any stats class vs. those who didn't
+#Q69 if 4 - stats class, 5 - no stats class
+#Set A1 - stats
+nstats <- length(which(setA1$Q69 == 4))
+setA1stats <- setA1[which(setA1$Q69 == 4),]
+ac1s <- sum(setA1stats$`A-1-Q1` == 14)/nstats #should be 14
+ac2s<- sum(setA1stats$`A-1-Q2` == 2)/nstats  #should be 2
+ac3s <- sum(setA1stats$`A-1-Q3` == 15)/nstats  #should be 15
+ac4s <- sum(setA1stats$`A-1-Q4` == 14)/nstats  #should be 14
+ac5s <- sum(setA1stats$`A-1-Q5` == 9)/nstats  #should be 9
+ac6s <- sum(setA1stats$`A-1-Q6` == 8)/nstats  #should be 8
+
+avgacS <- (ac1s + ac2s + ac3s + ac4s + ac5s + ac6s)/6
+avgacS #78.7%
+
+#Set A1 - no stats
+nNostats <- length(which(setA1$Q69 == 5))
+setA1Nostats <- setA1[which(setA1$Q69 == 5),]
+ac1NS <- sum(setA1Nostats$`A-1-Q1` == 14)/nNostats #should be 14
+ac2NS <- sum(setA1Nostats$`A-1-Q2` == 2)/nNostats  #should be 2
+ac3NS <- sum(setA1Nostats$`A-1-Q3` == 15)/nNostats  #should be 15
+ac4NS <- sum(setA1Nostats$`A-1-Q4` == 14)/nNostats  #should be 14
+ac5NS <- sum(setA1Nostats$`A-1-Q5` == 9)/nNostats  #should be 9
+ac6NS <- sum(setA1Nostats$`A-1-Q6` == 8)/nNostats  #should be 8
+
+avgacNS <- (ac1NS + ac2NS + ac3NS + ac4NS + ac5NS + ac6NS)/6
+avgacNS #72.9%
+```
+
+```{r}
+#stats
+nstats <- length(which(setB1$Q69 == 4))
+setB1stats <- setB1[which(setB1$Q69 == 4),]
+ac1 <- sum(setB1stats$`B-1-Q1` == 20)/nstats
+ac2 <- sum(setB1stats$`B-1-Q2` == 1)/nstats
+ac3 <- sum(setB1stats$`B-1-Q3` == 14)/nstats 
+ac4 <- sum(setB1stats$`B-1-Q4` == 8)/nstats 
+ac5 <- sum(setB1stats$`B-1-Q5` == 17)/nstats 
+ac6 <- sum(setB1stats$`B-1-Q6` == 8)/nstats
+
+avgac <- (ac1 + ac2+ ac3 + ac4 + ac5 + ac6)/6
+avgac
+
+#stats
+#83.3%
+
+#no stats
+nstats <- length(which(setB1$Q69 == 5))
+setB1Nostats <- setB1[which(setB1$Q69 == 5),]
+ac1 <- sum(setB1Nostats$`B-1-Q1` == 20)/nstats
+ac2 <- sum(setB1Nostats$`B-1-Q2` == 1)/nstats
+ac3 <- sum(setB1Nostats$`B-1-Q3` == 14)/nstats 
+ac4 <- sum(setB1Nostats$`B-1-Q4` == 8)/nstats 
+ac5 <- sum(setB1Nostats$`B-1-Q5` == 17)/nstats 
+ac6 <- sum(setB1Nostats$`B-1-Q6` == 8)/nstats
+
+avgac <- (ac1 + ac2+ ac3 + ac4 + ac5 + ac6)/6
+avgac
+
+#no stats
+#87.5%
+```

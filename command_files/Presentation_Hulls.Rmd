@@ -202,7 +202,9 @@ ggplot(stringy) +
   theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank())
 
 
+
 p <- ggplot(stringy, aes(x = scale(x), y = scale(y))) + geom_point() + ggtitle("Minimum Spanning Tree") + theme(legend.position = "none", axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
+>>>>>>> 9948f89689ae8e31b0d2afb8c0a5e734bfc98270
 x <- cbind(scale(stringy$x), scale(stringy$y))
 x <- unique(x)
 svg("scagnosticsBase.svg", width=10, height=3)
@@ -243,16 +245,16 @@ path_nodes = as.numeric(V(ex_graph)[path]$name) # Get node names (= row numbers 
 
 convex.low <- ggplot(ex1, aes(x = V1, y = V2)) +
   geom_point() +
-  geom_polygon(data = ex1[path_nodes, ], aes(color = "raspberry"),  alpha = 0.5, fill = NA) +
-  geom_segment(aes(color = "raspberry"), x = .002643, xend = .931209 , y = .004299, yend = .0043299) +
-  geom_segment(aes(color = "raspberry"), x = .002643, xend = .002643 , y = .004299, yend = 1.114296) +
-  geom_segment(aes(color = "navyblue"), x = .002643, xend = .931209, y = 1.114296, yend = .004299) +
-  geom_polygon(aes(color = "navyblue"), data = filter(df.hull1, !is.na(hull)), alpha = 0.5, fill = NA) +
-  geom_segment(aes(color = "navyblue"), x = .002643, xend = .931209 , y = .004299, yend = .004299) +
+  geom_polygon(data = ex1[path_nodes, ], aes(color = "raspberry"),  alpha = 0.5, fill = "#257985", size = 1.4) +
+  geom_segment(aes(color = "raspberry"), x = .002643, xend = .931209 , y = .004299, yend = .0043299, size = 1.4) +
+  geom_segment(aes(color = "raspberry"), x = .002643, xend = .002643 , y = .004299, yend = 1.114296, size = 1.4) +
+  geom_segment(aes(color = "navyblue"), x = .002643, xend = .931209, y = 1.114296, yend = .004299, size = 1.4) +
+  geom_polygon(aes(color = "navyblue"), data = filter(df.hull1, !is.na(hull)), alpha = 0.5, fill = NA, size = 1.4) +
+  geom_segment(aes(color = "navyblue"), x = .002643, xend = .931209 , y = .004299, yend = .004299, size = 1.4) +
   theme(legend.position = "none", axis.text = element_blank(), axis.ticks = element_blank()) +
   labs(x = "", y = "")
 convex.low
-ggsave("for_presentation/convexPlotLow_Hulls.png", width = 8, height = 6, dpi = 500)
+ggsave("for_presentation/convexPlotLow_Hulls.png", width = 8, height = 8, dpi = 500)
 
 ### Mid Convex ###
 set.seed(2)
@@ -276,12 +278,12 @@ path_nodes = as.numeric(V(ex_graph)[path]$name) # Get node names (= row numbers 
 
 convex.med <- ggplot(df.main2, aes(x = V1, y = V2)) +
   geom_point() +
-  geom_polygon(data = ex2[path_nodes, ], aes(color = "raspberry"),  alpha = 0.5, fill = NA) +
-  geom_polygon(aes(color = "navyblue"), data = filter(df.hull2, !is.na(hull)), alpha = 0.5, fill = NA) +
+  geom_polygon(data = ex2[path_nodes, ], aes(color = "raspberry"),  alpha = 0.5, fill = "#257985", size = 1.4) +
+  geom_polygon(aes(color = "navyblue"), data = filter(df.hull2, !is.na(hull)), alpha = 0.5, fill = NA, size = 1.4) +
   theme(legend.position = "none", axis.text = element_blank(), axis.ticks = element_blank()) +
   labs(x = "", y = "")
 convex.med
-ggsave("for_presentation/convexPlotMed_Hulls.png", width = 8, height = 6, dpi = 500)
+ggsave("for_presentation/convexPlotMed_Hulls.png", width = 6, height = 6, dpi = 500)
 
 ### High Convex ###
 x2 <- runif(2000,0,1)
@@ -305,51 +307,91 @@ path_nodes = as.numeric(V(ex_graph)[path]$name) # Get node names (= row numbers 
 
 convex.high <- ggplot(ex3, aes(x = V1, y = V2)) +
   geom_point() +
-  geom_polygon(data = ex[path_nodes, ], aes(color = "raspberry"),  alpha = 0.5, fill = NA) +
-  geom_polygon(aes(color = "#257985"), data = filter(df.hull3, !is.na(hull)), alpha = 0.5, fill = NA) +
+  geom_polygon(data = ex[path_nodes, ], aes(color = "raspberry"),  alpha = 0.5, fill = "#257985", size = 1.4) +
+  geom_polygon(aes(color = "#257985"), data = filter(df.hull3, !is.na(hull)), alpha = 0.5, fill = NA, size = 1.4) +
   theme(legend.position = "none", axis.text = element_blank(), axis.ticks = element_blank()) +
   labs(x = "", y = "")
 convex.high
-ggsave("for_presentation/convexPlotHigh_Hulls.png", width = 8, height = 6, dpi = 500)
+ggsave("for_presentation/convexPlotHigh_Hulls.png", width = 6, height = 6, dpi = 500)
 
 ```
 
-#Euclidean/Mahalanobis distance
 ```{r}
-set.seed(1)
-sigma1 <- matrix(c(1, 0, 0, 1), 2)
-eu <- mvrnorm(500, mu = c(2,2), Sigma = sigma1)
-set.seed(100)
-sigma2 <- matrix(c(1, 0.9, 0.9, 1), 2) 
-mah <- mvrnorm(500, mu = c(2,2), Sigma = sigma2)
+### Skinny Scagnostic Examples ###
+### Low ###
+set.seed(10)
+angle <- 2*pi*runif(1000)
+skinny3.x <- runif(1000)*cos(angle) 
+skinny3.y <- runif(1000)*sin(angle) 
+plot(skinny3.x, skinny3.y)
+df1 <- data.frame(x = skinny3.x, y = skinny3.y)
 
-plot(eu[,1], eu[,2])
-plot(mah[,1], mah[,2])
+ex1 = data.frame(x = df1$x, y = df1$y)
+ex1 = unique(ex1)
+ex_ashape = ashape(ex1, alpha = 5)
+ex_mat = ex_ashape$edges[, c("ind1", "ind2")]
+class(ex_mat) = "character"
+ex_graph = graph.edgelist(ex_mat, directed = F) # Make the graph of points
+cut_graph = ex_graph - E(ex_graph)[1]  # Cut the first edge
+ends = names(which(degree(cut_graph) == 1))   # Get two nodes with degree = 1
+path = get.shortest.paths(cut_graph, ends[1], ends[2])$vpath[[1]] # Compute a path
+path_nodes = as.numeric(V(ex_graph)[path]$name)
 
-eu2 <- data.frame(x = eu[,1], y = eu[,2])
-mah2 <- data.frame(x = mah[,1], y = mah[,2])
+skinny.low <- ggplot(df1, aes(x = x, y = y)) +
+  geom_point() +
+  geom_polygon(data = ex1[path_nodes, ], aes(color = "#257985"),  alpha = 0.5, fill = NA, size = 1.4) +
+  theme(legend.position = "none", axis.text = element_blank(), axis.ticks = element_blank()) +
+  labs(x = "", y = "")
+skinny.low
+ggsave("for_presentation/skinnyPlotLow_Hulls.png", width = 8, height = 8, dpi = 500)
 
+### Medium ###
 
+set.seed(10)
+skinny2.x <- runif(1000,-50,50); skinny2.y <- skinny2.x + rnorm(1000,0,200)
+df2 <- data.frame(x = skinny2.x, y = skinny2.y)
 
-ggplot(eu2) + 
-  geom_point(aes(x = x, y = y)) + 
-  geom_point(aes(x = 0, y = 5), color = "red", size = 3) + 
-  geom_point(aes(x = 4, y = 5), color = "blue", size = 3) + 
-  theme(legend.position = "none", axis.text = element_blank(),
-        axis.title = element_blank(), axis.ticks = element_blank())
+ex2 = data.frame(x = df2$x, y = df2$y)
+ex2 = unique(ex2)
+ex_ashape = ashape(ex2, alpha = 125)
+ex_mat = ex_ashape$edges[, c("ind1", "ind2")]
+class(ex_mat) = "character"
+ex_graph = graph.edgelist(ex_mat, directed = F) # Make the graph of points
+cut_graph = ex_graph - E(ex_graph)[1]  # Cut the first edge
+ends = names(which(degree(cut_graph) == 1))   # Get two nodes with degree = 1
+path = get.shortest.paths(cut_graph, ends[1], ends[2])$vpath[[1]] # Compute a path
+path_nodes = as.numeric(V(ex_graph)[path]$name)
 
-ggplot(mah2) + 
-  geom_point(aes(x = x, y = y)) + 
-  geom_point(aes(x = 0, y = 5), color = "red", size = 3) + 
-  geom_point(aes(x = 4, y = 5), color = "blue", size = 3) + 
-  theme(legend.position = "none", axis.text = element_blank(),
-        axis.title = element_blank(), axis.ticks = element_blank())
+skinny.med <- ggplot(df2, aes(x = x, y = y)) +
+  geom_point() +
+  geom_polygon(data = ex2[path_nodes, ], aes(color = "#257985"),  alpha = 0.5, fill = NA, size = 1.4) +
+  theme(legend.position = "none", axis.text = element_blank(), axis.ticks = element_blank()) +
+  labs(x = "", y = "")
+skinny.med
+ggsave("for_presentation/skinnyPlotMed_Hulls.png", width = 6, height = 6, dpi = 500)
 
+### High ###
+set.seed(10)
+skinny1.x <- runif(300,-50,50); skinny1.y <- skinny1.x + rnorm(300,0,1)
+df3 <- data.frame(x = skinny1.x, y = skinny1.y)
 
+ex3 = data.frame(x = df3$x, y = df3$y)
+ex3 = unique(ex3)
+ex_ashape = ashape(ex3, alpha = 125)
+ex_mat = ex_ashape$edges[, c("ind1", "ind2")]
+class(ex_mat) = "character"
+ex_graph = graph.edgelist(ex_mat, directed = F) # Make the graph of points
+cut_graph = ex_graph - E(ex_graph)[1]  # Cut the first edge
+ends = names(which(degree(cut_graph) == 1))   # Get two nodes with degree = 1
+path = get.shortest.paths(cut_graph, ends[1], ends[2])$vpath[[1]] # Compute a path
+path_nodes = as.numeric(V(ex_graph)[path]$name)
+
+skinny.high <- ggplot(df3, aes(x = x, y = y)) +
+  geom_point() +
+  geom_polygon(data = ex3[path_nodes, ], aes(color = "#257985"),  alpha = 0.5, fill = NA, size = 1.4) +
+  theme(legend.position = "none", axis.text = element_blank(), axis.ticks = element_blank()) +
+  labs(x = "", y = "")
+skinny.high
+ggsave("for_presentation/skinnyPlotHigh_Hulls.png", width = 8, height = 8, dpi = 500)
 ```
-
-
-
-
-
 

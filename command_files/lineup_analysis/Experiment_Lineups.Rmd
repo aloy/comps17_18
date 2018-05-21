@@ -272,6 +272,16 @@ colMeans(fp2)
 #FalPo: EU - .122, MAH - .291, LDA - .185, QDA - .185, LOG - .167, KNN - .250, RF - .056
 ```
 
+What Cari just got:
+    Euclidean   Mahalanobis           LDA           QDA      Logistic           KNN Random.Forest 
+    0.8333333     0.7500000     0.8333333     0.8333333     0.8333333     0.9166667     0.9166667 
+
+    Euclidean   Mahalanobis           LDA           QDA      Logistic           KNN Random.Forest 
+    0.9666667     0.6277778     0.9166667     0.7666667     0.8833333     0.9166667     0.9166667 
+
+    Euclidean   Mahalanobis           LDA           QDA      Logistic           KNN Random.Forest 
+   0.12222222    0.29074074    0.13888889    0.18888889    0.15000000    0.30925926    0.08333333
+   
 These first two prediction sets model signal based solely on the plots included in the experiment lineups. No differentiation was made between the linear and Turk lineups. The next step is to fit models to outside datasets specific to the lineup distribution and re-predict.
 
 ```{r}

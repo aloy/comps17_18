@@ -123,6 +123,29 @@ for(set in 1:27){
 
 colMeans(accuracy)
 #EU - .852, MAH - .537, LDA - .704, Log - .722, KNN - .870, RF - .926
+
+#trying to get false positive
+#just 1-accuracy
+
+#why no QDA?
+
+K <- 27
+fp2 <- data.frame(Euclidean = numeric(K), Mahalanobis = numeric(K), LDA = numeric(K), #QDA = numeric(K), 
+                  Logistic = numeric(K), KNN = numeric(K), Random.Forest = numeric(K))
+
+for(set in 1:K){
+  correct <- c(final_choice$Cor1[[set]],final_choice$Cor2[[set]])
+  fp2$Euclidean[set] <- 2 - mean(final_choice$EU1[[set]] %in% correct) - mean(final_choice$EU2[[set]] %in% correct) 
+  fp2$Mahalanobis[set] <- 2 - mean(final_choice$MAH1[[set]] %in% correct)-mean(final_choice$MAH2[[set]] %in% correct)
+  fp2$LDA[set] <- 2 - mean(final_choice$LDA1[[set]] %in% correct)- mean(final_choice$LDA2[[set]] %in% correct)
+  #fp2$QDA[set] <- 1 - mean(final_choice$QDA1[[set]] | final_choice$QDA2[[set]] %in% correct)
+  fp2$Logistic[set] <- 2 - mean(final_choice$Log1[[set]] %in% correct)- mean(final_choice$Log2[[set]] %in% correct)
+  fp2$KNN[set] <- 2 - mean(final_choice$KNN1[[set]] %in% correct)- mean(final_choice$KNN1[[set]] %in% correct)
+  fp2$Random.Forest[set] <- 2 - mean(final_choice$RF1[[set]]%in% correct)- mean(final_choice$RF1[[set]]%in% correct)
+}  
+
+#false positives
+sum(fp2$Euclidean)/52
 ```
 
 
