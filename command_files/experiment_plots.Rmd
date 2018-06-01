@@ -10,7 +10,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-
 library(nullabor)
 library(ggplot2)
 library(dplyr)

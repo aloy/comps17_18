@@ -72,6 +72,9 @@ QQ.rf
 #choose # of trees
 plot(QQ.rf)
 
+names(scags)[18:26]
+rfcv(scags[,c("scag_num_1", "scag_num_2", "scag_num_3", "scag_num_4", "scag_num_5", "scag_num_6", "scag_num_7", "scag_num_8", "scag_num_9")], scags$signal, cv.fold = 10)
+
 #100 is fine
 ```
 
